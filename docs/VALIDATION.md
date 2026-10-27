@@ -17,7 +17,9 @@ Projet Supabase Free `uznbnihmdzxdnlxanjcl`, Paris, PostgreSQL 17.11 et pgcrypto
 | Profil `private`                           | Refus 406/PGRST106                                                                                 |
 | Auth public                                | Email activé, autoconfirmation désactivée                                                          |
 
-Les compteurs après recette anonyme sont nuls dans les huit tables et Auth. Les tests Cloud **avec comptes connectés**, emails, invitations, RPC et synchronisation restent à effectuer ; aucun succès Mailpit n’est assimilé à une livraison Gmail. Supabase Free a d’abord refusé le modèle email avec le fournisseur intégré ; les réglages de base ont été appliqués séparément. Après confirmation utilisateur de la configuration SMTP Gmail, le contenu et le sujet du modèle ont été appliqués avec succès. La réception et le callback réels restent à valider. Sauvegarde/reprise documentées, restauration complète non encore répétée. État détaillé : `HANDOFF_2C.md`.
+Les compteurs après recette anonyme étaient nuls dans les huit tables et Auth. Supabase Free a d’abord refusé le modèle email avec le fournisseur intégré ; les réglages de base ont été appliqués séparément. Après configuration personnelle du SMTP Gmail, le contenu et le sujet du modèle ont été appliqués avec succès. L’utilisateur a confirmé la **réception réelle du premier email et la confirmation du compte**, corroborée par le compteur de compte vérifié. Aucun succès Mailpit n’est assimilé à cette livraison Gmail.
+
+La **connexion réelle**, la **création RPC d’une réserve vide** et la **persistance après rechargement** ont ensuite été observées dans l’UI Cloud. SQL confirme 1 réserve, 1 owner conforme et zéro produit/stock/course ; UI « Synchronisé ». Le second compte, les refus d’accès d’un extérieur connecté, l’invitation, les mutations de stock/scanner/courses et la synchronisation entre comptes restent à valider. Sauvegarde/reprise documentées, restauration complète non encore répétée. État détaillé : `HANDOFF_2C.md`.
 
 Les sections suivantes restent l’historique des étapes précédentes.
 

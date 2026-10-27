@@ -1,6 +1,6 @@
 # Transmission — phase 2C en cours de validation
 
-État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Ne pas annoncer la phase close : recette Cloud à deux comptes, livraison email et restauration complète restent à valider.** Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.
+État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Ne pas annoncer la phase close : recette Cloud à deux comptes et restauration complète restent à valider.** Première livraison email et premier compte confirmé validés ci-dessous. Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.
 
 ## Git et confidentialité
 
@@ -85,7 +85,7 @@ La base locale 2B n’a pas été remise à zéro. La stack de validation est re
 
 ### À valider avant clôture
 
-Les tests locaux ne constituent pas une validation Cloud de : réception Gmail, clic/callback réel, création de réserve par un utilisateur connecté, invitation entre deux comptes, RLS d’un tiers connecté, mutations métier/replays, concurrence et polling entre sessions. Ne pas les cocher sans exécution réelle.
+Les tests locaux ne constituent pas une validation Cloud de : invitation entre deux comptes, RLS d’un tiers connecté, mutations métier/replays, concurrence et polling entre sessions. La première livraison, confirmation, connexion persistante et création réelle de réserve vide sont validées ci-dessous ; ne pas en déduire la recette complète à deux comptes.
 
 ## SMTP, sauvegarde et prochaine action
 
@@ -97,9 +97,15 @@ L’utilisateur a confirmé **« SMTP configuré »** après la saisie personnel
 npx --no-install supabase config push --workdir config/cloud-email --project-ref uznbnihmdzxdnlxanjcl
 ```
 
-**En attente de validation de livraison** : le SMTP enregistré et le modèle accepté ne prouvent pas la réception d’un email. La preview a été relancée sur `127.0.0.1:4173` hors du bac à sable après un diagnostic d’inaccessibilité ; HTTP 200 et bundle Cloud vérifiés. Le port 5173 occupé n’a pas été arrêté. Un ancien onglet `127.0.0.1:4173` affichait le prototype en cache : aucune donnée locale n’a été effacée. Un nouvel onglet sur **`http://localhost:4173/`** affiche l’écran Auth actuel « Votre réserve, à deux. ». Utiliser cette origine pour la première inscription.
+**Première livraison réelle validée** : l’utilisateur a confirmé « email reçu et compte confirmé » après inscription depuis la preview Cloud et ouverture du lien sur cet ordinateur. Les compteurs SQL à ce moment confirmaient **1 compte Auth, 1 adresse vérifiée, 0 réserve et 0 membre**. Aucun compte n’a été confirmé administrativement ou par fixture.
 
-Action manuelle demandée : créer personnellement le premier compte, recevoir le message, ouvrir sa confirmation depuis cet ordinateur et se connecter, sans encore créer la réserve ; signaler seulement réussite ou erreur, sans identifiant, mot de passe ou fragment. Poursuivre ensuite propriétaire/extérieur avant invitation, deux membres/RPC/polling, en utilisant exclusivement les comptes et données autorisés. Ne pas récupérer de mot de passe ou session personnelle dans une conversation.
+L’utilisateur s’est ensuite connecté personnellement dans l’onglet intégré, sans transmettre de mot de passe. L’UI connectée a été observée, puis **« Ma réserve » créée par le parcours normal et sa RPC** : écran Stock « Synchronisé », zéro produit, zéro emballage et zéro course. Les compteurs SQL confirment **une réserve, un membre owner conforme à `owner_id`, zéro produit/stock/course**. Rechargement de l’onglet : session conservée et même stock vide synchronisé retrouvé. Aucune démo importée.
+
+La preview a été relancée sur `127.0.0.1:4173` hors du bac à sable après un diagnostic d’inaccessibilité ; HTTP 200 et bundle Cloud vérifiés. Le port 5173 occupé n’a pas été arrêté. Un ancien onglet `127.0.0.1:4173` affichait le prototype en cache : aucune donnée locale n’a été effacée. L’onglet sur **`http://localhost:4173/`** affiche l’écran Auth actuel. Utiliser cette origine pour la session propriétaire.
+
+La session propriétaire est sur **`http://localhost:4173/`**. L’ancienne page en cache de **`http://127.0.0.1:4173/`** a été quittée puis rouverte, laissant s’activer la mise à jour normale du service worker : l’écran Auth actuel s’y affiche, avec stockage d’origine distinct, sans effacement des données locales.
+
+Action manuelle demandée : inscrire/confirmer/connecter le second utilisateur sur `127.0.0.1:4173`, sans créer de réserve ni accepter d’invitation ; conserver le propriétaire connecté sur `localhost:4173`. Il est aussi demandé un **produit réel autorisé (nom/code-barres/quantité)** pour exercer les mutations en rétablissant sa quantité initiale, sans donnée de démonstration. Poursuivre ensuite extérieur avant invitation, deux membres/RPC/polling, exclusivement avec ces comptes et données autorisés. Ne pas récupérer de mot de passe ou session personnelle dans une conversation.
 
 `BACKUP.md` documente export technique ciblé `public,private,auth` sans sessions, copie chiffrée externe, restauration transactionnelle sur cible neuve, intégrité/UUID Auth, reprise de pause et limites. **Aucune sauvegarde Cloud ni restauration complète exécutée à ce stade** ; exercice obligatoire avant usage quotidien. Aucun maintien artificiel d’activité ajouté. L’export/import utilisateur de phase 5 n’est pas livré sous couvert de cette procédure technique.
 
