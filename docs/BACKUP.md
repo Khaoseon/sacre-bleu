@@ -1,6 +1,6 @@
 # Sauvegarde et reprise — Supabase Free
 
-Procédure administrative pour deux utilisateurs, au 27 octobre 2026. **Export Cloud et restauration SQL répétés avec succès sur une cible locale vierge isolée**, après accord spécifique pour cette copie temporaire des données privées/Auth. Aucune archive durable n’a été conservée par l’exercice : une sauvegarde externe chiffrée reste à constituer. L’export JSON de démonstration ne sauvegarde pas la réserve partagée. L’import utilisateur avec prévisualisation reste une fonction future de phase 5.
+Procédure administrative pour deux utilisateurs, au 27 octobre 2026. **Export Cloud et restauration SQL répétés avec succès sur une cible locale vierge isolée**, après accord spécifique pour cette copie temporaire des données privées/Auth. L’exercice avait supprimé sa copie ; une première archive durable chiffrée a ensuite été créée et vérifiée le 27 octobre 2026 (voir `HANDOFF_2C.md`). L’export JSON de démonstration ne sauvegarde pas la réserve partagée. L’import utilisateur avec prévisualisation reste une fonction future de phase 5.
 
 ## Quoi conserver et à quelle fréquence
 
@@ -12,28 +12,9 @@ Les exports Auth contiennent des adresses et empreintes de mots de passe, les jo
 
 `backups/`, `*.dump`, `*.backup` et les fichiers d’environnement sont ignorés par Git. Ne pas placer une sauvegarde sous `public/`, `dist/`, `dist-cloud/` ou dans un commit. Ne pas transmettre ces fichiers dans la conversation. `Compress-Archive` seul ne chiffre pas une archive.
 
-## Export technique sans mot de passe dans une commande
+## Sauvegarde chiffrée reproductible
 
-Prérequis : Docker, CLI verrouillée et projet lié par la procédure de `CLOUD.md`. Comparer **avant chaque export** la référence dans `supabase/.temp/project-ref` avec le Dashboard. Suspendre les modifications dans les deux sessions pendant les exports pour simplifier la cohérence entre fichiers. Les commandes de dump lisent la base, elles n’y créent pas de données.
-
-```powershell
-$backupDirectory = Join-Path 'backups' (Get-Date -Format 'yyyyMMdd-HHmmss')
-New-Item -ItemType Directory -Path $backupDirectory -ErrorAction Stop
-npx --no-install supabase db dump --linked --schema public,private --file "$backupDirectory/schema.sql"
-if ($LASTEXITCODE -ne 0) { throw 'Échec export schéma : sauvegarde incomplète.' }
-npx --no-install supabase db dump --linked --schema public,private,auth --data-only --use-copy --exclude auth.sessions --exclude auth.refresh_tokens --exclude auth.mfa_amr_claims --exclude auth.one_time_tokens --exclude auth.flow_state --exclude auth.audit_log_entries --file "$backupDirectory/data.sql"
-if ($LASTEXITCODE -ne 0) { throw 'Échec export données : sauvegarde incomplète.' }
-npx --no-install supabase migration list --linked | Out-File -Encoding utf8 "$backupDirectory/migrations.txt"
-if ($LASTEXITCODE -ne 0) { throw 'Échec inventaire migrations.' }
-git rev-parse HEAD | Out-File -Encoding utf8 "$backupDirectory/commit.txt"
-Get-FileHash -Algorithm SHA256 "$backupDirectory/schema.sql", "$backupDirectory/data.sql" | Format-List | Out-File -Encoding utf8 "$backupDirectory/checksums.txt"
-```
-
-Ne pas ajouter `--password` ou une URL avec mot de passe à ces commandes. Laisser la CLI utiliser sa connexion autorisée ou son invite masquée dans le terminal personnel. Si elle ne peut pas accéder à la base sans secret supplémentaire, terminer cette étape interactivement ; ne pas demander de secret dans le chat.
-
-Vérifier les codes de sortie, la taille non nulle des fichiers, les en-têtes de tables attendues (cinq `public`, trois `private`, comptes dans `auth.users`/`auth.identities`) sans imprimer les lignes de données. Les exclusions retirent les sessions et les dépendances de session ; les autres tables Auth doivent être compatibles avec la version cible. Aucun rôle métier personnalisé n’est créé par App_reserve : les rôles de plateforme ne sont pas restaurés aveuglément. `schema.sql` sert de référence/audit ; les migrations versionnées restent la source du schéma.
-
-Chiffrer et copier hors Supabase, puis vérifier que la copie peut être relue et que ses empreintes correspondent. Un fichier présent sur le même ordinateur ne suffit pas contre sa perte. La disponibilité d’un export ne prouve pas sa restaurabilité : exécuter l’exercice ci-dessous avant l’usage quotidien et après tout changement majeur.
+Voir [la procédure courte](SAUVEGARDE_CHIFFREE.md) pour créer, vérifier et extraire une archive. Elle remplace les exports SQL manuels en fichiers, en conservant le périmètre de restauration éprouvé ci-dessous.
 
 ## Reprendre un projet suspendu
 

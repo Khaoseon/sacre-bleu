@@ -1,6 +1,6 @@
 # Transmission — clôture de la phase 2C
 
-État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Phase 2C validée : recette Cloud à deux comptes et répétition de restauration réussies.** Ne pas confondre la répétition avec une sauvegarde externe déjà disponible : cette dernière reste à constituer avant usage quotidien. Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.
+État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Phase 2C validée : recette Cloud à deux comptes et répétition de restauration réussies.** Une première sauvegarde durable chiffrée a depuis été créée et vérifiée ; voir le complément en fin de document. Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.
 
 ## Git et confidentialité
 
@@ -124,6 +124,18 @@ Ces étapes d’inscription du second compte, d’invitation et de recette sur p
 
 Le conteneur et sa copie en RAM ont été supprimés après chaque tentative ; aucune donnée Cloud modifiée, aucun dump affiché ou enregistré en fichier, stack 2B conservée. Les premières tentatives ont révélé un problème de démarrage du conteneur puis des différences de représentation/tri dans le comparateur ; ces points du banc de répétition ont été corrigés avant le résultat réussi. Aucun échec de comparaison n’a été présenté comme un succès. Preuve locale non sensible : `.tmp/restore-drill-result.json` (ignorée, aucun contenu de table).
 
-**Reste avant usage quotidien** : créer et conserver une vraie archive chiffrée hors Supabase selon `BACKUP.md` ; la répétition ne laisse volontairement aucune sauvegarde durable. La procédure de reprise après pause est documentée, mais le projet actif n’a pas été suspendu pour la tester. Aucun maintien artificiel d’activité ajouté. L’export/import utilisateur de phase 5 n’est pas livré sous couvert de cette procédure technique.
+**Complément sauvegarde réalisé ci-dessous** : archive chiffrée externe vérifiée ; dupliquer les trois fichiers sur un second support. La répétition initiale avait supprimé sa copie jetable. La procédure de reprise après pause est documentée, mais le projet actif n’a pas été suspendu pour la tester. Aucun maintien artificiel d’activité ajouté. L’export/import utilisateur de phase 5 n’est pas livré sous couvert de cette procédure technique.
 
 Ne pas poursuivre caméra/OFF/photos/déploiement avant validation du périmètre suivant. Le dépôt doit rester strictement privé.
+
+## Complément — première sauvegarde durable, 27 octobre 2026
+
+Après choix explicite d’un dossier personnel hors Git et Supabase, l’utilisateur a exécuté la sauvegarde dans son terminal et saisi la phrase secrète invisiblement. Archive créée à **12:55:03 UTC**, contrôle terminé à **12:55:17 UTC** ; nom : app-reserve-2026-10-27T12-55-03Z-d1e6ed45.json.gz.gpg, taille **19 844 octets**. Le chemin personnel complet est communiqué directement à l’utilisateur, sans donnée personnelle ajoutée au dépôt.
+
+Chiffrement GnuPG 2.4.9/OpenPGP AES-256, dérivation salée/itérée SHA-512. Export CLI en lecture seule des dix tables essentielles éprouvées en 2C, avec Auth réduit à users/identities ; autres tables Auth exclues. Trois migrations, schéma de référence, historique et configurations non secrètes du commit 58acc0f inclus : **11 fichiers internes**. Aucun secret de plateforme ni paramètre SMTP privé sauvegardé. Aucun dump en clair enregistré, aucune écriture Cloud, aucun reset ou nouvel exercice de restauration. Frontend inchangé.
+
+Vérifications : ressaisie indépendante de la phrase secrète, intégrité OpenPGP, paquet déchiffré identique à l’export, empreintes internes valides. Contrôle indépendant sur disque : SHA-256 du fichier chiffré identique au reçu et au fichier d’empreinte ; seuls les trois fichiers attendus sont présents, aucun temporaire résiduel. Aucun mot de passe conservé par les scripts ou transmis à l’agent.
+
+Quatre tests synthétiques du nouvel outil réussis (manifeste, chemins Git, mauvais mot de passe et corruption), plus 81 tests applicatifs, TypeScript et build. Le premier essai avait échoué avant export sur un format CLI texte ; le script impose désormais JSON et le mode CLI approprié, vérifiés aussi hors environnement agent. Procédure courte : SAUVEGARDE_CHIFFREE.md ; restauration sur cible neuve : BACKUP.md.
+
+**À conserver** : archive, empreinte et reçu ensemble ; phrase secrète séparée dans le gestionnaire de mots de passe. **Reste à la charge de l’utilisateur** : dupliquer les trois fichiers sur un autre support privé ; une copie sur le même PC ne résiste pas à sa perte. Pas de nouvelle phase engagée. Les limites de restauration HTTP Auth et de reprise après pause décrites plus haut restent applicables.

@@ -22,7 +22,7 @@ Sur Cloud : huit tables RLS, quatorze fonctions applicatives, 47 contraintes et 
 
 Lancer `npm run dev:cloud -- --strictPort`, ou `npm run build:cloud` puis `npm run preview:cloud -- --strictPort`. Preview : `http://localhost:4173/` pour le propriétaire ; `http://127.0.0.1:4173/` pour une session d’origine distincte. Le membre a été déconnecté à la fin du test de confidentialité et peut se reconnecter normalement.
 
-**Avant usage quotidien, constituer une vraie archive chiffrée hors Supabase.** La répétition de restauration a volontairement supprimé sa copie ; elle n’est pas une sauvegarde durable. La reprise après pause est documentée mais aucune pause réelle du projet actif n’a été provoquée. La restauration SQL a été vérifiée, pas une nouvelle connexion HTTP sur une instance Auth restaurée.
+**Complément du 27 octobre 2026 : première archive durable chiffrée créée hors Git et Supabase, puis déchiffrée et vérifiée.** Procédure répétable dans `SAUVEGARDE_CHIFFREE.md`. La copie sur un second support reste à réaliser par l’utilisateur. La répétition de restauration 2C reste valable et n’a pas été relancée. La reprise après pause est documentée mais aucune pause réelle du projet actif n’a été provoquée. La restauration SQL a été vérifiée, pas une nouvelle connexion HTTP sur une instance Auth restaurée.
 
 Pas de caméra réelle, Open Food Facts, Storage privé/photos, cache privé persistant hors ligne, import utilisateur ou déploiement HTTPS public dans cette phase. Android et Safari iOS réels restent à valider. Après un scan refusé à zéro, le contexte ajustable est retiré ; le stock est resté correct et a été rétabli par une commande normale. Aucun chantier de phase suivante démarré.
 
