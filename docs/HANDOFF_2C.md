@@ -33,7 +33,7 @@ Configuration ciblée appliquée via **`config/cloud/supabase/config.toml`**, sa
 - Site URL `http://127.0.0.1:5173` ; quatre callbacks exacts `/auth/callback` sur `127.0.0.1` et `localhost`, ports 5173 et 4173, sans joker.
 - Relecture `config diff` sur ce dossier : **aucune différence de propriété déclarée**, aucune propriété non gérée signalée. Les paramètres non déclarés restent inchangés.
 
-Le push initial incluant le modèle email a été **refusé par Supabase Free**, qui interdit sa modification avec le fournisseur email intégré. La restriction API avait déjà été appliquée ; Auth a ensuite été appliquée séparément avec succès. Ce refus vient de Supabase, pas d’une revue automatique d’autorisation. Le modèle est désormais séparé dans **`config/cloud-email`** et doit être appliqué après SMTP. La CLI exige que son fichier HTML reste à l’intérieur du dossier de configuration ; un test contrôle l’égalité de sa copie avec le modèle local.
+Le push initial incluant le modèle email a été **refusé par Supabase Free**, qui interdit sa modification avec le fournisseur email intégré. La restriction API avait déjà été appliquée ; Auth a ensuite été appliquée séparément avec succès. Ce refus vient de Supabase, pas d’une revue automatique d’autorisation. Le modèle est séparé dans **`config/cloud-email`**. Après confirmation par l’utilisateur de la configuration SMTP Gmail, **son contenu et son sujet ont été appliqués avec succès**, sans modification des autres réglages. La CLI exige que son fichier HTML reste à l’intérieur du dossier de configuration ; un test contrôle l’égalité de sa copie avec le modèle local.
 
 ## Frontend et démarrage
 
@@ -91,13 +91,15 @@ Les tests locaux ne constituent pas une validation Cloud de : réception Gmail, 
 
 L’utilisateur a choisi **une boîte Gmail existante si compatible**. Les prérequis et alternatives ont été présentés : validation en deux étapes/mot de passe d’application, aucune souscription supplémentaire pour une boîte gratuite existante ; Brevo Free et Resend avec prérequis de domaine distingués. Aucune inscription fournisseur, achat de domaine ou dépense lancé.
 
-Action manuelle demandée : créer le mot de passe d’application dans le compte Gmail compatible, renseigner uniquement dans le Dashboard Supabase le serveur `smtp.gmail.com`, port 465 TLS, adresse expéditeur/identifiant de la boîte et secret d’application, puis signaler la réussite sans communiquer les valeurs. Ne pas réduire les protections du compte si cette fonction est indisponible. Après confirmation SMTP, appliquer le modèle autorisé :
+L’utilisateur a confirmé **« SMTP configuré »** après la saisie personnelle des paramètres Gmail dans le Dashboard : serveur `smtp.gmail.com`, port 465 TLS, adresse expéditeur/identifiant et secret d’application non transmis dans la conversation. Le modèle autorisé a ensuite été appliqué par :
 
 ```powershell
 npx --no-install supabase config push --workdir config/cloud-email --project-ref uznbnihmdzxdnlxanjcl
 ```
 
-Puis faire les inscriptions et confirmations réelles, parcours propriétaire/extérieur avant invitation, deux membres/RPC/polling, en utilisant exclusivement les comptes et données autorisés. Ne pas récupérer de mot de passe ou session personnelle dans une conversation.
+**En attente de validation de livraison** : le SMTP enregistré et le modèle accepté ne prouvent pas la réception d’un email. La preview a été relancée sur `127.0.0.1:4173` hors du bac à sable après un diagnostic d’inaccessibilité ; HTTP 200 et bundle Cloud vérifiés. Le port 5173 occupé n’a pas été arrêté. Un ancien onglet `127.0.0.1:4173` affichait le prototype en cache : aucune donnée locale n’a été effacée. Un nouvel onglet sur **`http://localhost:4173/`** affiche l’écran Auth actuel « Votre réserve, à deux. ». Utiliser cette origine pour la première inscription.
+
+Action manuelle demandée : créer personnellement le premier compte, recevoir le message, ouvrir sa confirmation depuis cet ordinateur et se connecter, sans encore créer la réserve ; signaler seulement réussite ou erreur, sans identifiant, mot de passe ou fragment. Poursuivre ensuite propriétaire/extérieur avant invitation, deux membres/RPC/polling, en utilisant exclusivement les comptes et données autorisés. Ne pas récupérer de mot de passe ou session personnelle dans une conversation.
 
 `BACKUP.md` documente export technique ciblé `public,private,auth` sans sessions, copie chiffrée externe, restauration transactionnelle sur cible neuve, intégrité/UUID Auth, reprise de pause et limites. **Aucune sauvegarde Cloud ni restauration complète exécutée à ce stade** ; exercice obligatoire avant usage quotidien. Aucun maintien artificiel d’activité ajouté. L’export/import utilisateur de phase 5 n’est pas livré sous couvert de cette procédure technique.
 

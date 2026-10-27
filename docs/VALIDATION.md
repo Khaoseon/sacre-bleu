@@ -17,7 +17,7 @@ Projet Supabase Free `uznbnihmdzxdnlxanjcl`, Paris, PostgreSQL 17.11 et pgcrypto
 | Profil `private`                           | Refus 406/PGRST106                                                                                 |
 | Auth public                                | Email activé, autoconfirmation désactivée                                                          |
 
-Les compteurs après recette anonyme sont nuls dans les huit tables et Auth. Les tests Cloud **avec comptes connectés**, emails, invitations, RPC et synchronisation restent à effectuer après SMTP ; aucun succès Mailpit n’est assimilé à une livraison Gmail. Supabase Free a refusé le modèle email tant que le fournisseur intégré est actif ; les réglages de base ont ensuite été appliqués séparément. Sauvegarde/reprise documentées, restauration complète non encore répétée. État détaillé : `HANDOFF_2C.md`.
+Les compteurs après recette anonyme sont nuls dans les huit tables et Auth. Les tests Cloud **avec comptes connectés**, emails, invitations, RPC et synchronisation restent à effectuer ; aucun succès Mailpit n’est assimilé à une livraison Gmail. Supabase Free a d’abord refusé le modèle email avec le fournisseur intégré ; les réglages de base ont été appliqués séparément. Après confirmation utilisateur de la configuration SMTP Gmail, le contenu et le sujet du modèle ont été appliqués avec succès. La réception et le callback réels restent à valider. Sauvegarde/reprise documentées, restauration complète non encore répétée. État détaillé : `HANDOFF_2C.md`.
 
 Les sections suivantes restent l’historique des étapes précédentes.
 
