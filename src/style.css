@@ -795,6 +795,24 @@ h1 > span {
 .camera-actions button {
   min-height: var(--touch-target);
 }
+.camera-choice {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.camera-choice select {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch-target);
+  font-size: 16px;
+  background: var(--paper);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  padding: 8px;
+}
 .camera-error {
   color: var(--danger-text);
   font-size: 13px;

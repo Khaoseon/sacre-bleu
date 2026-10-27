@@ -22,6 +22,8 @@ export function CameraScanner({
     error: '',
     torch: false,
     lit: false,
+    cameras: [],
+    cameraId: '',
   });
   useEffect(() => {
     const camera = new CameraSession(
@@ -95,6 +97,23 @@ export function CameraScanner({
             </button>
           )}
         </div>
+      )}
+      {view.cameras.length > 1 && (
+        <label className="camera-choice">
+          Caméra
+          <select
+            value={view.cameraId}
+            disabled={paused || view.status === 'starting'}
+            onChange={(event) => void session.current?.selectCamera(event.target.value)}
+          >
+            <option value="">Arrière automatique</option>
+            {view.cameras.map((camera) => (
+              <option key={camera.id} value={camera.id}>
+                {camera.label}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
     </div>
   );

@@ -23,7 +23,10 @@ function fixture() {
   const track = Object.assign(new EventTarget(), {
     readyState: 'live',
     stop: vi.fn(),
-    getCapabilities: () => ({ torch: true }),
+    getCapabilities: vi
+      .fn<() => MediaTrackCapabilities & { torch?: boolean; focusMode?: string[] }>()
+      .mockReturnValue({ torch: true }),
+    getSettings: vi.fn().mockReturnValue({ deviceId: 'rear-0' }),
     applyConstraints: vi.fn().mockResolvedValue(undefined),
   });
   const stream = {
@@ -43,6 +46,7 @@ function fixture() {
   const decoder: Decoder = { read: vi.fn().mockReturnValue(code), dispose: vi.fn() };
   const getMedia = vi.fn().mockResolvedValue(stream);
   const loadDecoder = vi.fn().mockResolvedValue(decoder);
+  const devices = vi.fn().mockResolvedValue([]);
   const runtime: CameraRuntime = {
     secure: () => true,
     getMedia,
@@ -50,6 +54,7 @@ function fixture() {
     later: (callback, delay) => setTimeout(callback, delay),
     cancel: clearTimeout,
     now: Date.now,
+    devices,
   };
   let blocked = false;
   const onCode = vi.fn();
@@ -71,6 +76,7 @@ function fixture() {
     decoder,
     getMedia,
     loadDecoder,
+    devices,
     runtime,
     onCode,
     views,
@@ -84,6 +90,149 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('cycle caméra (MediaStream simulé)', () => {
+  it('demande une meilleure définition sans minimum strict et active la mise au point continue seulement si annoncée', async () => {
+    const f = fixture();
+    f.track.getCapabilities.mockReturnValue({ torch: true, focusMode: ['manual', 'continuous'] });
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenCalledWith({
+      audio: false,
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
+    });
+    expect(f.track.applyConstraints).toHaveBeenCalledWith({
+      advanced: [{ focusMode: 'continuous' }],
+    });
+    await f.camera.toggleTorch();
+    expect(f.track.applyConstraints).toHaveBeenLastCalledWith({
+      advanced: [{ torch: true, focusMode: 'continuous' }],
+    });
+    vi.advanceTimersByTime(450);
+    expect(f.onCode).toHaveBeenCalledOnce();
+    f.camera.dispose();
+  });
+  it('conserve les lectures si le réglage autofocus est refusé', async () => {
+    const f = fixture();
+    f.track.getCapabilities.mockReturnValue({ focusMode: ['continuous'] });
+    f.track.applyConstraints.mockRejectedValue(new Error('Option unsupported'));
+    await f.camera.start();
+    vi.advanceTimersByTime(450);
+    expect(f.views.at(-1)?.status).toBe('running');
+    expect(f.onCode).toHaveBeenCalledOnce();
+    f.camera.dispose();
+  });
+  it('n’impose pas l’autofocus si le navigateur ne l’annonce pas', async () => {
+    const f = fixture();
+    f.track.getCapabilities.mockReturnValue({ focusMode: ['none'] });
+    await f.camera.start();
+    expect(f.track.applyConstraints).not.toHaveBeenCalled();
+    expect(f.views.at(-1)?.status).toBe('running');
+    f.camera.dispose();
+  });
+  it('annule un démarrage pendant le réglage de mise au point sans ressusciter le flux', async () => {
+    const f = fixture();
+    const focus = deferred<void>();
+    f.track.getCapabilities.mockReturnValue({ focusMode: ['continuous'] });
+    f.track.applyConstraints.mockReturnValue(focus.promise);
+    const opening = f.camera.start();
+    await Promise.resolve();
+    f.camera.stop();
+    focus.resolve();
+    await opening;
+    expect(f.track.stop).toHaveBeenCalledOnce();
+    expect(f.loadDecoder).not.toHaveBeenCalled();
+    expect(f.video.srcObject).toBeNull();
+    expect(vi.getTimerCount()).toBe(0);
+    f.camera.dispose();
+  });
+  it('ne liste les caméras qu’après permission et exclut microphones et identifiants vides', async () => {
+    const f = fixture();
+    const permission = deferred<MediaStream>();
+    f.getMedia.mockReturnValueOnce(permission.promise);
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'rear-0', label: 'Back camera' },
+      { kind: 'videoinput', deviceId: 'rear-1', label: '' },
+      { kind: 'videoinput', deviceId: '', label: '' },
+      { kind: 'audioinput', deviceId: 'mic', label: 'Microphone' },
+    ]);
+    const opening = f.camera.start();
+    expect(f.devices).not.toHaveBeenCalled();
+    permission.resolve(f.stream);
+    await opening;
+    expect(f.views.at(-1)).toMatchObject({
+      cameraId: 'rear-0',
+      cameras: [
+        { id: 'rear-0', label: 'Back camera' },
+        { id: 'rear-1', label: 'Caméra 2' },
+      ],
+    });
+    f.camera.dispose();
+  });
+  it('un échec de liste des objectifs ne bloque pas le lecteur', async () => {
+    const f = fixture();
+    f.devices.mockRejectedValue(new Error());
+    await f.camera.start();
+    vi.advanceTimersByTime(450);
+    expect(f.onCode).toHaveBeenCalledOnce();
+    expect(f.views.at(-1)).toMatchObject({ status: 'running', cameras: [] });
+    f.camera.dispose();
+  });
+  it('change d’objectif en fermant le premier flux et conserve le verrou anti-doublon, puis reprend le même choix', async () => {
+    const f = fixture();
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'rear-0', label: 'Back' },
+      { kind: 'videoinput', deviceId: 'rear-1', label: 'Back 1' },
+    ]);
+    await f.camera.start();
+    vi.advanceTimersByTime(450);
+    expect(f.onCode).toHaveBeenCalledOnce();
+    await f.camera.selectCamera('not-listed');
+    expect(f.getMedia).toHaveBeenCalledOnce();
+    const nextTrack = Object.assign(new EventTarget(), {
+      readyState: 'live',
+      stop: vi.fn(),
+      getCapabilities: () => ({}),
+      getSettings: () => ({ deviceId: 'rear-1' }),
+    });
+    const nextStream = {
+      getTracks: () => [nextTrack],
+      getVideoTracks: () => [nextTrack],
+    } as unknown as MediaStream;
+    f.getMedia.mockResolvedValue(nextStream);
+    await f.camera.selectCamera('rear-1');
+    expect(f.track.stop).toHaveBeenCalledOnce();
+    expect(f.getMedia).toHaveBeenLastCalledWith({
+      audio: false,
+      video: { deviceId: { exact: 'rear-1' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    });
+    expect(f.video.srcObject).toBe(nextStream);
+    expect(f.views.at(-1)?.cameraId).toBe('rear-1');
+    vi.advanceTimersByTime(1500);
+    expect(f.onCode).toHaveBeenCalledOnce();
+    f.camera.stop('paused');
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        video: expect.objectContaining({ deviceId: { exact: 'rear-1' } }),
+      }),
+    );
+    f.camera.dispose();
+  });
+  it('ignore les listes tardives d’un flux fermé', async () => {
+    const f = fixture();
+    const inventory = deferred<[]>();
+    f.devices.mockReturnValueOnce(inventory.promise);
+    await f.camera.start();
+    f.camera.stop();
+    const count = f.views.length;
+    inventory.resolve([]);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(f.views.length).toBe(count);
+    f.camera.dispose();
+  });
   it('ne demande rien à la construction, ouvre une seule caméra arrière sans audio et lit en continu', async () => {
     const f = fixture();
     expect(f.getMedia).not.toHaveBeenCalled();

@@ -51,6 +51,8 @@ Pour Chrome Android, le [transfert de port DevTools par USB](https://developer.c
 
 ## Parcours à exécuter sur chaque appareil
 
+Après le constat de flou sur Samsung, le lecteur demande la mise au point continue si le navigateur l’annonce et une définition idéale 1920×1080. Si l’image reste floue, utiliser le sélecteur **Caméra** sous l’aperçu pour essayer un autre objectif arrière ; les noms dépendent du navigateur. Ne pas chercher à agrandir le code au maximum en collant le téléphone : commencer à une distance confortable, bonne lumière, puis ajuster. Le sélecteur n’apparaît que si plusieurs caméras sont exposées. Une image nette dans l’appareil photo natif ne prouve pas que Chrome utilise le même objectif ni les mêmes réglages. La netteté après changement et les lectures physiques restent des résultats à rapporter, pas des garanties du correctif.
+
 Noter modèle, version OS, navigateur/version, date, lumière, durée approximative de lecture, résultats et anomalies. Ne pas committer de capture d’inventaire personnel, d’email ou de session. Préparer des **emballages physiques** EAN-13 et EAN-8, et UPC-A si disponible, dont les chiffres imprimés sont lisibles. Créer les fiches nécessaires par les formulaires normaux. Relever les quantités initiales et une course liée non cochée ; le second compte contrôle les résultats. Ne jamais utiliser une fixture backend pour cette recette Cloud.
 
 | Étape               | Action                                                                                                         | Résultat attendu                                                                                                                                                    |

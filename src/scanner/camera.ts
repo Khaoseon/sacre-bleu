@@ -6,6 +6,8 @@ export interface CameraView {
   error: string;
   torch: boolean;
   lit: boolean;
+  cameras: { id: string; label: string }[];
+  cameraId: string;
 }
 export interface Decoder {
   read(video: HTMLVideoElement): string | null;
@@ -18,6 +20,7 @@ export interface CameraRuntime {
   later: (callback: () => void, delay: number) => ReturnType<typeof setTimeout>;
   cancel: (timer: ReturnType<typeof setTimeout>) => void;
   now: () => number;
+  devices?: () => Promise<Pick<MediaDeviceInfo, 'deviceId' | 'label' | 'kind'>[]>;
 }
 const browserRuntime: CameraRuntime = {
   secure: () => window.isSecureContext && !!navigator.mediaDevices?.getUserMedia,
@@ -26,6 +29,7 @@ const browserRuntime: CameraRuntime = {
   later: (callback, delay) => setTimeout(callback, delay),
   cancel: (timer) => clearTimeout(timer),
   now: () => performance.now(),
+  devices: () => navigator.mediaDevices.enumerateDevices(),
 };
 
 export function cameraError(error: unknown): string {
@@ -47,7 +51,16 @@ export class CameraSession {
   private decoder: Decoder | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private detach: (() => void) | null = null;
-  private view: CameraView = { status: 'idle', error: '', torch: false, lit: false };
+  private selectedDeviceId = '';
+  private continuousFocus = false;
+  private view: CameraView = {
+    status: 'idle',
+    error: '',
+    torch: false,
+    lit: false,
+    cameras: [],
+    cameraId: '',
+  };
 
   constructor(
     private video: HTMLVideoElement,
@@ -74,6 +87,7 @@ export class CameraSession {
     this.stream = null;
     this.decoder?.dispose();
     this.decoder = null;
+    this.continuousFocus = false;
     this.video.pause();
     this.video.srcObject = null;
     // A pause, mode change or network wait is never evidence that an item left the frame.
@@ -97,9 +111,11 @@ export class CameraSession {
       const stream = await this.runtime.getMedia({
         audio: false,
         video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          ...(this.selectedDeviceId
+            ? { deviceId: { exact: this.selectedDeviceId } }
+            : { facingMode: { ideal: 'environment' } }),
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
         },
       });
       if (generation !== this.generation || this.disposed) {
@@ -110,6 +126,24 @@ export class CameraSession {
       const interrupted = () => this.stop('paused');
       const track = stream.getVideoTracks()[0];
       if (!track || track.readyState === 'ended') throw new DOMException('', 'NotReadableError');
+      let capabilities: MediaTrackCapabilities & { torch?: boolean; focusMode?: string[] } = {};
+      try {
+        capabilities = track.getCapabilities?.() ?? {};
+      } catch {
+        /* Optional API. */
+      }
+      if (capabilities.focusMode?.includes('continuous')) {
+        try {
+          // Configure before listening for mute: hardware reconfiguration may briefly mute the track.
+          await track.applyConstraints({
+            advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet],
+          });
+          if (generation === this.generation && !this.disposed) this.continuousFocus = true;
+        } catch {
+          /* An optional focus setting must not prevent manual fallback or scanning. */
+        }
+        if (generation !== this.generation || this.disposed) return;
+      }
       track.addEventListener('ended', interrupted);
       track.addEventListener('mute', interrupted);
       this.video.addEventListener('pause', interrupted);
@@ -123,21 +157,14 @@ export class CameraSession {
       this.video.srcObject = stream;
       await this.video.play();
       if (generation !== this.generation || this.disposed) return;
+      void this.discoverCameras(track, generation);
       const decoder = await this.runtime.loadDecoder();
       if (generation !== this.generation || this.disposed) {
         decoder.dispose();
         return;
       }
       this.decoder = decoder;
-      let torch = false;
-      try {
-        const capabilities = track.getCapabilities?.() as
-          (MediaTrackCapabilities & { torch?: boolean }) | undefined;
-        torch = capabilities?.torch === true;
-      } catch {
-        // Optional hardware capabilities must never prevent barcode scanning.
-      }
-      this.publish({ status: 'running', torch });
+      this.publish({ status: 'running', torch: capabilities.torch === true });
       const tick = () => {
         if (generation !== this.generation || this.disposed) return;
         try {
@@ -166,13 +193,52 @@ export class CameraSession {
     }
   }
 
+  private async discoverCameras(track: MediaStreamTrack, generation: number) {
+    if (!this.runtime.devices) return;
+    try {
+      // Enumerate only AFTER the user's camera permission; keep device identifiers in memory.
+      const devices = await this.runtime.devices();
+      if (generation !== this.generation || this.disposed) return;
+      const cameras = devices
+        .filter((device) => device.kind === 'videoinput' && device.deviceId)
+        .map((device, index) => ({
+          id: device.deviceId,
+          label: device.label || `Caméra ${index + 1}`,
+        }));
+      const cameraId = track.getSettings?.().deviceId ?? this.selectedDeviceId;
+      this.publish({ cameras, cameraId });
+    } catch {
+      /* Camera enumeration is optional and must not interrupt the live reader. */
+    }
+  }
+
+  async selectCamera(id: string) {
+    if (
+      this.disposed ||
+      this.view.status === 'starting' ||
+      (id && !this.view.cameras.some((camera) => camera.id === id))
+    )
+      return;
+    this.selectedDeviceId = id;
+    this.stop();
+    this.publish({ cameraId: id });
+    await this.start();
+  }
+
   async toggleTorch() {
     const track = this.stream?.getVideoTracks()[0];
     if (!track || !this.view.torch) return;
     const generation = this.generation;
     const lit = !this.view.lit;
     try {
-      await track.applyConstraints({ advanced: [{ torch: lit } as MediaTrackConstraintSet] });
+      await track.applyConstraints({
+        advanced: [
+          {
+            torch: lit,
+            ...(this.continuousFocus ? { focusMode: 'continuous' } : {}),
+          } as MediaTrackConstraintSet,
+        ],
+      });
       if (generation === this.generation) this.publish({ lit, error: '' });
     } catch {
       if (generation === this.generation)
