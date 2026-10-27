@@ -1,6 +1,8 @@
 # Recette privée sur iPhone et Samsung
 
-**Procédure préparée, pas encore exécutée sur téléphone.** Aucun certificat installé, pare-feu modifié, serveur LAN lancé, tunnel public ou déploiement créé par cette phase. L’accès Cloud existant est conservé ; utiliser les deux comptes déjà confirmés. Ne pas lancer les fixtures locales contre le Cloud.
+**Recette Samsung commencée le 27 octobre 2026, iPhone encore à effectuer.** Après accords distincts : certificat local installé sur le compte Windows et sur Samsung, serveur HTTPS LAN lancé ; aucun pare-feu modifié, tunnel public ou déploiement créé. Premier flux réel obtenu, correctif de cadrage en cours de confirmation. Résultats dans `VALIDATION.md`. Les instructions générales ci-dessous restent la procédure reproductible ; ne pas réinstaller une autorité déjà préparée. L’accès Cloud existant est conservé ; utiliser les deux comptes déjà confirmés. Ne pas lancer les fixtures locales contre le Cloud.
+
+La session de recette utilise une autorité isolée dans `.tmp/phone-tls/ca` et la confiance **Windows CurrentUser/Root uniquement**. Le dossier de transfert `.tmp/phone-public` contient seulement `App_reserve-recette.crt`, copie publique de `rootCA.pem` ; aucune clé privée à copier. Cette variante n’utilise pas l’autorité par défaut de mkcert. Pour la retirer à la fin, identifier son empreinte depuis ce certificat public et retirer seulement le certificat correspondant dans le magasin Windows de l’utilisateur (`certmgr.msc` → Trusted Root Certification Authorities → Certificates), ainsi que la CA installée sur le téléphone. Un `mkcert -uninstall` lancé avec le CAROOT par défaut ne vise pas cette autorité isolée. Arrêter le serveur séparément ; demander une autorisation avant de modifier le pare-feu. Les clés locales ne sont pas supprimées pendant la recette.
 
 ## Méthode commune : build Cloud sur HTTPS privé du réseau Wi-Fi
 

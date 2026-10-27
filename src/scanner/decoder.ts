@@ -6,6 +6,7 @@ import {
   FormatException,
   NotFoundException,
 } from '@zxing/library';
+import { viewfinderCrop } from './viewfinder';
 
 /** Loaded only after an explicit camera request. No images leave the browser. */
 export function createDecoder() {
@@ -24,18 +25,21 @@ export function createDecoder() {
   if (!context) throw new Error('Canvas indisponible.');
   return {
     read(video: HTMLVideoElement): string | null {
-      // Decode the same central strip shown by the viewfinder, with bounded work per frame.
-      const width = video.videoWidth;
-      const height = video.videoHeight;
-      const cropHeight = Math.min(height, width * 0.55);
-      canvas.width = Math.min(width, 960);
-      canvas.height = Math.round((cropHeight * canvas.width) / width);
+      const crop = viewfinderCrop(
+        video.videoWidth,
+        video.videoHeight,
+        video.clientWidth,
+        video.clientHeight,
+      );
+      if (!crop) return null;
+      canvas.width = crop.canvasWidth;
+      canvas.height = crop.canvasHeight;
       context.drawImage(
         video,
-        0,
-        (height - cropHeight) / 2,
-        width,
-        cropHeight,
+        crop.x,
+        crop.y,
+        crop.width,
+        crop.height,
         0,
         0,
         canvas.width,

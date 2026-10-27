@@ -744,7 +744,9 @@ h1 > span {
 .camera-preview video {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: block;
+  object-fit: cover;
+  object-position: center;
 }
 .camera-active {
   background: #111;
@@ -765,10 +767,8 @@ h1 > span {
 .camera-target {
   position: absolute;
   top: 50%;
-  left: 5%;
-  width: 90%;
-  height: 50%;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
   border: 2px solid #89ebac;
   border-radius: 8px;
   pointer-events: none;

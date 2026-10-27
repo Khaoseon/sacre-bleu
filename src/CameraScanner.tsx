@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, Flashlight, Square } from 'lucide-react';
 import { ScanRecognition } from './model';
 import { bindCameraLifecycle, CameraSession, type CameraView } from './scanner/camera';
+import { VIEWFINDER } from './scanner/viewfinder';
 
 export function CameraScanner({
   recognition,
@@ -43,7 +44,11 @@ export function CameraScanner({
         <video ref={video} muted playsInline autoPlay aria-label="Aperçu de la caméra arrière" />
         {view.status === 'running' ? (
           <>
-            <div className="camera-target" aria-hidden="true" />
+            <div
+              className="camera-target"
+              aria-hidden="true"
+              style={{ width: `${VIEWFINDER.width * 100}%`, height: `${VIEWFINDER.height * 100}%` }}
+            />
             <span className="camera-status" role="status">
               {paused ? 'Lecture en pause' : 'Placez le code au centre'}
             </span>

@@ -63,10 +63,16 @@ it.each(['4006381333931', '96385074', '036000291452', '0036000291452'])(
     };
     vi.stubGlobal('document', { createElement: () => canvas });
     const decoder = createDecoder();
-    const result = decoder.read({ videoWidth: 1280, videoHeight: 720 } as HTMLVideoElement);
+    const video = {
+      videoWidth: 1280,
+      videoHeight: 720,
+      clientWidth: 320,
+      clientHeight: 180,
+    } as HTMLVideoElement;
+    const result = decoder.read(video);
     // UPC-A uses its equivalent EAN-13 representation; an existing leading zero is never stripped.
     expect(result).toBe(code.length === 12 ? `0${code}` : code);
-    expect(context.drawImage).toHaveBeenCalled();
+    expect(context.drawImage).toHaveBeenCalledWith(video, 64, 180, 1152, 360, 0, 0, 960, 300);
     expect(canvas.width).toBe(960);
     decoder.dispose();
     expect(canvas.width + canvas.height).toBe(0);

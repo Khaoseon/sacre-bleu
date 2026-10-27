@@ -1,6 +1,6 @@
 # Scanner caméra — phase 3
 
-État au 27 octobre 2026. Implémentation et tests automatisés livrés ; **recette physique iPhone/Samsung à effectuer**. Aucun hébergement, tunnel, appel Open Food Facts ou traitement distant des images.
+État au 27 octobre 2026. Implémentation et tests automatisés livrés ; **recette Samsung commencée, iPhone encore à effectuer**. Premier flux réel obtenu ; correction du cadrage portrait à confirmer sur l’appareil, détails dans `VALIDATION.md`. Serveur HTTPS temporaire sur Wi-Fi privé lancé après accord, sans hébergement externe, tunnel, appel Open Food Facts ou traitement distant des images.
 
 ## Choix technique
 
@@ -20,7 +20,7 @@ Le module est importé après activation explicite de la caméra. Son fichier s�
 ## Session et parcours
 
 - Scanner → **Activer la caméra** : permission à ce moment seulement. Caméra arrière préférée (`facingMode: environment`), sans audio, vidéo muette, `playsInline`, `autoPlay` et appel explicite à `play()`.
-- Prévisualisation conservée entre produits. Décodage de la bande centrale, largeur plafonnée à 960 px, nouvelle tentative 150 ms après chaque traitement : pas de rendu React par image et pas de boucle concurrente.
+- Prévisualisation conservée entre produits, remplie par recadrage centré (`object-fit: cover`), sans déformation ni bandes noires ajoutées par la mise en page. Le cadre partage ses proportions avec le décodeur ; ses coordonnées sont projetées dans le flux source selon la taille réelle de la vidéo affichée, y compris après rotation. Décodage de cette seule zone, largeur plafonnée à 960 px, nouvelle tentative 150 ms après chaque traitement : pas de rendu React par image et pas de boucle concurrente.
 - Ajouter vert par défaut, Retirer rouge ; une reconnaissance déclenche le parcours `scan` existant, puis RPC et relecture cohérente en partagé. Aucun stock n’est modifié par le module caméra.
 - Le compteur traite le dernier mouvement : +/−, répétition explicite et Annuler inchangés. Le changement de mode prépare la prochaine intention et ne réinterprète pas le mouvement précédent.
 - Inconnu : détection suspendue, flux conservé, formulaire existant avec code prérempli. Validation ou annulation ferme le formulaire et reprend la détection. Le code encore présent reste verrouillé : retirer/représenter ou saisir explicitement pour le traiter. En partagé, création à zéro puis scan en Ajouter, mêmes clés/reprises ; Annuler conserve la fiche à zéro.

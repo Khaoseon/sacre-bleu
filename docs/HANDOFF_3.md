@@ -1,5 +1,7 @@
 # Transmission — phase 3 : scanner caméra
 
+**Complément de recette réelle du 27 octobre 2026 :** Samsung Android 13 / One UI 5.1, Chrome Android ; accès HTTPS privé et premier flux caméra réel confirmés par l’utilisateur. Essai USB bloqué à l’authentification RSA, abandonné. Autorité locale installée après accord dans le magasin Windows de l’utilisateur seulement, certificat public installé sur le Samsung ; clés privées ignorées et conservées sur le PC. Serveur LAN limité au Samsung lancé après accord distinct, sans modification de pare-feu. Une vidéo portrait étroite avec bandes noires a été constatée sur capture personnelle non versionnée. Correctif `object-fit: cover` et projection du cadre vers les pixels caméra, avec 13 tests géométriques ; total **138 tests / 11 fichiers**, types, builds et formatage réussis. Cadrage corrigé à confirmer physiquement ; aucune lecture de produit ou mutation de stock de test validée, ni recette iPhone. Voir la première section de `VALIDATION.md`. Les mentions « zéro essai réel » ci-dessous sont l’historique de la livraison initiale.
+
 État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, cette transmission et la section phase 3 de `VALIDATION.md`. Conserver les acquis Cloud de `HANDOFF_2C.md` et les archives chiffrées. **Implémentation livrée et vérifiée automatiquement ; recette physique iPhone/Samsung encore ouverte. Ne pas commencer Open Food Facts.**
 
 ## Implémenté
