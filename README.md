@@ -1,64 +1,68 @@
 # Réserve · App_reserve
 
-Prototype local d’une PWA de gestion de réserve alimentaire, en français et pensée pour le téléphone. **Étape 1 uniquement : aucune authentification, caméra, API Open Food Facts ou synchronisation distante.**
+PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. **La phase 2B fonctionne avec Supabase local** : inscription et confirmation email, invitation, stock, scanner simulé et courses synchronisés. Design et thèmes conservés. Aucun projet hébergé ni déploiement n’a été créé.
 
-## Installer et lancer
+## Démarrer localement
 
-Prérequis : Node.js **22.12 ou plus récent** (Node 24 LTS conseillé), npm. Depuis le dossier qui contient le projet :
+Prérequis : Node.js 22.12+ (Node 24 conseillé), npm, Docker Desktop avec moteur Linux démarré.
 
 ```powershell
 cd App_reserve
 npm ci
-npm run dev
+npm run db:start
+npm run env:local
+npm run dev -- --strictPort
 ```
 
-Ouvrir l’adresse affichée par Vite, habituellement **http://127.0.0.1:5173/**. Le serveur écoute seulement sur l’ordinateur local.
+Ouvrir [l’application](http://127.0.0.1:5173/) et [Mailpit](http://127.0.0.1:55324/). Vite écoute seulement sur la boucle locale. API : `127.0.0.1:55321` ; PostgreSQL : port `55322`. Ne pas exposer la stack de développement au réseau public.
 
-Pour tester la version compilée, le manifeste et le cache PWA :
+`env:local` génère le fichier ignoré `.env.local` avec seulement `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY`, sans afficher les clés. Une ancienne clé publique `anon` est acceptée ; une clé secrète ou `service_role` est refusée par le frontend.
 
-```powershell
-npm run build
-npm run preview
-```
+`db:start` applique les migrations d’une nouvelle installation sans injecter de démonstration. **`npm run db:reset` efface la base locale** : le réserver à une remise à zéro volontaire. `npm run db:stop` conserve les volumes.
 
-Ouvrir **http://127.0.0.1:4173/**. Le service worker est activé uniquement en production/preview ; visiter une première fois en ligne, puis recharger pour tester le cache. Les origines `:5173` et `:4173` possèdent des données distinctes.
+Pour la version compilée : `npm run build`, puis `npm run preview -- --strictPort`, et ouvrir [la preview](http://127.0.0.1:4173/). Les callbacks Auth autorisent 5173 et 4173, sur `127.0.0.1` et `localhost`. Conserver ces ports exacts pour les confirmations email. Le service worker met en cache les fichiers de l’application en preview/production, **pas les snapshots privés**.
 
-## Ce qui fonctionne
+## Deux comptes, une réserve
 
-- **Stock** : huit produits d’exemple, recherche insensible aux accents et à la casse, filtres de catégorie, tri alphabétique ou récent mémorisé, boutons +/−, création, modification, photo locale facultative et suppression confirmée. Les produits épuisés restent grisés en bas.
-- **Scanner simulé** : saisie successive de codes, modes Ajouter/Retirer, aperçu du stock et compteur d’exemplaires traités par le dernier scan. Les boutons +/− modifient ce total en mettant à jour ensemble stock et courses liées. Formulaire court pour les inconnus, reconnaissance au scan suivant, retour visuel, vibration lorsque disponible, annulation complète du dernier scan ajusté.
-- **À acheter** : articles libres ou liés au catalogue, quantités, cochage, suppression et suggestions explicites selon les seuils. Un scan Ajouter et ses ajustements déduisent le total traité des courses liées ; réduire ce total restaure la déduction correspondante. Les articles libres ne sont jamais rapprochés par leur nom.
-- **Données locales** : sauvegarde après chaque mutation, réglages et export JSON via le bouton de statut en haut ou le menu latéral. Réinitialisation confirmée de la démonstration.
-- **Base PWA** : manifeste, icônes Android/iOS et cache des fichiers de l’application. La version compilée reste utilisable sans réseau après son premier chargement.
-- **Apparence** : Automatique, Clair et Sombre dans les paramètres (bouton de statut en haut ou menu latéral). Le mode Automatique suit les changements de préférence système ; le choix manuel est immédiat et mémorisé sur cet appareil, indépendamment du stock.
+1. Sur `http://127.0.0.1:5173/`, créer un premier compte avec une adresse fictive `…@example.test` et un mot de passe de 12 caractères minimum, avec majuscule, minuscule et chiffre.
+2. Ouvrir son message dans Mailpit puis « Confirmer mon adresse email ». Le callback `/auth/callback` traite la confirmation et retire son fragment de l’URL. Créer une réserve vide.
+3. Paramètres (bouton de statut en haut ou menu latéral) → email du destinataire → générer et copier le lien valable 24 h. Un nouveau lien remplace les précédents.
+4. Utiliser un autre profil de navigateur, ou `http://localhost:5173/` pour une session distincte. Dans ce dernier cas, remplacer seulement `127.0.0.1` par `localhost` dans le lien copié ; conserver son fragment complet.
+5. Ouvrir l’invitation, se connecter ou créer le second compte avec **l’adresse invitée**. Après confirmation email dans Mailpit, **rouvrir le lien d’invitation initial**, puis accepter. Un membre déjà présent peut rouvrir sa réserve sans consommer à nouveau l’invitation.
+6. Modifier stock et courses depuis les deux sessions. Le snapshot est relu après chaque mutation ; l’autre session s’actualise sous environ cinq secondes lorsqu’elle est visible, ainsi qu’au retour au premier plan et à la reconnexion.
 
-Les quantités représentent des emballages entiers, limités à 9 999. Les photos JPEG/PNG/WebP sont limitées à 500 Ko pour préserver le stockage du navigateur. Les pictogrammes par catégorie ne sont pas des photographies commerciales.
+Mailpit capture les emails localement, sans envoi réel. Les paramètres affichent les deux membres et leurs rôles. Le secret d’invitation reste dans le fragment, est consommé en mémoire puis immédiatement retiré de l’URL, sans sauvegarde durable.
 
-## Parcours de démonstration
+## Fonctionnement partagé
 
-1. Dans Stock, modifier les quantités puis rechercher `pelees`. Vérifier que les tomates restent visibles malgré l’accent de leur nom.
-2. Scanner → code `8076802085738` : les penne passent de 3 à 4. « Scanner à nouveau » traite volontairement un autre exemplaire, même immédiatement.
-3. Code `3019081234567` : le thon passe de 0 à 1 et la quantité liée aux courses passe de 2 à 1. « Annuler » restaure les deux. Retirer à zéro affiche une erreur sans mutation.
-4. Code `1234567890128` : créer un produit inconnu. Son code sera reconnu aux prochains scans. Les boutons d’exemples remplissent la saisie ; « Valider » applique l’opération.
-5. À acheter → ajouter un article libre, modifier sa quantité, le cocher ; ajouter les pois chiches proposés sous le seuil.
-6. Recharger : stock, courses et tri sont conservés. Les données de démonstration ne sont pas réinjectées si la liste devient vide.
+- **Stock** : catalogue réel, ajout/modification/suppression, recherche insensible aux accents, catégories, tri local mémorisé, seuils facultatifs et épuisés conservés. Les boutons +/− modifient uniquement le stock. Le stock d’une fiche existante se règle avec ces boutons pour éviter d’écraser une quantité plus récente pendant l’édition des métadonnées.
+- **Scanner simulé** : saisie de codes, Ajouter/Retirer, premier mouvement automatique, compteur ajustable et annulation. Ajouter traite ensemble stock et courses liées ; réduire le total restitue exactement la déduction correspondante. Retirer respecte le stock initial. Une modification ultérieure invalide ajustement et annulation avec un message explicite. Le même code lu à moins de 1,2 seconde est ignoré ; « Scanner à nouveau » permet une répétition volontaire.
+- **Inconnu** : création d’une fiche à zéro puis mouvement identifié en Ajouter. Une interruption conserve la fiche et la reprise du mouvement ; Annuler conserve la fiche à zéro. En Retirer, création à la quantité saisie sans retrait automatique.
+- **À acheter** : articles libres ou liés, quantités, cochage, suppression, effacement des cochés et suggestions explicites. Aucun rapprochement des articles libres par leur nom.
+- **Sessions** : persistance Supabase Auth, erreurs françaises, déconnexion retirant les vues privées et demandes en attente de l’onglet. Le catalogue privé reste en mémoire.
+- **Réseau** : indicateur d’indisponibilité, dernière lecture réussie, écritures bloquées, actualisation manuelle. Une demande incertaine conserve UUID et paramètres dans `sessionStorage`, par compte/réserve. « Reprendre la demande » réutilise cette clé, même après rechargement. Aucune nouvelle écriture entre-temps ; aucun succès avant reçu serveur et snapshot courant.
+- **Apparence** : Automatique/Clair/Sombre exclusivement dans les paramètres, effet immédiat et préférence mémorisée, contrôles natifs et navigation mobile compris.
 
-Le même code soumis à moins de **1,2 seconde** d’intervalle est ignoré ; la commande explicite de répétition permet d’enchaîner les exemplaires identiques. Sous le scanner, +/− règlent le total traité par la dernière opération, au minimum 1 ; Annuler restaure son état de départ, stock et courses ensemble. Une autre mutation invalide ces ajustements et leur annulation, avec un message explicite. Les boutons de Stock continuent de régler directement le stock. Un nouveau produit en mode Retirer est créé à la quantité saisie, zéro par défaut, **sans retrait automatique**.
+Quantités entières entre 0 et 9 999. Métadonnées et quantités de courses : modifications partielles, dernière valeur explicitement envoyée gagnante. Stock : deltas transactionnels ; les ajustements de scan contrôlent aussi leurs versions.
+
+## Démonstration isolée
+
+Depuis l’écran de connexion, « Essayer la démonstration sur cet appareil » ouvre les huit exemples et la sauvegarde `app-reserve.local.v1`. Paramètres : export JSON brut, réinitialisation confirmée et sortie de la démo. Les exemples de codes n’apparaissent qu’en démo. Aucune donnée de démonstration n’est injectée dans Supabase ; aucune erreur réseau ne bascule sur ce stockage. Une sauvegarde illisible reste exportable, sans remplacement silencieux.
+
+Les photos locales JPEG/PNG/WebP de 500 Ko maximum restent disponibles en démo. En partagé, ajout de photos désactivé en attendant Storage privé ; les références `photo_path` sont préservées sans présenter une photo locale comme synchronisée. Aucun bucket public n’existe.
 
 ## Architecture
 
-React et TypeScript strict pour les vues et formulaires, Vite pour le développement et la compilation, `vite-plugin-pwa` pour le manifeste et Workbox. Styles CSS sans bibliothèque d’interface ; Lucide fournit les pictogrammes. Aucun routeur ou gestionnaire d’état supplémentaire n’est nécessaire pour trois vues.
+- `src/Root.tsx` : source active, session, confirmation, création de réserve et partage.
+- `src/App.tsx`, `components.tsx` : écrans existants et formulaires ; `AppearanceSettings.tsx` : réglage commun du thème.
+- `src/backend/client.ts`, `auth.ts`, `adapter.ts`, `errors.ts` : SDK officiel typé, Auth, lectures/RPC et erreurs françaises.
+- `src/backend/store.ts`, `usePantry.ts` : snapshot confirmé en mémoire, journal de reprise, scan et polling avec nettoyage des écouteurs.
+- `src/backend/contracts.ts`, `database.generated.ts` : port métier et types générés depuis PostgreSQL ; régénérer ces derniers plutôt que les éditer manuellement.
+- `src/model.ts`, `storage.ts`, `demo.ts` : règles pures et démo ; recherche/tri/suggestions réutilisés sur la projection partagée.
+- `src/theme.css`, `theme.ts`, `public/theme-init.js` : couleurs centralisées et initialisation avant rendu.
+- `supabase/migrations/` : trois migrations 2A conservées, RLS et RPC transactionnelles/idempotentes ; `supabase/templates/confirmation.html` : confirmation locale.
 
-- `src/model.ts` : modèles et règles métier pures (stock, courses, suggestions, recherche/tri, annulation).
-- `src/storage.ts` : lecture, validation et écriture versionnées de la sauvegarde locale.
-- `src/demo.ts` : données d’exemple reproductibles.
-- `src/components.tsx` : composants accessibles et formulaire produit.
-- `src/App.tsx` : navigation, vues et orchestration des mutations.
-- `src/style.css` : styles et adaptations mobile.
-- `src/theme.css` : palettes et valeurs visuelles partagées ; `src/theme.ts` : préférence et suivi du thème système. Le petit script `public/theme-init.js` applique le choix avant le premier rendu pour éviter un flash de thème incorrect.
-- `src/*.test.ts` : tests métier et stockage avec Vitest.
-
-Le stockage utilise une seule clé `app-reserve.local.v1` dans `localStorage`. Une mutation métier produit un nouvel état ; l’écriture de cet état doit réussir avant le rendu et le retour de succès. L’annulation restaure stock et courses ensemble. Une sauvegarde corrompue bloque les mutations et reste exportable, sans remplacement silencieux.
+Thème (`app-reserve.theme.v1`) et tri partagé (`app-reserve.sort.v1`) sont locaux. Session Auth séparée (`app-reserve.auth.v1`). Le journal `app-reserve.pending.v1:*` n’est ni un cache de catalogue ni une file d’édition hors ligne ; aucun secret d’invitation n’y figure.
 
 ## Vérifications
 
@@ -67,16 +71,22 @@ npm test
 npm run typecheck
 npm run build
 npm run format:check
+# Supabase local démarré :
+npm run test:shared
+npm run test:db
+npm run test:db:concurrency
+npm run test:db:api
+npm run db:lint
 ```
 
-`npm run format` reformate les sources. Les versions exactes et le fichier de verrouillage rendent l’installation reproductible. Le compte rendu des parcours manuels est dans [docs/VALIDATION.md](docs/VALIDATION.md).
+`test:shared` automatise deux comptes avec SDK, emails Mailpit, confirmation depuis un client neuf, invitation, mouvements concurrents, scans et reprise après réponse perdue. Les fixtures refusent les services distants et nettoient uniquement leurs propres comptes/réserves. Le test historique `test:db:api` confirme ses comptes par SQL ; le test partagé valide la livraison réelle. Après modification de migration uniquement : base locale volontairement vierge, tests backend puis `npm run db:types`.
+
+Résultats dans [docs/VALIDATION.md](docs/VALIDATION.md). Transmission : [docs/HANDOFF_2B.md](docs/HANDOFF_2B.md).
 
 ## Limites et suite
 
-La persistance de démonstration est **propre au navigateur et à l’origine**, sans compte ni réserve partagée. Elle peut être effacée avec les données du navigateur. Un export JSON brut est disponible ; sa restauration guidée est prévue ultérieurement. Ne pas y stocker des données irremplaçables sans sauvegarde.
+Pas de cloud, déploiement, caméra, Open Food Facts ou Storage privé complet. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’export/restauration partagé ou de gestion avancée des membres. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
 
-L’écoute d’événements `storage` actualise les autres onglets et la révision détecte des écritures périmées. Ce mécanisme n’est **pas une transaction entre onglets ou appareils** : utiliser un seul onglet pour modifier la réserve. Les transactions et clés d’idempotence du futur serveur remplaceront ce mécanisme.
+Polling adapté à deux membres et une petite réserve ; Realtime désactivé. Effacer plusieurs cochés applique des commandes individuelles reprises séparément, sans transaction globale du lot. Android et Safari iOS réels restent à valider ; une largeur mobile émulée ne valide pas l’installation PWA.
 
-L’installation Android/iOS et la caméra nécessiteront une origine HTTPS accessible au téléphone. `localhost` est accepté comme contexte sûr sur l’ordinateur, mais l’adresse IP d’un PC en HTTP ne suffit pas. Aucun hébergement ni certificat n’est créé à cette étape. Une validation réelle sur Android et Safari iOS reste nécessaire.
-
-Prochaine étape : évaluer les parcours sur téléphone, puis mettre en place Supabase et les opérations atomiques privées après validation du prototype. Voir [docs/SPEC.md](docs/SPEC.md) et [docs/PLAN.md](docs/PLAN.md).
+Supabase Cloud nécessitera une demande distincte : revue migrations/RLS et sauvegardes, Auth/SMTP et URLs HTTPS exactes, modèle de confirmation, clé publique frontend, tests à deux identités et procédure de restauration. Aucun secret serveur dans `VITE_*`. Voir [docs/BACKEND.md](docs/BACKEND.md) et [docs/PLAN.md](docs/PLAN.md). Ne pas commencer la phase suivante sans validation de son périmètre.

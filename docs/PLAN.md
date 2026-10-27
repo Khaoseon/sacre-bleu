@@ -10,6 +10,22 @@ Critères : démarrage local ; navigation ; boutons réellement fonctionnels ; a
 
 ## Étape 2 — Réserve partagée privée avec Supabase
 
+### Phase 2A — Backend et sécurité : réalisée et testée localement
+
+Trois migrations PostgreSQL, RLS et privilèges explicites, comptes Auth vérifiés, invitations ciblées/hachées/expirables, capacité de deux membres, catalogue distinct du stock, commandes de courses et transactions idempotentes de stock/scanner. Corrections et annulations compensatrices contrôlent les révisions sans restaurer un snapshot global. Aucune donnée de démonstration n’est injectée et aucun projet hébergé n’est créé.
+
+Validation exécutée : remise à zéro locale sans seed puis migrations réussies, 80 assertions pgTAP, 6 tests multi-connexions et 1 parcours réel Auth/API ; linter Supabase sans erreur. Types TypeScript générés depuis la base et port d’accès préparé. Détails, commandes et limites dans `BACKEND.md`. La livraison de confirmation email et les callbacks UI restent à tester en 2B ; les fixtures API confirment leurs utilisateurs par SQL.
+
+### Phase 2B — Intégration des écrans : finalisée localement
+
+Sessions Auth persistées, inscription/confirmation email via Mailpit, création d’une réserve vide, invitation et deux membres dans les paramètres. Adaptateur SDK officiel conforme à `ReserveBackend` ; les trois écrans utilisent exclusivement les RPC en mode partagé. Démonstration explicitement séparée, sans import automatique ni double écriture.
+
+Snapshot relu après mutation, polling toutes les cinq secondes lorsque l’application est visible, retour au premier plan/reconnexion et actualisation manuelle. Journal de demande incertaine en `sessionStorage`, isolé par compte/réserve, mêmes clés à la reprise ; aucune écriture hors ligne. Données privées en mémoire, retirées à la déconnexion. Une révision ultérieure invalide corrections/annulations du scan. Thème et tri locaux, photos partagées désactivées et références `photo_path` préservées.
+
+Validation : parcours réel automatisé à deux comptes avec emails Mailpit et confirmation depuis un client neuf ; UI sur deux origines, scans 1 → 5 → 3 → annulation, panne réelle de l’API et reprise après rechargement sans double mouvement, thèmes mobiles et confidentialité à la déconnexion. Résultats détaillés dans `VALIDATION.md`, transmission dans `HANDOFF_2B.md`.
+
+Limites : pas de cache privé persistant après fermeture, de file d’édition hors ligne, de Storage complet, de restauration partagée ni de validation sur téléphones réels. Le passage à Cloud nécessite une intervention distincte. Aucune phase 2C ou 3 n’est commencée. Les paragraphes suivants rappellent les critères de l’étape 2 et ne demandent pas de recréer le backend déjà livré.
+
 Après validation explicite de l’étape 1, préparer le schéma, les migrations et les opérations avant de créer des ressources. Prévoir deux comptes individuels, réserves, membres, invitation à usage unique et droits d’accès RLS. Pas de clé de service dans le client.
 
 Implémenter les mouvements de stock transactionnels côté serveur avec identifiant d’opération unique. Un scan Ajouter et la déduction de la quantité aux courses sont validés ensemble. L’annulation devient une opération compensatrice, sans restauration globale d’un état ancien. Adapter le dépôt de données et afficher les statuts de synchronisation réels.

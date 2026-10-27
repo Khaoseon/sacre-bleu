@@ -1,6 +1,6 @@
 # Spécification produit — App_reserve
 
-Exigences fonctionnelles d’origine conservées ci-dessous. Le périmètre actuellement réalisé est uniquement l’étape 1 locale, défini après ces exigences.
+Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. Le mode démo reste explicitement isolé. Aucun projet hébergé ni déploiement ; caméra et Open Food Facts restent futurs.
 
 ## Contexte du produit
 
@@ -178,3 +178,23 @@ Le thème s’applique à tous les écrans, formulaires, modales, navigation mob
 - Export JSON brut disponible. La restauration guidée et la procédure Supabase complète appartiennent à une étape ultérieure.
 
 Voir `PLAN.md` pour les étapes futures et `VALIDATION.md` pour les vérifications effectuées.
+
+## Backend de phase 2A
+
+Le schéma PostgreSQL distingue catalogue et stock, limite les réserves à deux membres et impose la visibilité par appartenance via RLS. Les clients n’écrivent pas directement les tables : les RPC vérifient Auth, les droits, les bornes et les dépendances, puis traitent ensemble stock, courses et reçu d’idempotence.
+
+Les invitations ciblent un email Auth vérifié, expirent après 24 h, n’ajoutent qu’un membre ordinaire et ne sont consommables qu’une fois. Le secret n’est jamais conservé en clair dans les tables ou reçus ; sa création ne le retourne qu’une seule fois. Une nouvelle création révoque les anciennes invitations encore utilisables.
+
+Une clé est réutilisée seulement pour rejouer la même intention. Les ajustements d’un scan transmettent son identifiant, sa dernière version et un total absolu ; Annuler applique une compensation ciblée. Une modification de réserve postérieure invalide corrections/annulations et doit produire un refus explicite, jamais écraser des données récentes. Les replays retournent leur reçu historique ; le futur client doit relire le snapshot courant avant affichage.
+
+Ces règles serveur sont utilisées par les écrans partagés, sans double source de vérité. Une fiche inconnue créée à stock zéro reçoit ensuite un mouvement identifié ; son annulation compensatrice conserve la fiche à zéro. API, références photos privées futures, garanties et limites sont détaillées dans `BACKEND.md`.
+
+### Précisions de la phase 2B locale
+
+Auth gère les sessions persistées et la confirmation email obligatoire. Les invitations ciblées se partagent par lien temporaire avec secret dans le fragment, consommé en mémoire puis retiré immédiatement de l’URL. Après inscription et confirmation, rouvrir le lien initial pour accepter ; un membre déjà présent peut rouvrir sa réserve sans consommer à nouveau l’invitation.
+
+Les écrans partagés affichent un snapshot confirmé. Une mutation RPC est suivie d’une relecture ; une demande incertaine conserve UUID et paramètres en `sessionStorage` par compte/réserve et bloque toute nouvelle écriture jusqu’à reprise. Polling de cinq secondes lorsque l’application est visible, rafraîchissement au premier plan/reconnexion. Les échecs affichent la dernière lecture réussie ; aucune bascule silencieuse vers la démo.
+
+Les boutons Stock sont indépendants des courses et du compteur de scan. L’édition d’une fiche existante porte sur ses métadonnées ; son stock se règle avec les boutons, sans écraser une quantité plus récente. Les modifications manuelles de courses/métadonnées sont partielles, dernière valeur explicitement envoyée gagnante.
+
+Thème et tri locaux. Aucun catalogue privé sauvegardé durablement ; consultation pendant une panne limitée au snapshot en mémoire. Déconnexion : vues privées et demandes de reprise retirées. Photos partagées désactivées en attendant Storage privé ; références `photo_path` préservées. La restauration globale décrite pour le prototype concerne uniquement la démo ; les annulations partagées compensent les mouvements côté serveur.

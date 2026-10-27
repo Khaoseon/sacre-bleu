@@ -6,7 +6,7 @@ import {
   packageLabel,
   type Editor,
 } from './components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Archive,
   ArrowDown,
@@ -51,7 +51,8 @@ import {
 } from './model';
 import { demo } from './demo';
 import { load, persist, STORAGE_KEY } from './storage';
-import { useThemePreference, type ThemePreference } from './theme';
+import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
+import { snapshotState, type SharedPantryStore, type SharedView } from './backend/store';
 
 type Page = 'stock' | 'scanner' | 'shopping';
 function initial() {
@@ -66,11 +67,32 @@ function initial() {
   }
 }
 
-export default function App() {
-  const theme = useThemePreference();
-  const [boot] = useState(initial);
-  const [state, setState] = useState(boot.state);
+export default function App({
+  theme,
+  shared,
+  accountSettings,
+  onExitDemo,
+}: {
+  theme: ThemeController;
+  shared?: { store: SharedPantryStore; view: SharedView };
+  accountSettings?: ReactNode;
+  onExitDemo?: () => void;
+}) {
+  const [boot] = useState(() =>
+    shared ? { state: snapshotState(shared.view.snapshot!, 'name'), error: '' } : initial(),
+  );
+  const [localState, setState] = useState(boot.state);
+  const [sort, setSort] = useState<State['sort']>(() => {
+    try {
+      return localStorage.getItem('app-reserve.sort.v1') === 'recent' ? 'recent' : 'name';
+    } catch {
+      return 'name';
+    }
+  });
+  const state = shared ? snapshotState(shared.view.snapshot!, sort) : localState;
   const current = useRef(state);
+  if (shared) current.current = state;
+  const locked = !!shared && !shared.store.writable;
   const [bootError, setBootError] = useState(boot.error);
   const [page, setPage] = useState<Page>('stock');
   const [query, setQuery] = useState('');
@@ -82,9 +104,11 @@ export default function App() {
   const [feedback, setFeedback] = useState<{ text: string; error?: boolean } | null>(null);
   const lastError = useRef('');
   const [undo, setUndo] = useState<{ before: State; revision: number } | null>(null);
-  const [lastScan, setLastScan] = useState<ScanOperation | null>(null);
+  const [localScan, setLastScan] = useState<ScanOperation | null>(null);
+  const lastScan = shared ? shared.view.scan : localScan;
   const scanContext = useRef<ScanOperation | null>(null);
-  const [scanInvalidation, setScanInvalidation] = useState('');
+  const [localInvalidation, setScanInvalidation] = useState('');
+  const scanInvalidation = shared ? shared.view.scanInvalidation : localInvalidation;
   const [mode, setMode] = useState<1 | -1>(1);
   const [code, setCode] = useState('');
   const [lastProductId, setLastProductId] = useState<string | null>(null);
@@ -95,7 +119,25 @@ export default function App() {
   const [shoppingProduct, setShoppingProduct] = useState('');
   const [shoppingQuantity, setShoppingQuantity] = useState(1);
   const [online, setOnline] = useState(navigator.onLine);
+  const canUndo = shared ? !!shared.view.scan : !!undo;
+  const completion = useRef(shared?.view.completed ?? 0);
   useEffect(() => {
+    if (!shared) return;
+    const { view } = shared;
+    if (view.busy) setFeedback(null);
+    else if (view.error) setFeedback({ text: view.error, error: true });
+    else if (view.notice) setFeedback({ text: view.notice });
+    if (view.completed !== completion.current) {
+      completion.current = view.completed;
+      if (view.completionLabel === 'Produit enregistré.') {
+        setEditor(null);
+        setCode('');
+      }
+      if (view.completionLabel === 'Produit supprimé.') setDeleting(null);
+    }
+  }, [shared?.view.error, shared?.view.notice, shared?.view.completed, shared?.view.busy]);
+  useEffect(() => {
+    if (shared) return;
     const network = () => setOnline(navigator.onLine);
     const sync = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY && e.key !== null) return;
@@ -123,7 +165,7 @@ export default function App() {
       window.removeEventListener('online', network);
       window.removeEventListener('offline', network);
     };
-  }, []);
+  }, [shared?.store]);
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [page]);
@@ -144,6 +186,8 @@ export default function App() {
     undoable: boolean | State = false,
   ) {
     try {
+      if (shared)
+        throw new Error('Cette modification doit être confirmée par la réserve partagée.');
       if (bootError)
         throw new Error(
           'Exportez ou réinitialisez la sauvegarde illisible avant de modifier les données.',
@@ -177,9 +221,14 @@ export default function App() {
     }
   }
   function change(p: Product, delta: 1 | -1) {
+    if (shared) {
+      void shared.store.changeStock(p, delta);
+      return;
+    }
     commit((s) => changeStock(s, p.id, delta), `${p.name} · quantité mise à jour`);
   }
-  function scan(raw: string, repeat = false) {
+  async function scan(raw: string, repeat = false) {
+    if (shared && !shared.store.writable) return;
     const barcode = raw.trim();
     if (!/^\d{4,32}$/.test(barcode)) {
       setFeedback({ text: 'Saisissez un code de 4 à 32 chiffres.', error: true });
@@ -194,6 +243,16 @@ export default function App() {
     const p = current.current.products.find((p) => p.barcode === barcode);
     if (!p) {
       setEditor({ barcode, fromScan: true, mode });
+      return;
+    }
+    if (shared) {
+      if (await shared.store.scanProduct(p.id, mode)) {
+        lastRead.current = { code: barcode, time: Date.now() };
+        setLastCode(barcode);
+        setCode('');
+        navigator.vibrate?.(45);
+        input.current?.focus();
+      }
       return;
     }
     let operation: ScanOperation;
@@ -218,6 +277,10 @@ export default function App() {
     }
   }
   function adjustLastScan(delta: 1 | -1) {
+    if (shared) {
+      void shared.store.adjustScan(delta);
+      return;
+    }
     const operation = scanContext.current;
     if (!operation) return;
     let adjusted: ScanOperation;
@@ -236,6 +299,10 @@ export default function App() {
     }
   }
   function undoScan() {
+    if (shared) {
+      void shared.store.undoScan();
+      return;
+    }
     if (!undo) return;
     const previous = undo;
     if (
@@ -265,7 +332,36 @@ export default function App() {
   const low = suggestions(state);
   const remaining = state.shopping.filter((i) => !i.checked);
   const checked = state.shopping.filter((i) => i.checked);
-  const lastProduct = state.products.find((p) => p.id === lastProductId);
+  const lastProduct = state.products.find(
+    (p) => p.id === (shared ? shared.view.lastProductId : lastProductId),
+  );
+  const recovery = shared && (
+    <div
+      className={`sync-message ${shared.view.error ? 'sync-error' : ''}`}
+      role={shared.view.error ? 'alert' : 'status'}
+    >
+      <span>
+        {shared.view.busy
+          ? 'Enregistrement en cours…'
+          : shared.view.error ||
+            (shared.view.status === 'ready'
+              ? 'Réserve synchronisée.'
+              : 'Dernier stock connu · actualisation nécessaire.')}
+        {shared.view.syncedAt && shared.view.status !== 'ready' && (
+          <small>
+            Dernière lecture réussie à {new Date(shared.view.syncedAt).toLocaleTimeString('fr-FR')}.
+          </small>
+        )}
+      </span>
+      <button
+        className="text-button"
+        disabled={shared.view.busy || (!online && !navigator.onLine)}
+        onClick={() => void (shared.view.pending ? shared.store.resume() : shared.store.refresh())}
+      >
+        {shared.view.pending ? 'Reprendre la demande' : 'Actualiser'}
+      </button>
+    </div>
+  );
   const nav = [
     { page: 'stock' as const, label: 'Stock', icon: Archive },
     { page: 'scanner' as const, label: 'Scanner', icon: ScanLine },
@@ -292,7 +388,12 @@ export default function App() {
             )}
           </span>
         </button>
-        <Quantity name={p.name} value={p.quantity} onChange={(delta) => change(p, delta)} />
+        <Quantity
+          name={p.name}
+          value={p.quantity}
+          locked={locked}
+          onChange={(delta) => change(p, delta)}
+        />
       </article>
     );
   }
@@ -334,16 +435,17 @@ export default function App() {
         </nav>
         <div className="sidebar-bottom">
           <div className="local-tag">
-            <span /> Prototype local
+            <span /> {shared ? 'Réserve partagée' : 'Démonstration locale'}
           </div>
-          <p>Votre réserve, sur cet appareil.</p>
+          <p>{shared ? 'Votre réserve, à deux.' : 'Votre réserve, sur cet appareil.'}</p>
           <button className="settings-link" onClick={() => setSettings(true)}>
             <Settings2 size={17} /> Données et réglages
           </button>
           <div className="sidebar-footer">
             <span className="avatar">R</span>
             <div>
-              Ma réserve<small>Espace personnel</small>
+              {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
+              <small>{shared ? 'Espace partagé privé' : 'Démonstration'}</small>
             </div>
             <Leaf size={18} />
           </div>
@@ -352,15 +454,31 @@ export default function App() {
       <div className="main-shell">
         <header className="topbar">
           <span>
-            <span className="topbar-dot" /> Ma réserve
+            <span className="topbar-dot" /> {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
           </span>
           <button className="local-button" onClick={() => setSettings(true)}>
             <span className="status-dot" />
-            {online ? 'Enregistré sur cet appareil' : 'Hors ligne · données locales'}
+            {shared
+              ? shared.view.busy
+                ? 'Enregistrement…'
+                : shared.view.pending
+                  ? 'Demande à vérifier'
+                  : shared.view.status === 'ready'
+                    ? 'Synchronisé'
+                    : 'Actualisation nécessaire'
+              : online
+                ? 'Enregistré sur cet appareil'
+                : 'Hors ligne · données locales'}
             <CircleHelp size={15} />
           </button>
         </header>
         <main id="main-content">
+          {shared &&
+            (shared.view.error ||
+              shared.view.busy ||
+              shared.view.status !== 'ready' ||
+              shared.view.pending) &&
+            recovery}
           {bootError && (
             <div role="alert" className="storage-error">
               {bootError} <button onClick={() => setSettings(true)}>Gérer les données</button>
@@ -374,7 +492,7 @@ export default function App() {
                     Votre stock<span>.</span>
                   </h1>
                 </div>
-                <button className="primary-button" onClick={() => setEditor({})}>
+                <button className="primary-button" disabled={locked} onClick={() => setEditor({})}>
                   <Plus size={19} />
                   <span>Ajouter un produit</span>
                 </button>
@@ -441,7 +559,14 @@ export default function App() {
                     value={state.sort}
                     onChange={(e) => {
                       const sort = e.target.value as State['sort'];
-                      commit((s) => ({ ...s, sort }));
+                      if (shared) {
+                        try {
+                          localStorage.setItem('app-reserve.sort.v1', sort);
+                          setSort(sort);
+                        } catch {
+                          setFeedback({ text: 'Impossible de mémoriser le tri.', error: true });
+                        }
+                      } else commit((s) => ({ ...s, sort }));
                     }}
                   >
                     <option value="name">Nom A → Z</option>
@@ -584,6 +709,7 @@ export default function App() {
                       <button
                         className={mode === 1 ? 'primary-button' : 'primary-button red'}
                         type="submit"
+                        disabled={locked}
                       >
                         <ScanLine size={19} /> Valider
                       </button>
@@ -603,8 +729,15 @@ export default function App() {
                         name={lastProduct.name}
                         value={lastScan?.quantity ?? 0}
                         zeroAllowed={false}
-                        max={lastScan ? scanQuantityLimit(lastScan) : 0}
+                        max={
+                          shared
+                            ? (shared.view.scan?.limit ?? 0)
+                            : localScan
+                              ? scanQuantityLimit(localScan)
+                              : 0
+                        }
                         disabled={!lastScan}
+                        locked={locked}
                         increaseLabel="Augmenter la quantité du dernier scan"
                         decreaseLabel="Réduire la quantité du dernier scan"
                         onChange={adjustLastScan}
@@ -620,11 +753,15 @@ export default function App() {
                             'Produit créé sans mouvement. Scannez à nouveau pour ajuster une quantité traitée.'}
                         </p>
                       )}
-                      <button className="secondary-button" onClick={() => scan(lastCode, true)}>
+                      <button
+                        className="secondary-button"
+                        disabled={locked}
+                        onClick={() => scan(lastProduct.barcode ?? lastCode, true)}
+                      >
                         <ScanLine size={17} /> Scanner à nouveau
                       </button>
-                      {undo && (
-                        <button className="text-button" onClick={undoScan}>
+                      {canUndo && (
+                        <button className="text-button" disabled={locked} onClick={undoScan}>
                           <Undo2 size={16} /> Annuler la dernière opération
                         </button>
                       )}
@@ -636,28 +773,30 @@ export default function App() {
                       <p>Son stock actualisé apparaîtra ici après validation.</p>
                     </section>
                   )}
-                  <section className="demo-codes">
-                    <div className="section-eyebrow">ESSAYER AVEC LA DÉMO</div>
-                    {[
-                      { name: 'Penne rigate', code: '8076802085738' },
-                      { name: 'Thon au naturel', code: '3019081234567' },
-                      { name: 'Produit inconnu', code: '1234567890128' },
-                    ].map((c) => (
-                      <button
-                        key={c.code}
-                        onClick={() => {
-                          setCode(c.code);
-                          input.current?.focus();
-                        }}
-                      >
-                        <span>
-                          {c.name}
-                          <small>{c.code}</small>
-                        </span>
-                        <ArrowLeft size={16} />
-                      </button>
-                    ))}
-                  </section>
+                  {!shared && (
+                    <section className="demo-codes">
+                      <div className="section-eyebrow">ESSAYER AVEC LA DÉMO</div>
+                      {[
+                        { name: 'Penne rigate', code: '8076802085738' },
+                        { name: 'Thon au naturel', code: '3019081234567' },
+                        { name: 'Produit inconnu', code: '1234567890128' },
+                      ].map((c) => (
+                        <button
+                          key={c.code}
+                          onClick={() => {
+                            setCode(c.code);
+                            input.current?.focus();
+                          }}
+                        >
+                          <span>
+                            {c.name}
+                            <small>{c.code}</small>
+                          </span>
+                          <ArrowLeft size={16} />
+                        </button>
+                      ))}
+                    </section>
+                  )}
                 </aside>
               </div>
             </>
@@ -681,14 +820,20 @@ export default function App() {
               </div>
               <form
                 className="shopping-add"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   const p = state.products.find((p) => p.id === shoppingProduct);
                   if (
-                    commit(
-                      (s) => addShopping(s, p?.name ?? shoppingName, shoppingQuantity, p?.id),
-                      'Article ajouté aux courses.',
-                    )
+                    shared
+                      ? await shared.store.addShopping(
+                          p?.name ?? shoppingName,
+                          shoppingQuantity,
+                          p?.id,
+                        )
+                      : commit(
+                          (s) => addShopping(s, p?.name ?? shoppingName, shoppingQuantity, p?.id),
+                          'Article ajouté aux courses.',
+                        )
                   ) {
                     setShoppingName('');
                     setShoppingProduct('');
@@ -736,7 +881,7 @@ export default function App() {
                     onChange={(e) => setShoppingQuantity(Number(e.target.value))}
                   />
                 </label>
-                <button type="submit" className="primary-button">
+                <button type="submit" className="primary-button" disabled={locked}>
                   <Plus size={18} /> Ajouter
                 </button>
               </form>
@@ -752,19 +897,22 @@ export default function App() {
                         className="check-item"
                         aria-label={`${item.checked ? 'Décocher' : 'Cocher'} ${item.name}`}
                         aria-pressed={item.checked}
+                        disabled={locked}
                         onClick={() =>
-                          commit((s) => ({
-                            ...s,
-                            shopping: s.shopping.map((i) =>
-                              i.id === item.id
-                                ? {
-                                    ...i,
-                                    checked: !i.checked,
-                                    quantity: !i.checked ? i.quantity : Math.max(1, i.quantity),
-                                  }
-                                : i,
-                            ),
-                          }))
+                          shared
+                            ? void shared.store.updateShopping(item.id, { checked: !item.checked })
+                            : commit((s) => ({
+                                ...s,
+                                shopping: s.shopping.map((i) =>
+                                  i.id === item.id
+                                    ? {
+                                        ...i,
+                                        checked: !i.checked,
+                                        quantity: !i.checked ? i.quantity : Math.max(1, i.quantity),
+                                      }
+                                    : i,
+                                ),
+                              }))
                         }
                       >
                         {item.checked && <Check size={17} />}
@@ -782,29 +930,38 @@ export default function App() {
                         name={item.name}
                         value={item.quantity}
                         zeroAllowed={false}
+                        locked={locked}
                         onChange={(delta) =>
-                          commit((s) => ({
-                            ...s,
-                            shopping: s.shopping.map((i) =>
-                              i.id === item.id
-                                ? {
-                                    ...i,
-                                    quantity: Math.max(1, i.quantity + delta),
-                                    checked: false,
-                                  }
-                                : i,
-                            ),
-                          }))
+                          shared
+                            ? void shared.store.updateShopping(item.id, {
+                                quantity: Math.max(1, item.quantity + delta),
+                                checked: false,
+                              })
+                            : commit((s) => ({
+                                ...s,
+                                shopping: s.shopping.map((i) =>
+                                  i.id === item.id
+                                    ? {
+                                        ...i,
+                                        quantity: Math.max(1, i.quantity + delta),
+                                        checked: false,
+                                      }
+                                    : i,
+                                ),
+                              }))
                         }
                       />
                       <button
                         className="icon-button remove-item"
                         aria-label={`Supprimer ${item.name} des courses`}
+                        disabled={locked}
                         onClick={() =>
-                          commit((s) => ({
-                            ...s,
-                            shopping: s.shopping.filter((i) => i.id !== item.id),
-                          }))
+                          shared
+                            ? void shared.store.deleteShopping(item.id)
+                            : commit((s) => ({
+                                ...s,
+                                shopping: s.shopping.filter((i) => i.id !== item.id),
+                              }))
                         }
                       >
                         <Trash2 size={17} />
@@ -823,11 +980,14 @@ export default function App() {
               {checked.length > 0 && (
                 <button
                   className="text-button clear-checked"
+                  disabled={locked}
                   onClick={() =>
-                    commit(
-                      (s) => ({ ...s, shopping: s.shopping.filter((i) => !i.checked) }),
-                      'Articles cochés supprimés.',
-                    )
+                    shared
+                      ? void shared.store.clearChecked()
+                      : commit(
+                          (s) => ({ ...s, shopping: s.shopping.filter((i) => !i.checked) }),
+                          'Articles cochés supprimés.',
+                        )
                   }
                 >
                   <CheckCheck size={17} /> Effacer les articles cochés ({checked.length})
@@ -855,11 +1015,14 @@ export default function App() {
                       </div>
                       <button
                         className="secondary-button"
+                        disabled={locked}
                         onClick={() =>
-                          commit(
-                            (s) => addShopping(s, p.name, quantity, p.id),
-                            `${p.name} ajouté aux courses.`,
-                          )
+                          shared
+                            ? void shared.store.addShopping(p.name, quantity, p.id)
+                            : commit(
+                                (s) => addShopping(s, p.name, quantity, p.id),
+                                `${p.name} ajouté aux courses.`,
+                              )
                         }
                       >
                         <Plus size={16} /> Ajouter {quantity}
@@ -876,8 +1039,12 @@ export default function App() {
           )}
         </main>
         <footer className="main-footer">
-          <span>Données locales sur cet appareil.</span>
-          <span>réserve · version locale 0.1</span>
+          <span>
+            {shared
+              ? 'Réserve privée · actualisation toutes les 5 s.'
+              : 'Données de démonstration sur cet appareil.'}
+          </span>
+          <span>réserve · {shared ? 'partagée' : 'démo'} 0.2</span>
         </footer>
       </div>
       <nav className="mobile-nav" aria-label="Navigation mobile">
@@ -904,7 +1071,11 @@ export default function App() {
         >
           {feedback.error ? <CircleHelp size={18} /> : <Check size={18} />}
           <span>{feedback.text}</span>
-          {undo && !feedback.error && <button onClick={undoScan}>Annuler</button>}
+          {canUndo && !feedback.error && (
+            <button disabled={locked} onClick={undoScan}>
+              Annuler
+            </button>
+          )}
           <button aria-label="Fermer le message" onClick={() => setFeedback(null)}>
             <X size={17} />
           </button>
@@ -913,11 +1084,30 @@ export default function App() {
       {editor && (
         <ProductForm
           editor={editor}
+          shared={!!shared}
+          blocked={locked}
+          recovery={shared && (shared.view.error || shared.view.pending) ? recovery : undefined}
           close={() => {
             setEditor(null);
             input.current?.focus();
           }}
-          onSave={(product) => {
+          onSave={async (product) => {
+            if (shared) {
+              const success = await shared.store.saveProduct(
+                product,
+                !!editor.product,
+                !!editor.fromScan,
+                editor.mode,
+              );
+              if (!success) throw new Error(shared.store.getSnapshot().error);
+              if (editor.fromScan) {
+                lastRead.current = { code: product.barcode ?? '', time: Date.now() };
+                setLastCode(product.barcode ?? '');
+                navigator.vibrate?.(45);
+              }
+              setEditor(null);
+              return true;
+            }
             const fromScan = !!editor.fromScan;
             let operation: ScanOperation | undefined;
             if (
@@ -968,6 +1158,7 @@ export default function App() {
           close={() => setDeleting(null)}
           error={feedback?.error ? feedback.text : undefined}
         >
+          {shared && recovery}
           <p className="form-note">
             La fiche « {deleting.name} » et son stock seront supprimés. Les éventuels articles de
             courses resteront comme articles libres.
@@ -984,8 +1175,13 @@ export default function App() {
             </button>
             <button
               className="danger-button filled"
-              onClick={() => {
-                if (commit((s) => deleteProduct(s, deleting.id), 'Produit supprimé.'))
+              disabled={locked}
+              onClick={async () => {
+                if (
+                  shared
+                    ? await shared.store.deleteProduct(deleting.id)
+                    : commit((s) => deleteProduct(s, deleting.id), 'Produit supprimé.')
+                )
                   setDeleting(null);
               }}
             >
@@ -996,66 +1192,51 @@ export default function App() {
       )}
       {settings && (
         <Modal
-          title="Données de cet appareil"
+          title={shared ? 'Paramètres de la réserve' : 'Données de cet appareil'}
           close={() => setSettings(false)}
           error={feedback?.error ? feedback.text : undefined}
         >
           <div className="settings-content">
-            <span className="pill">Prototype local · étape 1</span>
-            <fieldset className="theme-settings">
-              <legend>Apparence</legend>
-              <div className="theme-options">
-                {(
-                  [
-                    ['auto', 'Automatique'],
-                    ['light', 'Clair'],
-                    ['dark', 'Sombre'],
-                  ] as const
-                ).map(([value, label]) => (
-                  <label key={value}>
-                    <input
-                      type="radio"
-                      name="theme"
-                      value={value}
-                      checked={theme.preference === value}
-                      onChange={(e) => theme.chooseTheme(e.target.value as ThemePreference)}
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
-              <small>Automatique suit le thème de votre appareil.</small>
-              {theme.error && (
-                <p role="alert" className="form-error">
-                  {theme.error}
+            <span className="pill">
+              {shared ? 'Réserve partagée privée' : 'Démonstration locale'}
+            </span>
+            <AppearanceSettings theme={theme} />
+            {shared ? (
+              accountSettings
+            ) : (
+              <>
+                <p>
+                  Vos produits et votre liste sont sauvegardés dans ce navigateur. Les modifications
+                  sont disponibles hors ligne après le premier chargement de la version compilée.
                 </p>
-              )}
-            </fieldset>
-            <p>
-              Vos produits et votre liste sont sauvegardés dans ce navigateur. Les modifications
-              sont disponibles hors ligne après le premier chargement de la version compilée.
-            </p>
-            <p>
-              Le partage entre deux comptes, la caméra et la recherche Open Food Facts arrivent aux
-              prochaines étapes. Il n’y a aucune synchronisation entre appareils.
-            </p>
-            <button className="secondary-button" onClick={exportData}>
-              <Download size={17} /> Exporter les données JSON
-            </button>
-            <small>
-              L’export est une sauvegarde brute. La restauration guidée sera ajoutée à une prochaine
-              étape.
-            </small>
-            <hr />
-            <button
-              className="danger-button"
-              onClick={() => {
-                setSettings(false);
-                setResetting(true);
-              }}
-            >
-              Réinitialiser la démonstration
-            </button>
+                <p>
+                  Le partage entre deux comptes, la caméra et la recherche Open Food Facts arrivent
+                  aux prochaines étapes. Il n’y a aucune synchronisation entre appareils.
+                </p>
+                <button className="secondary-button" onClick={exportData}>
+                  <Download size={17} /> Exporter les données JSON
+                </button>
+                <small>
+                  L’export est une sauvegarde brute. La restauration guidée sera ajoutée à une
+                  prochaine étape.
+                </small>
+                <hr />
+                <button
+                  className="danger-button"
+                  onClick={() => {
+                    setSettings(false);
+                    setResetting(true);
+                  }}
+                >
+                  Réinitialiser la démonstration
+                </button>
+                {onExitDemo && (
+                  <button className="secondary-button" onClick={onExitDemo}>
+                    Quitter la démonstration
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </Modal>
       )}

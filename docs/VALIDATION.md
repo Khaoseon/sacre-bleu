@@ -1,6 +1,76 @@
-# Validation de l’étape 1
+# Validation — phases 1, 2A et 2B
+
+## Clôture 2B — 27 octobre 2026
+
+Frontend branché sur Supabase local, sans projet hébergé ni déploiement. Interface et thème existants conservés. Les sections historiques ci-dessous décrivent les validations de leur étape respective ; leurs limites ne remplacent pas le présent état 2B.
+
+| Vérification de clôture | Résultat                                                    |
+| ----------------------- | ----------------------------------------------------------- |
+| `npm test`              | 77 tests applicatifs, 6 fichiers                            |
+| `npm run test:shared`   | 1 parcours complet réel à deux comptes réussi               |
+| `npm run typecheck`     | TypeScript strict réussi                                    |
+| `npm run build`         | Compilation Vite et génération PWA réussies                 |
+| `npm run format:check`  | Réussi après formatage                                      |
+| GitHub existant         | `Khaoseon/App_reserve` confirmé **PRIVATE**, origin correct |
+
+Le test partagé a été réexécuté à la reprise car la toute dernière invocation avait été refusée avant exécution par Auto-review à cause de la limite d’utilisation. Il couvre aussi les derniers changements : références `photo_path` préservées, édition de métadonnées sans réécriture du stock, et relecture suffisante après reçu. Un test unitaire supplémentaire vérifie explicitement qu’un snapshot plus ancien que le reçu ne produit pas de succès et conserve la clé pour reprise.
+
+Build final : bundle JavaScript de 513,09 Ko minifié (148,03 Ko gzip), avertissement Vite non bloquant au seuil de 500 Ko ; optimisation du découpage différée, sans refonte de clôture. Audit des 70 fichiers destinés au commit : aucun secret ou chemin personnel détecté ; `.env.local`, outils et journaux temporaires ignorés. `git diff --check` sans erreur. Le frontend déjà ouvert a été relu à la clôture : réserve partagée synchronisée, riz et quantité serveur présents, sans réinitialisation des données ni nouvelle mutation.
+
+### Parcours automatisé réel partagé
+
+SDK officiel et mêmes adaptateur/store que l’application, contre Supabase local uniquement. Deux comptes fictifs, email réellement livré dans Mailpit, connexion non confirmée refusée, confirmation PKCE par token hash depuis un client neuf sans vérificateur d’origine, connexion puis réserve vide. Invitation ciblée, acceptation idempotente, deux membres, accès extérieur et invitation par membre non propriétaire refusés.
+
+Création visible des deux comptes ; scan Ajouter 1 → 5 : stock 5, courses 0 cochées ; réduction à 3 : courses 2 ; annulation : stock 0, courses 5. Deux incréments simultanés sans perte, Stock indépendant des courses, Retirer jusqu’au stock disponible, puis annulation ; conflit après écriture d’un autre membre explicitement refusé. Réponse perdue simulée **après commit serveur** : aucune annonce de succès, reprise même clé, exactement un mouvement. Fiche inconnue conservée à zéro après annulation, modifications des courses, suppression détachant les références, déconnexion et accès privé refusé. Les fixtures nettoient leurs propres comptes/réserves ; aucun secret imprimé ni service distant utilisé.
+
+Les 80 assertions pgTAP, 6 tests multi-connexions, 1 parcours Auth/API historique et le linter sans erreur ont également été exécutés pendant l’implémentation 2B. Ils ne sont pas répétés à la clôture : aucune migration n’a changé depuis. Les trois migrations validées de 2A n’ont pas été réécrites. Le test Auth/API historique confirme par SQL ; le test partagé ci-dessus confirme via les emails réellement reçus.
+
+### Parcours exécutés dans l’interface pendant 2B
+
+- Deux sessions distinctes sur `127.0.0.1:5173` et `localhost:5173` ; inscription, messages Mailpit, clic de confirmation et retour Auth. Invitation ouverte avant inscription, puis lien initial rouvert après confirmation, acceptation réussie ; fragment retiré de l’URL.
+- Réserve initialement vide ; création d’un riz à zéro, visible dans l’autre compte via polling ; deux membres affichés dans les paramètres.
+- Courses liées réglées à 5 ; scan 1 puis quatre + → 5 ; l’autre compte voit courses 0 cochées. Deux − → 3 ; Annuler → stock 0 et courses restaurées. Changement de thème sans invalider le scan.
+- Recherche `RIZ`, tri récent conservé et session restaurée après rechargement. Thèmes Clair et Sombre sur largeur 390 px ; formulaire sombre, contrôles natifs, épuisés et navigation mobile lisibles. Captures `screenshots/shared-mobile-light.jpg` et `screenshots/shared-mobile-dark.jpg`.
+- **Interruption réelle de PostgREST local** avec Docker, sans effacer la base : stock précédent conservé, écritures bloquées, erreur et date de dernière lecture réussie. API rétablie, page rechargée avec demande en attente ; reprise avec clé conservée, quantité augmentée exactement d’un exemplaire. Délai réseau borné à huit secondes par requête. L’autre session récupère par polling.
+- Déconnexion du membre : stock privé immédiatement retiré, toujours absent après rechargement ; écran de connexion conservé.
+
+### Refus Auto-review et limites
+
+Le lancement sur `0.0.0.0` a été refusé pour exposition réseau inutile. Il a été remplacé par un lancement sur `127.0.0.1`, sans contournement. Une invocation de `test:shared` a ensuite été refusée faute de quota d’examen automatique ; elle n’avait pas été exécutée et a réussi après reprise. Aucune action nécessaire ne reste bloquée.
+
+Pas de validation Android/Safari iOS réels, cloud, installation PWA réelle, Storage privé ou consultation privée persistante hors ligne. La suite automatisée teste SDK/adaptateur/store, sans automatiser les clics navigateur ; les parcours UI ci-dessus ont été exercés séparément. Les données de test UI locales peuvent subsister ; les tests automatisés ne les effacent pas. Aucun push effectué à la clôture. La transmission et les commandes de reprise sont dans `HANDOFF_2B.md`.
+
+## Historique des validations précédentes
 
 Vérification du 26 octobre 2026, sur Windows avec Node 24.20.0 et npm 11.19.0.
+
+## Phase 2A — Backend local et sécurité
+
+Le frontend de l’étape 1, y compris thème sombre et compteur de scan, est conservé sans changement. Dépôt propre au départ, remote `Khaoseon/App_reserve` confirmé **PRIVATE** avant intervention ; aucun projet Supabase hébergé ni déploiement n’a été créé.
+
+Environnement réellement utilisé : CLI Supabase 2.122.0 installée localement et verrouillée, Docker Engine 29.9.2, PostgreSQL 17.11. Le moteur Docker a été démarré, puis les ports 543xx réservés par Windows ont été remplacés par 553xx dans la configuration de ce projet uniquement.
+
+| Vérification backend            | Résultat exécuté                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| Migrations initiales            | 3 migrations appliquées avec succès                                                         |
+| `npm run db:reset`              | Base locale vierge recréée, 3 migrations réappliquées, aucun seed                           |
+| `npm run test:db`               | **80 assertions pgTAP réussies**, 1 fichier, transaction de test annulée                    |
+| `npm run test:db:concurrency`   | **6 tests réussis**, 2 connexions effectivement en concurrence, attente PostgreSQL observée |
+| `npm run test:db:api`           | **1 parcours Auth/Data API réussi**, 2 utilisateurs et sessions réelles                     |
+| Linter Supabase local           | Aucune erreur de schéma                                                                     |
+| `npm run db:types`              | Types publics générés depuis la base appliquée et formatés                                  |
+| Tests PWA existants             | **58 tests réussis**, 4 fichiers                                                            |
+| TypeScript, build PWA, Prettier | Réussis                                                                                     |
+
+Les tests SQL vérifient RLS/grants, comptes non vérifiés, propriétaire et membre, métadonnées de rôle non fiables, invitations ciblées/expirées/invalides/utilisées, absence de secret d’invitation en clair dans les reçus, limite de membres, accès anonyme et extérieur refusés, écritures directes interdites, codes-barres simultanément identiques dans deux réserves mais uniques dans chacune, refus d’un produit étranger par changement d’ID, catalogue et stock distincts, seuil sans ajout automatique, articles libres, ajouts/retraits et limites, répétitions idempotentes, compensations et ajustements successifs, suppression avec courses détachées et panne de courses injectée annulant aussi stock et reçu.
+
+Les tests multi-connexions exécutent ajouts simultanés, retraits au dernier emballage, requête identique concurrente, même clé avec paramètres différents, double acceptation d’invitation et refus de compensation/ajustement après la modification d’un autre membre. Le parcours HTTP vérifie réellement GoTrue, les sessions signées, RLS et les RPC via PostgREST, ainsi que l’impossibilité de promouvoir le destinataire en administrateur.
+
+Limites : dans le test Auth, l’email est confirmé **par la fixture SQL**, après vérification du refus de connexion non confirmée ; l’envoi réel, le clic et le callback d’interface ne sont pas validés de bout en bout. Aucun écran n’est connecté au backend et aucune synchronisation distante, gestion complète de Storage, export/restauration serveur ou suppression de compte n’est livrée. Le cache de démonstration du navigateur n’est pas modifié. Les fixtures SQL sont annulées et les autres tests suppriment uniquement leurs propres utilisateurs/réserves de test.
+
+Voir `BACKEND.md` pour les transactions, interfaces, commandes reproductibles et la future transition à une seule source de vérité en phase 2B.
+
+Après les tests, la base contenait zéro réserve et zéro utilisateur de fixture. La stack Supabase a été arrêtée avec `npm run db:stop`, volumes conservés ; `npm run db:start` la redémarre. Les modifications de phase 2A restent locales, sans push ni publication distante.
 
 ## Contrôles automatisés
 

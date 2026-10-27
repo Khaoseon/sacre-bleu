@@ -51,6 +51,7 @@ export function Quantity({
   zeroAllowed = true,
   max = MAX_QUANTITY,
   disabled = false,
+  locked = false,
   increaseLabel,
   decreaseLabel,
 }: {
@@ -60,6 +61,7 @@ export function Quantity({
   zeroAllowed?: boolean;
   max?: number;
   disabled?: boolean;
+  locked?: boolean;
   increaseLabel?: string;
   decreaseLabel?: string;
 }) {
@@ -68,7 +70,7 @@ export function Quantity({
       <button
         className="quantity-button"
         aria-label={decreaseLabel ?? `Retirer un ${name}`}
-        disabled={disabled || value <= (zeroAllowed ? 0 : 1)}
+        disabled={disabled || locked || value <= (zeroAllowed ? 0 : 1)}
         onClick={() => onChange(-1)}
       >
         <Minus size={17} />
@@ -79,7 +81,7 @@ export function Quantity({
       <button
         className="quantity-button"
         aria-label={increaseLabel ?? `Ajouter un ${name}`}
-        disabled={disabled || value >= max}
+        disabled={disabled || locked || value >= max}
         onClick={() => onChange(1)}
       >
         <Plus size={17} />
@@ -125,24 +127,35 @@ export function ProductForm({
   onSave,
   onDelete,
   close,
+  shared = false,
+  blocked = false,
+  recovery,
 }: {
   editor: Editor;
-  onSave: (p: Product) => boolean;
+  onSave: (p: Product) => boolean | Promise<boolean>;
   onDelete: (p: Product) => void;
   close: () => void;
+  shared?: boolean;
+  blocked?: boolean;
+  recovery?: ReactNode;
 }) {
   const p = editor.product;
+  const draftId = useRef(p?.id ?? id());
   const [photo, setPhoto] = useState(p?.photo);
   const [photoError, setPhotoError] = useState('');
   const [minimum, setMinimum] = useState(p?.minimum !== undefined);
   const [error, setError] = useState('');
   const [reading, setReading] = useState(false);
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving || blocked) return;
     const data = new FormData(event.currentTarget);
+    setSaving(true);
+    setError('');
     try {
       const product: Product = {
-        id: p?.id ?? id(),
+        id: draftId.current,
         name: String(data.get('name')),
         brand: String(data.get('brand') ?? '').trim() || undefined,
         barcode: String(data.get('barcode')).trim() || undefined,
@@ -154,9 +167,11 @@ export function ProductForm({
         minimum: minimum ? Number(data.get('minimum')) : undefined,
         updatedAt: new Date().toISOString(),
       };
-      onSave(product);
+      await onSave(product);
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setSaving(false);
     }
   }
   return (
@@ -166,6 +181,7 @@ export function ProductForm({
       }
       close={close}
     >
+      {recovery}
       {editor.fromScan && (
         <p className="form-note">
           Ce produit n’est pas encore dans votre réserve.
@@ -175,167 +191,179 @@ export function ProductForm({
         </p>
       )}
       <form onSubmit={submit} className="product-form">
-        <label>
-          Nom du produit{' '}
-          <input
-            name="name"
-            autoFocus
-            required
-            maxLength={120}
-            defaultValue={p?.name}
-            placeholder="Ex. Pois chiches"
-          />
-        </label>
-        {!editor.fromScan && (
+        <fieldset className="form-fields" disabled={blocked || saving}>
+          <label>
+            Nom du produit{' '}
+            <input
+              name="name"
+              autoFocus
+              required
+              maxLength={120}
+              defaultValue={p?.name}
+              placeholder="Ex. Pois chiches"
+            />
+          </label>
+          {!editor.fromScan && (
+            <div className="field-row">
+              <label>
+                Marque <span>facultatif</span>
+                <input
+                  name="brand"
+                  maxLength={80}
+                  defaultValue={p?.brand}
+                  placeholder="Ex. Bonduelle"
+                />
+              </label>
+              <label>
+                Catégorie
+                <select name="category" defaultValue={p?.category ?? 'Autres'}>
+                  {categories.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <div className="field-row">
             <label>
-              Marque <span>facultatif</span>
+              Conditionnement <span>facultatif</span>
               <input
-                name="brand"
-                maxLength={80}
-                defaultValue={p?.brand}
-                placeholder="Ex. Bonduelle"
+                name="size"
+                type="number"
+                min="0.01"
+                step="0.01"
+                max="99999"
+                defaultValue={p?.size}
+                placeholder="500"
               />
             </label>
             <label>
-              Catégorie
-              <select name="category" defaultValue={p?.category ?? 'Autres'}>
-                {categories.map((c) => (
-                  <option key={c}>{c}</option>
+              Unité
+              <select name="unit" defaultValue={p?.unit ?? 'g'}>
+                {units.map((u) => (
+                  <option key={u}>{u}</option>
                 ))}
               </select>
             </label>
           </div>
-        )}
-        <div className="field-row">
-          <label>
-            Conditionnement <span>facultatif</span>
-            <input
-              name="size"
-              type="number"
-              min="0.01"
-              step="0.01"
-              max="99999"
-              defaultValue={p?.size}
-              placeholder="500"
-            />
-          </label>
-          <label>
-            Unité
-            <select name="unit" defaultValue={p?.unit ?? 'g'}>
-              {units.map((u) => (
-                <option key={u}>{u}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <div className={editor.fromScan ? '' : 'field-row'}>
-          <label>
-            Quantité en stock
-            <input
-              name="quantity"
-              type="number"
-              required
-              min="0"
-              max={MAX_QUANTITY}
-              step="1"
-              defaultValue={p?.quantity ?? (editor.mode === -1 ? 0 : 1)}
-            />
-          </label>
-          {editor.fromScan ? (
-            <input type="hidden" name="barcode" value={editor.barcode} />
-          ) : (
+          <div className={editor.fromScan ? '' : 'field-row'}>
             <label>
-              Code-barres <span>facultatif</span>
+              Quantité en stock
               <input
-                name="barcode"
-                inputMode="numeric"
-                pattern="[0-9]{4,32}"
-                maxLength={32}
-                defaultValue={p?.barcode ?? editor.barcode}
-                placeholder="13 chiffres…"
+                name="quantity"
+                type="number"
+                required
+                min="0"
+                max={MAX_QUANTITY}
+                step="1"
+                readOnly={shared && !!p}
+                defaultValue={p?.quantity ?? (editor.mode === -1 ? 0 : 1)}
+              />
+            </label>
+            {editor.fromScan ? (
+              <input type="hidden" name="barcode" value={editor.barcode} />
+            ) : (
+              <label>
+                Code-barres <span>facultatif</span>
+                <input
+                  name="barcode"
+                  inputMode="numeric"
+                  pattern="[0-9]{4,32}"
+                  maxLength={32}
+                  defaultValue={p?.barcode ?? editor.barcode}
+                  placeholder="13 chiffres…"
+                />
+              </label>
+            )}
+          </div>
+          {shared && p && (
+            <small>Modifiez le stock avec les boutons + et − de l’écran Stock.</small>
+          )}
+          {!editor.fromScan && (
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={minimum}
+                onChange={(e) => setMinimum(e.target.checked)}
+              />{' '}
+              Me signaler un stock bas
+            </label>
+          )}
+          {minimum && (
+            <label>
+              Seuil minimum (emballages)
+              <input
+                name="minimum"
+                type="number"
+                required
+                min="0"
+                max={MAX_QUANTITY}
+                step="1"
+                defaultValue={p?.minimum ?? 2}
               />
             </label>
           )}
-        </div>
-        {!editor.fromScan && (
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={minimum}
-              onChange={(e) => setMinimum(e.target.checked)}
-            />{' '}
-            Me signaler un stock bas
-          </label>
-        )}
-        {minimum && (
           <label>
-            Seuil minimum (emballages)
+            Photo <span>facultatif · JPG, PNG ou WebP, 500 Ko max.</span>
             <input
-              name="minimum"
-              type="number"
-              required
-              min="0"
-              max={MAX_QUANTITY}
-              step="1"
-              defaultValue={p?.minimum ?? 2}
+              type="file"
+              disabled={shared}
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => {
+                setPhotoError('');
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (
+                  file.size > 500_000 ||
+                  !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+                ) {
+                  setPhotoError('Choisissez une image JPG, PNG ou WebP de moins de 500 Ko.');
+                  e.target.value = '';
+                  return;
+                }
+                setReading(true);
+                const reader = new FileReader();
+                reader.onload = () => {
+                  setPhoto(String(reader.result));
+                  setReading(false);
+                };
+                reader.onerror = () => {
+                  setPhotoError('Impossible de lire cette image.');
+                  setReading(false);
+                };
+                reader.readAsDataURL(file);
+              }}
             />
           </label>
-        )}
-        <label>
-          Photo <span>facultatif · JPG, PNG ou WebP, 500 Ko max.</span>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              setPhotoError('');
-              const file = e.target.files?.[0];
-              if (!file) return;
-              if (
-                file.size > 500_000 ||
-                !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-              ) {
-                setPhotoError('Choisissez une image JPG, PNG ou WebP de moins de 500 Ko.');
-                e.target.value = '';
-                return;
-              }
-              setReading(true);
-              const reader = new FileReader();
-              reader.onload = () => {
-                setPhoto(String(reader.result));
-                setReading(false);
-              };
-              reader.onerror = () => {
-                setPhotoError('Impossible de lire cette image.');
-                setReading(false);
-              };
-              reader.readAsDataURL(file);
-            }}
-          />
-        </label>
-        {photo && (
-          <div className="photo-preview">
-            <img src={photo} alt="Photo du produit" />
-            <button type="button" className="text-button" onClick={() => setPhoto(undefined)}>
-              Retirer la photo
-            </button>
-          </div>
-        )}
-        {(photoError || error) && (
-          <p role="alert" className="form-error">
-            {photoError || error}
-          </p>
-        )}
-        <footer className="form-actions">
-          {p && (
-            <button type="button" className="danger-button" onClick={() => onDelete(p)}>
-              <Trash2 size={17} /> Supprimer
-            </button>
+          {shared && <small>Ajout de photos indisponible en mode partagé pour le moment.</small>}
+          {photo && (
+            <div className="photo-preview">
+              <img src={photo} alt="Photo du produit" />
+              <button type="button" className="text-button" onClick={() => setPhoto(undefined)}>
+                Retirer la photo
+              </button>
+            </div>
           )}
-          <button className="primary-button" disabled={reading} type="submit">
-            <Check size={18} /> Enregistrer
-          </button>
-        </footer>
+          {(photoError || error) && (
+            <p role="alert" className="form-error">
+              {photoError || error}
+            </p>
+          )}
+          <footer className="form-actions">
+            {p && (
+              <button type="button" className="danger-button" onClick={() => onDelete(p)}>
+                <Trash2 size={17} /> Supprimer
+              </button>
+            )}
+            <button
+              className="primary-button"
+              disabled={reading || saving || blocked}
+              type="submit"
+            >
+              <Check size={18} /> Enregistrer
+            </button>
+          </footer>
+        </fieldset>
       </form>
     </Modal>
   );
