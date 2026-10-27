@@ -1,6 +1,6 @@
 # Scanner caméra — phase 3
 
-État au 27 octobre 2026. Implémentation et tests automatisés livrés ; **recette Samsung commencée, iPhone encore à effectuer**. Premier flux réel obtenu ; correction du cadrage portrait à confirmer sur l’appareil, détails dans `VALIDATION.md`. Serveur HTTPS temporaire sur Wi-Fi privé lancé après accord, sans hébergement externe, tunnel, appel Open Food Facts ou traitement distant des images.
+État au 27 octobre 2026. Implémentation et tests automatisés livrés ; **recette Samsung commencée, iPhone encore à effectuer**. Premier flux réel obtenu ; correction du cadrage portrait confirmée par l’utilisateur sur l’appareil, détails dans `VALIDATION.md`. Serveur HTTPS temporaire sur Wi-Fi privé lancé après accord, sans hébergement externe, tunnel, appel Open Food Facts ou traitement distant des images.
 
 ## Choix technique
 
