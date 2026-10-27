@@ -1,10 +1,10 @@
 # Réserve · App_reserve
 
-PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. **La phase 2C est validée sur Supabase Free à Paris** : confirmation email via SMTP Gmail, invitation, stock, scanner par saisie et courses synchronisés entre deux comptes. Une restauration technique a été répétée sur une cible locale vierge isolée. Le fonctionnement Supabase local de phase 2B, le design et les thèmes sont conservés. Aucun hébergement public de la PWA ; une sauvegarde externe chiffrée reste à conserver avant usage quotidien.
+PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. Supabase Cloud privé et les deux comptes de phase 2C sont conservés. **Phase 3 : scanner caméra EAN-13/EAN-8/UPC-A implémenté**, avec saisie manuelle de secours, filtre des doublons et même parcours RPC stock/courses. Validation automatisée et navigateur effectuée ; vraie caméra, iPhone et Samsung restent à valider. Aucun hébergement public ni tunnel. Choix technique : [docs/SCANNER.md](docs/SCANNER.md) ; recette privée HTTPS : [docs/TESTS_TELEPHONES.md](docs/TESTS_TELEPHONES.md) ; transmission : [docs/HANDOFF_3.md](docs/HANDOFF_3.md).
 
 ## Démarrer localement
 
-Prérequis : Node.js 22.12+ (Node 24 conseillé), npm, Docker Desktop avec moteur Linux démarré.
+Prérequis : Node.js 24+, npm, Docker Desktop avec moteur Linux démarré pour le backend local.
 
 ```powershell
 cd App_reserve
@@ -42,7 +42,7 @@ Mailpit capture les emails localement, sans envoi réel. Les paramètres affiche
 ## Fonctionnement partagé
 
 - **Stock** : catalogue réel, ajout/modification/suppression, recherche insensible aux accents, catégories, tri local mémorisé, seuils facultatifs et épuisés conservés. Les boutons +/− modifient uniquement le stock. Le stock d’une fiche existante se règle avec ces boutons pour éviter d’écraser une quantité plus récente pendant l’édition des métadonnées.
-- **Scanner simulé** : saisie de codes, Ajouter/Retirer, premier mouvement automatique, compteur ajustable et annulation. Ajouter traite ensemble stock et courses liées ; réduire le total restitue exactement la déduction correspondante. Retirer respecte le stock initial. Une modification ultérieure invalide ajustement et annulation avec un message explicite. Le même code lu à moins de 1,2 seconde est ignoré ; « Scanner à nouveau » permet une répétition volontaire.
+- **Scanner caméra** : activation explicite en contexte sécurisé, caméra arrière, flux continu ; reconnaissance stable avec clé EAN/UPC, verrou d’un code encore présenté, réarmement après retrait ou répétition explicite. Ajouter/Retirer, premier mouvement automatique, compteur ajustable et annulation. Ajouter traite ensemble stock et courses liées ; réduire le total restitue exactement la déduction correspondante. Retirer respecte le stock initial. Une modification ultérieure invalide ajustement et annulation avec un message explicite. Détection suspendue pendant un inconnu ou une demande réseau ; pistes arrêtées en quittant ou en arrière-plan, reprise explicite. Saisie manuelle repliable toujours disponible (avec son délai historique de 1,2 seconde et « Scanner à nouveau »).
 - **Inconnu** : création d’une fiche à zéro puis mouvement identifié en Ajouter. Une interruption conserve la fiche et la reprise du mouvement ; Annuler conserve la fiche à zéro. En Retirer, création à la quantité saisie sans retrait automatique.
 - **À acheter** : articles libres ou liés, quantités, cochage, suppression, effacement des cochés et suggestions explicites. Aucun rapprochement des articles libres par leur nom.
 - **Sessions** : persistance Supabase Auth, erreurs françaises, déconnexion retirant les vues privées et demandes en attente de l’onglet. Le catalogue privé reste en mémoire.
@@ -61,6 +61,7 @@ Les photos locales JPEG/PNG/WebP de 500 Ko maximum restent disponibles en démo.
 
 - `src/Root.tsx` : source active, session, confirmation, création de réserve et partage.
 - `src/App.tsx`, `components.tsx` : écrans existants et formulaires ; `AppearanceSettings.tsx` : réglage commun du thème.
+- `src/CameraScanner.tsx`, `scanner/camera.ts`, `scanner/decoder.ts` : interface caméra, propriété/nettoyage des pistes, lecteur ZXing différé ; validation et filtre purs dans `model.ts`.
 - `src/backend/client.ts`, `auth.ts`, `adapter.ts`, `errors.ts` : SDK officiel typé, Auth, lectures/RPC et erreurs françaises.
 - `src/backend/store.ts`, `usePantry.ts` : snapshot confirmé en mémoire, journal de reprise, scan et polling avec nettoyage des écouteurs.
 - `src/backend/contracts.ts`, `database.generated.ts` : port métier et types générés depuis PostgreSQL ; régénérer ces derniers plutôt que les éditer manuellement.
@@ -77,6 +78,7 @@ npm test
 npm run typecheck
 npm run build
 npm run format:check
+npm run test:phone
 # Supabase local démarré :
 npm run test:shared
 npm run test:db
@@ -91,7 +93,7 @@ Résultats dans [docs/VALIDATION.md](docs/VALIDATION.md). Transmission : [docs/H
 
 ## Limites et suite
 
-Pas de déploiement PWA, caméra, Open Food Facts ou Storage privé complet. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’interface d’export/restauration partagé ou de gestion avancée des membres. La restauration technique a été répétée ; une archive externe chiffrée reste à conserver avant usage quotidien. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
+Pas de déploiement PWA, Open Food Facts ou Storage privé complet. Scanner implémenté mais recette physique sur téléphones encore nécessaire, avec autofocus, vitesse, lampe et cycle Safari/PWA. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’interface d’export/restauration partagé ou de gestion avancée des membres. La restauration technique a été répétée et une archive chiffrée créée en 2C ; sa copie sur un second support reste à la charge de l’utilisateur. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
 
 Polling adapté à deux membres et une petite réserve ; Realtime désactivé. Effacer plusieurs cochés applique des commandes individuelles reprises séparément, sans transaction globale du lot. Android et Safari iOS réels restent à valider ; une largeur mobile émulée ne valide pas l’installation PWA.
 

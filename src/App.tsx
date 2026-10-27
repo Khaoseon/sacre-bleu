@@ -9,11 +9,9 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Archive,
-  ArrowDown,
   ArrowDownUp,
   ArrowLeft,
   ArrowRight,
-  ArrowUp,
   Check,
   CheckCheck,
   CircleHelp,
@@ -45,6 +43,8 @@ import {
   StaleOperationError,
   suggestions,
   undoOperation,
+  ScanRecognition,
+  findProductByBarcode,
   type Product,
   type State,
   type ScanOperation,
@@ -53,6 +53,7 @@ import { demo } from './demo';
 import { load, persist, STORAGE_KEY } from './storage';
 import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
 import { snapshotState, type SharedPantryStore, type SharedView } from './backend/store';
+import { CameraScanner } from './CameraScanner';
 
 type Page = 'stock' | 'scanner' | 'shopping';
 function initial() {
@@ -114,6 +115,9 @@ export default function App({
   const [lastProductId, setLastProductId] = useState<string | null>(null);
   const [lastCode, setLastCode] = useState('');
   const lastRead = useRef({ code: '', time: 0 });
+  const [recognition] = useState(() => new ScanRecognition());
+  const scanInFlight = useRef(false);
+  const [scanning, setScanning] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const [shoppingName, setShoppingName] = useState('');
   const [shoppingProduct, setShoppingProduct] = useState('');
@@ -129,6 +133,13 @@ export default function App({
     else if (view.notice) setFeedback({ text: view.notice });
     if (view.completed !== completion.current) {
       completion.current = view.completed;
+      const completedProduct = view.snapshot?.products.find(
+        (product) => product.id === view.lastProductId,
+      );
+      if (view.scan) {
+        if (completedProduct?.barcode) recognition.hold(completedProduct.barcode);
+        navigator.vibrate?.(45);
+      }
       if (view.completionLabel === 'Produit enregistré.') {
         setEditor(null);
         setCode('');
@@ -136,6 +147,13 @@ export default function App({
       if (view.completionLabel === 'Produit supprimé.') setDeleting(null);
     }
   }, [shared?.view.error, shared?.view.notice, shared?.view.completed, shared?.view.busy]);
+  useEffect(() => {
+    // Restore the presentation latch before resolving an uncertain request, also after reload.
+    const pendingProduct = shared?.view.snapshot?.products.find(
+      (product) => product.id === shared.view.pending?.productId,
+    );
+    if (pendingProduct?.barcode) recognition.hold(pendingProduct.barcode);
+  }, [shared?.view.pending, shared?.view.snapshot, recognition]);
   useEffect(() => {
     if (shared) return;
     const network = () => setOnline(navigator.onLine);
@@ -227,53 +245,66 @@ export default function App({
     }
     commit((s) => changeStock(s, p.id, delta), `${p.name} · quantité mise à jour`);
   }
-  async function scan(raw: string, repeat = false) {
-    if (shared && !shared.store.writable) return;
+  async function scan(raw: string, repeat = false, fromCamera = false) {
+    if (scanInFlight.current || editor || settings || (shared && !shared.store.writable)) return;
     const barcode = raw.trim();
     if (!/^\d{4,32}$/.test(barcode)) {
       setFeedback({ text: 'Saisissez un code de 4 à 32 chiffres.', error: true });
       return;
     }
-    if (!repeat && barcode === lastRead.current.code && Date.now() - lastRead.current.time < 1200) {
+    if (
+      !fromCamera &&
+      !repeat &&
+      barcode === lastRead.current.code &&
+      Date.now() - lastRead.current.time < 1200
+    ) {
       setFeedback({
         text: 'Lecture rapprochée ignorée. Utilisez « Scanner à nouveau » pour un autre exemplaire.',
       });
       return;
     }
-    const p = current.current.products.find((p) => p.barcode === barcode);
+    recognition.hold(barcode);
+    const p = findProductByBarcode(current.current.products, barcode);
     if (!p) {
       setEditor({ barcode, fromScan: true, mode });
       return;
     }
-    if (shared) {
-      if (await shared.store.scanProduct(p.id, mode)) {
+    scanInFlight.current = true;
+    setScanning(true);
+    if (fromCamera) setCode(barcode);
+    try {
+      if (shared) {
+        if (await shared.store.scanProduct(p.id, mode)) {
+          lastRead.current = { code: barcode, time: Date.now() };
+          setLastCode(barcode);
+          setCode('');
+          if (!fromCamera && !repeat) input.current?.focus();
+        }
+        return;
+      }
+      let operation: ScanOperation;
+      if (
+        commit(
+          (s) => {
+            const result = startScan(s, p.id, mode);
+            operation = result.operation;
+            return result.state;
+          },
+          `${mode === 1 ? '+1' : '−1'} ${p.name}`,
+          true,
+        )
+      ) {
+        publishScan(operation!);
         lastRead.current = { code: barcode, time: Date.now() };
         setLastCode(barcode);
+        setLastProductId(p.id);
         setCode('');
         navigator.vibrate?.(45);
-        input.current?.focus();
+        if (!fromCamera && !repeat) input.current?.focus();
       }
-      return;
-    }
-    let operation: ScanOperation;
-    if (
-      commit(
-        (s) => {
-          const result = startScan(s, p.id, mode);
-          operation = result.operation;
-          return result.state;
-        },
-        `${mode === 1 ? '+1' : '−1'} ${p.name}`,
-        true,
-      )
-    ) {
-      publishScan(operation!);
-      lastRead.current = { code: barcode, time: Date.now() };
-      setLastCode(barcode);
-      setLastProductId(p.id);
-      setCode('');
-      navigator.vibrate?.(45);
-      input.current?.focus();
+    } finally {
+      scanInFlight.current = false;
+      setScanning(false);
     }
   }
   function adjustLastScan(delta: 1 | -1) {
@@ -648,73 +679,71 @@ export default function App({
                   </h1>
                   <p>Ajoutez ou retirez vos produits à la suite.</p>
                 </div>
-                <span className="pill">Simulation locale</span>
               </div>
               <div className="scanner-layout">
                 <section
                   className={`scanner-card ${mode === -1 ? 'removing' : ''}`}
-                  aria-label="Scanner simulé"
+                  aria-label="Scanner de codes-barres"
                 >
                   <div className="mode-toggle">
                     <button
                       className={mode === 1 ? 'active' : ''}
                       aria-pressed={mode === 1}
-                      onClick={() => setMode(1)}
+                      onClick={() => {
+                        recognition.suspend();
+                        setMode(1);
+                      }}
                     >
                       <Plus size={19} /> Ajouter
                     </button>
                     <button
                       className={mode === -1 ? 'active danger' : ''}
                       aria-pressed={mode === -1}
-                      onClick={() => setMode(-1)}
+                      onClick={() => {
+                        recognition.suspend();
+                        setMode(-1);
+                      }}
                     >
                       <Minus size={19} /> Retirer
                     </button>
                   </div>
-                  <div className="scan-window">
-                    <div className="scan-frame">
-                      <ScanLine size={62} strokeWidth={1} />
-                    </div>
-                    <strong>Un code-barres suffit.</strong>
-                    <p>
-                      La caméra arrive à une prochaine étape.
-                      <br />
-                      Pour l’instant, saisissez un code ci-dessous.
-                    </p>
-                    <span className="scan-mode-label">
-                      {mode === 1 ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-                      {mode === 1 ? '+1 emballage par lecture' : '−1 emballage par lecture'}
-                    </span>
-                  </div>
-                  <form
-                    className="scan-form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      scan(code);
-                    }}
-                  >
-                    <label htmlFor="barcode">Code-barres</label>
-                    <div>
-                      <input
-                        id="barcode"
-                        ref={input}
-                        inputMode="numeric"
-                        autoComplete="off"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        placeholder="Ex. 8076802085738"
-                        maxLength={32}
-                        required
-                      />
-                      <button
-                        className={mode === 1 ? 'primary-button' : 'primary-button red'}
-                        type="submit"
-                        disabled={locked}
-                      >
-                        <ScanLine size={19} /> Valider
-                      </button>
-                    </div>
-                  </form>
+                  <CameraScanner
+                    recognition={recognition}
+                    paused={locked || scanning || !!bootError || !!editor || settings}
+                    onCode={(barcode) => void scan(barcode, false, true)}
+                  />
+                  <details className="manual-code">
+                    <summary>Saisir un code-barres</summary>
+                    <form
+                      className="scan-form"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        scan(code);
+                      }}
+                    >
+                      <label htmlFor="barcode">Code-barres</label>
+                      <div>
+                        <input
+                          id="barcode"
+                          ref={input}
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          placeholder="Ex. 8076802085738"
+                          maxLength={32}
+                          required
+                        />
+                        <button
+                          className={mode === 1 ? 'primary-button' : 'primary-button red'}
+                          type="submit"
+                          disabled={locked || scanning}
+                        >
+                          <ScanLine size={19} /> Valider
+                        </button>
+                      </div>
+                    </form>
+                  </details>
                 </section>
                 <aside className="scanner-aside">
                   {lastProduct ? (
@@ -755,7 +784,7 @@ export default function App({
                       )}
                       <button
                         className="secondary-button"
-                        disabled={locked}
+                        disabled={locked || scanning}
                         onClick={() => scan(lastProduct.barcode ?? lastCode, true)}
                       >
                         <ScanLine size={17} /> Scanner à nouveau
@@ -1103,7 +1132,6 @@ export default function App({
               if (editor.fromScan) {
                 lastRead.current = { code: product.barcode ?? '', time: Date.now() };
                 setLastCode(product.barcode ?? '');
-                navigator.vibrate?.(45);
               }
               setEditor(null);
               return true;
@@ -1210,8 +1238,8 @@ export default function App({
                   sont disponibles hors ligne après le premier chargement de la version compilée.
                 </p>
                 <p>
-                  Le partage entre deux comptes, la caméra et la recherche Open Food Facts arrivent
-                  aux prochaines étapes. Il n’y a aucune synchronisation entre appareils.
+                  Cette démonstration reste sur cet appareil, sans synchronisation. La caméra est
+                  disponible en contexte sécurisé ; la recherche Open Food Facts viendra plus tard.
                 </p>
                 <button className="secondary-button" onClick={exportData}>
                   <Download size={17} /> Exporter les données JSON

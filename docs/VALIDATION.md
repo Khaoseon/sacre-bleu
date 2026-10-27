@@ -1,4 +1,34 @@
-# Validation — phases 1, 2A, 2B et 2C
+# Validation — phases 1, 2A, 2B, 2C et 3
+
+## Phase 3 — 27 octobre 2026
+
+Scanner caméra implémenté sans modification des migrations, RPC, Auth ou données Cloud. ZXing Browser 0.2.1 / ZXing JS 0.23.0, Node 24.20.0 utilisé pour les vérifications. Comparaison et seuils : `SCANNER.md` ; recette physique à exécuter : `TESTS_TELEPHONES.md`.
+
+| Vérification                                 | Résultat                                                                                     |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `npm test`                                   | 125 tests réussis, 10 fichiers ; 44 tests supplémentaires par rapport à la clôture 2C        |
+| `npm run typecheck`                          | TypeScript strict réussi                                                                     |
+| `npm run build`, `npm run build:cloud`       | Réussis ; lecteur dans un chunk séparé, exclu du précache initial                            |
+| `npm run format:check`, `git diff --check`   | Réussis à la clôture                                                                         |
+| `npm run test:phone`                         | 2 tests du serveur HTTPS préparé : paramètres privés obligatoires et confinement des chemins |
+| `npm run test:db`                            | 80 assertions pgTAP réussies sur la stack Docker locale existante                            |
+| `npm run test:db:concurrency`                | 6 tests multi-connexions réussis                                                             |
+| `npm run test:db:api`, `npm run test:shared` | Auth/API et parcours partagé avec Mailpit réussis, fixtures locales nettoyées                |
+| Dépendances                                  | Versions exactes et lockfile ; npm ne signalait aucune vulnérabilité à l’installation        |
+
+Tests caméra : format et clés EAN-13/EAN-8/UPC-A, zéros initiaux et équivalence UPC-A/EAN-13 ; stabilité, code maintenu 30 secondes sans répétition, A→B→A, retrait/représentation et répétition volontaire ; pause/changement de mode sans réarmement. Tests de flux avec `MediaStream` **simulé** : permission refusée, absence/occupation/interruption, HTTPS absent, annulation avec réponse tardive, un seul flux, libération des pistes/lecteurs/timers, visibilité/pagehide, reprise explicite, lampe facultative, échec de vidéo/chargement/décodage. Tests store supplémentaires : pas de succès avant reçu **et** snapshot ; nouvelle écriture bloquée pendant attente/incertitude, reprise de la même clé et mode de la prochaine intention. Les tests métier et backend existants couvrent stock/courses, ajustements, compensation, bornes et conflits.
+
+Quatre **rasters synthétiques indépendants** EAN-13, EAN-8, UPC-A et EAN-13 préfixé de zéro passent réellement dans le lecteur ZXing livré, via une surface canvas simulée. Ce contrôle exerce le moteur de décodage, **pas un capteur, l’autofocus ni une caméra réelle**.
+
+Recette UI dans le navigateur intégré, build local compilé sur origine de démonstration isolée `localhost:4184` :
+
+- Ouverture du scanner sans demande automatique de caméra, puis activation restant en attente de permission dans cet environnement ; **Arrêter** annule correctement l’attente et rend le bouton d’activation. Aucun flux réel ni image de caméra obtenu.
+- Saisie de secours : thon 0→1 ; compteur 1→3→2 avec cohérence visible de la liste de courses ; répétition explicite puis annulation conservant le mouvement précédent.
+- Code inconnu EAN-8 : annulation du formulaire puis création manuelle, reconnaissance par répétition, passage Retirer à zéro conservant la fiche, puis Ajouter. Formulaire existant, sans appel externe d’identification.
+- Thème sombre à 390×844 et clair à 320×740 ; saisie repliable, compteur compact, absence de débordement horizontal mesurée. Ces tailles ne simulent pas un vrai Safari/Chrome de téléphone. À 320 px un défilement vertical peut être nécessaire pour les actions sous le dernier produit.
+- Journal navigateur sans erreur/avertissement au contrôle. Captures **de démonstration seulement**, sans inventaire privé : `screenshots/scanner-phase3-dark.png`, `screenshots/scanner-phase3-light-320.png`.
+
+Limites : **aucune caméra réelle, aucun iPhone ni Samsung testé**. Permission et autofocus réels, rapidité, flou/reflets, plusieurs emballages identiques, interruption Safari/PWA, lampe, vibration et synchronisation depuis les téléphones restent à valider. Les seuils du filtre sont un compromis à éprouver, pas une garantie contre tout faux positif. Le serveur HTTPS a été préparé et testé pour ses options/chemins ; aucune autorité TLS installée et aucune écoute LAN exécutée. Les builds signalent le seuil Vite de 500 Ko pour le bundle principal (~523 Ko, ~152 Ko gzip) ; lecteur différé ~478 Ko (~125 Ko gzip). Aucun déploiement, tunnel, reset de base, migration, sauvegarde ou mutation Cloud réalisé. Les premiers lancements de tests backend dans le bac à sable ont échoué sur l’écriture du fichier de télémétrie CLI ; relancés hors bac à sable, tous les tests listés ont réussi. Pas de nouvelle base vierge nécessaire ici, aucune migration modifiée.
 
 ## Clôture 2C — 27 octobre 2026
 

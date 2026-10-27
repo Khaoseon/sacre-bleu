@@ -728,53 +728,83 @@ h1 > span {
 .mode-toggle .active.danger {
   background: var(--danger);
 }
-.scan-window {
-  padding: 40px 10px 29px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: var(--muted);
+.camera-scanner {
+  margin: 14px 0;
 }
-.scan-frame {
-  width: 130px;
-  height: 105px;
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(var(--paper), var(--paper)) padding-box,
-    linear-gradient(125deg, var(--focus), transparent 40%, transparent 60%, var(--focus)) border-box;
-  border: 2px solid transparent;
+.camera-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 340px;
+  overflow: hidden;
   border-radius: 9px;
-  margin-bottom: 24px;
-}
-.scan-window strong {
-  font-size: 16px;
+  background: var(--surface-soft);
   color: var(--text-strong);
-  font-weight: 600;
 }
-.scan-window p {
-  font-size: 11px;
-  color: var(--muted);
-  margin: 9px 0 20px;
-  line-height: 1.8;
+.camera-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
-.scan-mode-label {
+.camera-active {
+  background: #111;
+  color: #fff;
+}
+.camera-placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  background: var(--accent-soft);
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+}
+.camera-target {
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  width: 90%;
+  height: 50%;
+  transform: translateY(-50%);
+  border: 2px solid #89ebac;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.removing .camera-target {
+  border-color: #ffb2af;
+}
+.camera-status {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111e;
+  color: #fff;
+  padding: 5px 9px;
   border-radius: 5px;
-  padding: 5px 10px;
-  color: var(--accent-text);
+  white-space: nowrap;
+  font-size: 12px;
 }
-.removing .scan-mode-label {
-  color: var(--danger-text);
-  background: var(--danger-surface);
+.camera-actions {
+  display: flex;
+  justify-content: space-between;
 }
-.removing .scan-frame {
+.camera-actions button {
+  min-height: var(--touch-target);
+}
+.camera-error {
   color: var(--danger-text);
+  font-size: 13px;
+}
+.manual-code summary {
+  min-height: var(--touch-target);
+  align-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
 }
 .scan-form {
   border-top: 1px solid var(--border);
@@ -1675,20 +1705,10 @@ h1 > span {
   .scanner-card {
     padding: 16px;
   }
-  .scan-window {
-    padding-top: 30px;
-    padding-bottom: 25px;
-  }
-  .scan-frame {
-    height: 90px;
-    width: 120px;
-    margin-bottom: 20px;
-  }
-  .scan-window strong {
-    font-size: 15px;
-  }
-  .scan-window p {
-    font-size: 11px;
+  .camera-preview {
+    aspect-ratio: 16 / 10;
+    max-height: 30svh;
+    min-height: 170px;
   }
   .scan-form input {
     font-size: 12px;
@@ -1696,16 +1716,41 @@ h1 > span {
   .scanner-aside {
     grid-template-columns: 1fr;
   }
-  .last-product .section-eyebrow {
-    margin-bottom: 13px;
-  }
   .last-product {
-    padding: 21px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 6px;
+    text-align: left;
+  }
+  .last-product .section-eyebrow {
+    grid-column: 1 / -1;
+    margin: 0 0 4px;
+  }
+  .last-product h2,
+  .last-product > p {
+    grid-column: 2;
+    margin: 0;
+  }
+  .last-product > .quantity {
+    grid-column: 3;
+    grid-row: 2 / 4;
+  }
+  .last-product > .muted,
+  .last-product > button,
+  .last-product > p[role] {
+    grid-column: 1 / -1;
+  }
+  .last-product.no-product {
+    display: flex;
+    text-align: center;
   }
   .last-product .product-image {
-    width: 55px;
-    height: 60px;
-    margin-bottom: 11px;
+    grid-column: 1;
+    grid-row: 2 / 4;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
   }
   .last-product .secondary-button {
     max-width: 300px;

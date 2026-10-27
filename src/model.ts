@@ -239,3 +239,84 @@ export function undoOperation(current: State, before: State, expectedRevision: n
     throw new StaleOperationError('Cette opération ne peut plus être annulée.');
   return { ...before, revision: current.revision };
 }
+/** Camera reads are GTIN-8/12/13 strings; manual catalogue codes keep their existing contract. */
+export function validCameraBarcode(code: string): boolean {
+  if (!/^(?:\d{8}|\d{12}|\d{13})$/.test(code) || /^0+$/.test(code)) return false;
+  let sum = 0;
+  for (let i = code.length - 2, weight = 3; i >= 0; i--, weight = 4 - weight)
+    sum += Number(code[i]) * weight;
+  return (10 - (sum % 10)) % 10 === Number(code.at(-1));
+}
+
+// UPC-A and its EAN-13 representation identify the same item. Never rewrite stored codes.
+export function barcodeIdentity(code: string): string {
+  return code.length === 12 ? `0${code}` : code;
+}
+
+export function findProductByBarcode(products: Product[], code: string): Product | undefined {
+  return (
+    products.find((product) => product.barcode === code) ??
+    (validCameraBarcode(code)
+      ? products.find(
+          (product) =>
+            product.barcode && barcodeIdentity(product.barcode) === barcodeIdentity(code),
+        )
+      : undefined)
+  );
+}
+
+/** One presentation, one intention. Timing alone never releases a code still being read. */
+export class ScanRecognition {
+  private held = '';
+  private candidate = '';
+  private hits = 0;
+  private first = 0;
+  private last = 0;
+  private missingSince: number | null = null;
+  private misses = 0;
+
+  suspend() {
+    this.candidate = '';
+    this.hits = 0;
+    this.missingSince = null;
+    this.misses = 0;
+  }
+
+  hold(code: string) {
+    this.held = barcodeIdentity(code);
+    this.suspend();
+  }
+
+  observe(code: string | null, now: number): string | null {
+    if (code === null) {
+      this.candidate = '';
+      this.hits = 0;
+      this.missingSince ??= now;
+      this.misses++;
+      if (this.misses >= 5 && now - this.missingSince >= 1000) this.held = '';
+      return null;
+    }
+    if (!validCameraBarcode(code)) {
+      this.suspend();
+      return null;
+    }
+    this.missingSince = null;
+    this.misses = 0;
+    const identity = barcodeIdentity(code);
+    if (identity === this.held) {
+      this.candidate = '';
+      this.hits = 0;
+      return null;
+    }
+    if (identity !== this.candidate || now - this.last > 500) {
+      this.candidate = identity;
+      this.hits = 0;
+      this.first = now;
+    }
+    this.last = now;
+    this.hits++;
+    if (this.hits < 3 || now - this.first < 240) return null;
+    this.hold(code);
+    return code;
+  }
+}

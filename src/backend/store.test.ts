@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { clearPrivateIntents, PENDING_PREFIX, SharedPantryStore } from './store';
 import { BackendError } from './errors';
 import type { ReserveBackend, ReserveSnapshot } from './contracts';
+import { ScanRecognition } from '../model';
 const snapshot = (revision = 1): ReserveSnapshot => ({
   reserve: { id: 'r', name: 'Réserve', owner_id: 'u', revision, created_at: '', updated_at: '' },
   members: [],
@@ -37,6 +38,96 @@ function setup() {
   };
 }
 const command = { action: 'stock', payload: { product_id: 'p', delta: 1 } } as const;
+describe('camera intentions through the existing shared store', () => {
+  it('blocks duplicates until both the receipt AND coherent stock/shopping are available', async () => {
+    const f = setup();
+    await f.store.refresh();
+    let releaseReceipt!: (value: { revision: number }) => void;
+    let releaseSnapshot!: (value: ReserveSnapshot) => void;
+    f.execute.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseReceipt = resolve;
+        }),
+    );
+    f.getSnapshot.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseSnapshot = resolve;
+        }),
+    );
+    const first = f.store.scanProduct('p', 1);
+    expect(f.store.getSnapshot().busy).toBe(true);
+    expect(f.store.getSnapshot().notice).toBe('');
+    expect(await f.store.scanProduct('p', 1)).toBe(false);
+    expect(f.execute).toHaveBeenCalledOnce();
+    releaseReceipt({ revision: 2 });
+    await Promise.resolve();
+    expect(f.store.getSnapshot().completed).toBe(0);
+    expect(f.store.getSnapshot().snapshot?.reserve.revision).toBe(1);
+    expect(f.store.writable).toBe(false);
+    const confirmed = snapshot(2);
+    confirmed.shopping = [
+      {
+        id: 's',
+        reserve_id: 'r',
+        product_id: 'p',
+        name: 'Produit',
+        quantity: 0,
+        checked: true,
+        version: 2,
+        created_at: '',
+        updated_at: '',
+      },
+    ];
+    releaseSnapshot(confirmed);
+    expect(await first).toBe(true);
+    expect(f.store.getSnapshot().snapshot).toBe(confirmed);
+    expect(f.store.getSnapshot().snapshot?.shopping[0]).toMatchObject({
+      quantity: 0,
+      checked: true,
+    });
+    expect(f.store.getSnapshot().completed).toBe(1);
+  });
+  it('recovers an uncertain scan with the same key; mode changes only affect the next intention', async () => {
+    const f = setup();
+    await f.store.refresh();
+    const recognition = new ScanRecognition();
+    const code = '4006381333931';
+    [0, 150, 300].forEach((time) => recognition.observe(code, time));
+    f.execute.mockRejectedValueOnce(new BackendError('Réponse perdue', 'uncertain'));
+    expect(await f.store.scanProduct('p', 1)).toBe(false);
+    const pendingId = f.execute.mock.calls[0][0];
+    expect(await f.store.scanProduct('p', -1)).toBe(false);
+    expect(f.execute).toHaveBeenCalledOnce();
+    recognition.suspend();
+    f.execute.mockResolvedValue({
+      revision: 2,
+      scan_id: 'scan',
+      scan_version: 1,
+      processed: 1,
+      stock: 1,
+    });
+    f.getSnapshot.mockResolvedValue(snapshot(2));
+    expect(await f.store.resume()).toBe(true);
+    expect(f.execute.mock.calls[1]).toEqual([
+      pendingId,
+      'r',
+      { action: 'scan', payload: { product_id: 'p', delta: 1 } },
+    ]);
+    expect(f.store.getSnapshot().scan?.mode).toBe(1);
+    for (let time = 6000; time < 9000; time += 150)
+      expect(recognition.observe(code, time)).toBeNull();
+    // Explicit repeat bypasses camera recognition, with its own idempotency key and current mode.
+    recognition.hold(code);
+    await f.store.scanProduct('p', -1);
+    expect(f.execute.mock.calls[2][0]).not.toBe(pendingId);
+    expect(f.execute.mock.calls[2][2]).toEqual({
+      action: 'scan',
+      payload: { product_id: 'p', delta: -1 },
+    });
+  });
+});
 describe('shared store: confirmation and idempotent recovery', () => {
   it('does not announce success before both RPC and current snapshot', async () => {
     const f = setup();

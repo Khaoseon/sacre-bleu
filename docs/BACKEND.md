@@ -4,7 +4,7 @@ Le backend est implémenté et testé **localement**. La phase 2B branche les é
 
 ## Démarrage reproductible
 
-Prérequis : Node 22.12+ (Node 24 conseillé), npm et Docker Desktop avec moteur Linux opérationnel. La CLI officielle est verrouillée dans les dépendances de développement ; aucune installation globale ni connexion Supabase distante n’est nécessaire.
+Prérequis : Node 24+, npm et Docker Desktop avec moteur Linux opérationnel. La CLI officielle est verrouillée dans les dépendances de développement ; aucune installation globale ni connexion Supabase distante n’est nécessaire. La phase 3 réutilise ce backend sans modification de migration ou de contrat RPC ; voir `SCANNER.md`.
 
 ```powershell
 npm ci

@@ -1,6 +1,6 @@
 # Spécification produit — App_reserve
 
-Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. Aucun déploiement PWA ; caméra et Open Food Facts restent futurs.
+Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. La phase 3 ajoute la caméra et conserve les contrats métier ; détails dans `SCANNER.md`, validations et limites dans `HANDOFF_3.md`. Aucun déploiement PWA ni Open Food Facts ; recette physique iPhone/Samsung encore nécessaire.
 
 ## Contexte du produit
 
@@ -143,6 +143,12 @@ Sépare suffisamment l'interface, la logique métier et les accès aux données 
 ## Périmètre livré : étape 1 locale
 
 Trois vues, démo, stockage local versionné, stock et catalogue éditables, scanner par saisie et courses. Sans comptes, caméra, Open Food Facts ni Supabase. Le manifeste et le cache PWA sont présents ; l’installation sur appareils réels reste à valider.
+
+### Précisions du scanner caméra de phase 3
+
+Activation explicite, caméra arrière préférée, vidéo intégrée, décodage ZXing local et différé. Formats caméra EAN-13/EAN-8/UPC-A avec clé valide, au moins trois observations concordantes. Verrou sans expiration d’un code encore relu ; autre code stable accepté, réarmement après au moins cinq observations sans résultat sur une seconde ou répétition explicite. Les pauses (formulaire, réseau, changement de mode, arrière-plan) ne réarment pas le code. Conservation des chaînes et de leurs zéros, recherche exacte puis équivalence UPC-A/EAN-13 préfixé de zéro. La saisie personnelle 4–32 chiffres conserve son contrat et son délai historique ; elle reste le secours.
+
+Un inconnu suspend la détection, conserve le flux et ouvre le formulaire existant. Toute écriture/incertitude partagée bloque les lectures ; même RPC, idempotence, reçu et snapshot cohérent avant succès. Quitter, se déconnecter ou masquer la page arrête les pistes ; reprise caméra explicite au retour. Lampe facultative selon capacités. Aucune image transmise. Ces précisions remplacent les seuls comportements de simulation ci-dessous ; le reste des règles demeure. Recette réelle et réglage des seuils à valider selon `TESTS_TELEPHONES.md`.
 
 ### Hypothèses et précisions du prototype
 

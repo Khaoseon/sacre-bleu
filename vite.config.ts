@@ -31,6 +31,19 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          globIgnores: ['**/decoder-*.js'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url, sameOrigin }) =>
+                sameOrigin && /\/assets\/decoder-[\w-]+\.js$/.test(url.pathname),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'app-reserve-scanner-v1',
+                expiration: { maxEntries: 2 },
+                cacheableResponse: { statuses: [200] },
+              },
+            },
+          ],
           navigateFallback: '/index.html',
         },
       }),

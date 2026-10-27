@@ -1,0 +1,36 @@
+# Transmission — phase 3 : scanner caméra
+
+État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, cette transmission et la section phase 3 de `VALIDATION.md`. Conserver les acquis Cloud de `HANDOFF_2C.md` et les archives chiffrées. **Implémentation livrée et vérifiée automatiquement ; recette physique iPhone/Samsung encore ouverte. Ne pas commencer Open Food Facts.**
+
+## Implémenté
+
+- ZXing Browser **0.2.1** + ZXing JS **0.23.0**, verrouillés. Choix comparé à Quagga2, ZXing WASM et BarcodeDetector dans `SCANNER.md`. Décodage entièrement local, caméra arrière préférée, vidéo muette intégrée, activation explicite ; aucun service d’images. **Node 24+ désormais requis** par la dépendance actuelle.
+- Module différé, bande centrale à largeur maximale 960 px, tentative 150 ms après le traitement précédent, pas de rendu React par image. Chunk lecteur exclu du précache initial ; cache à la première utilisation seulement. Principal ~523 Ko / 152 Ko gzip, lecteur ~478 Ko / 125 Ko gzip ; avertissement Vite principal de 500 Ko conservé explicitement.
+- Validation pure EAN-13/EAN-8/UPC-A par format/clé modulo 10 ; au moins trois résultats concordants sur 240 ms. Verrou sans expiration du code encore lu ; autre produit stable accepté, réarmement après au moins cinq tentatives sans résultat sur une seconde. Le retrait est inféré optiquement : un flou prolongé peut aussi réarmer, à mesurer sur appareils. Répétition explicite disponible. UPC-A et son EAN-13 zéro-préfixé équivalents, recherche exacte prioritaire ; chaînes du catalogue non réécrites.
+- Même `App.scan` pour caméra et saisie, mêmes RPC et idempotence. Écriture en cours/incertaine suspend le décodage, reprise par la clé existante et snapshot confirmé avant succès/vibration. Code de la demande en attente reverrouillé après rechargement. Aucun stock dans le module caméra.
+- Inconnu : formulaire existant prérempli, caméra conservée et détection suspendue ; reprend après fermeture/validation. Les contrats de création à zéro puis mouvement en partagé, ajustement du total et annulation compensatrice restent inchangés. Pas de phase 4.
+- Caméra arrêtée en quittant le scanner, à la déconnexion, en arrière-plan et sur interruption. Retour par **Reprendre la caméra** ; aucune reprise automatique. Annulation des démarrages tardifs, lecteurs et timers nettoyés. Lampe facultative selon capacité ; saisie de secours repliable. Ajouter vert/Retirer rouge, thèmes exclusivement dans Paramètres ; carte du dernier produit compacte sur mobile.
+
+Fichiers : `src/model.ts` (validation/filtre/recherche), `src/scanner/camera.ts` (session/pistes), `src/scanner/decoder.ts` (ZXing), `src/CameraScanner.tsx` (vue), `src/App.tsx` (même parcours métier). `src/storage.ts`, backend de production, migrations et `database.generated.ts` inchangés.
+
+## Vérifié
+
+- **125 tests applicatifs, 10 fichiers**, dont quatre rasters synthétiques réellement décodés par ZXing ; simulations MediaStream/lifecycle/permissions et tests de filtrage/reprise. Stock/courses, quantités et compensations existants toujours couverts. Le moteur lit UPC-A sous sa représentation EAN-13 à zéro initial pour ne supprimer aucun zéro ; alias du catalogue existant conservé.
+- TypeScript, builds local et Cloud, formatage et `git diff --check` réussis.
+- **80 assertions pgTAP**, **6 tests concurrence**, **Auth/API** et **parcours partagé Mailpit** réussis sur Docker local existant. Aucune nouvelle migration, aucun reset requis ou effectué. Les fixtures se limitent à leur environnement local.
+- Serveur HTTPS privé préparé : `npm run phone:serve`, options/chemins couverts par **2 tests** `npm run test:phone`. Il sert seulement `dist-cloud`, refuse écoute publique et clients hors liste. Non lancé sur LAN durant cette intervention.
+- UI de démonstration sur origine isolée : saisie, compteur, répétition/annulation, inconnu, Retirer à zéro, annulation d’ouverture caméra en attente ; sombre 390 px et clair 320 px sans débordement horizontal. Captures uniquement synthétiques dans `docs/screenshots/scanner-phase3-*`. Journal navigateur sans erreur au contrôle. Le navigateur intégré a laissé `getUserMedia` en attente de permission ; aucun flux obtenu.
+
+## Non vérifié physiquement et prochaine action
+
+**Zéro essai avec une vraie caméra.** Ni iPhone, ni Samsung, ni caméra de PC. Ne pas transformer les tests de rasters/MediaStream/viewport en affirmation de compatibilité réelle.
+
+Suivre **`TESTS_TELEPHONES.md`** : certificat mkcert installé personnellement sur les appareils, build Cloud en HTTPS Wi-Fi privé, IP du PC et des deux téléphones explicites ; alternative USB pour Chrome Android. Aucun tunnel public ou nouveau service requis. Pas de changement automatique des callbacks Auth ; utiliser les deux comptes déjà confirmés. Installation de confiance TLS/pare-feu et lancement LAN restent des actions manuelles de l’utilisateur.
+
+Recette : EAN-13/EAN-8 physiques (UPC-A si disponible), plusieurs produits/identiques, compteur et annulation avec courses, inconnu, refus caméra, interruptions, lampe/vibration si disponibles, contrôle du stock sur le second compte. Noter modèles/versions, temps de lecture, flou/reflets et éventuels doublons ; ajuster les seuils seulement à partir de ces observations. L’installation PWA complète reste en phase 6.
+
+## Git, données et périmètre
+
+Départ propre sur `main`, base `e33f59c`. Dépôt **`Khaoseon/App_reserve` privé**, vérifié par le connecteur GitHub durant la phase et à contrôler aussi à la clôture. Le commit de cette transmission porte uniquement code, lockfile, tests, documentation et captures de démo. Push demandé sans forcer ; contrôler `HEAD = origin/main` après fetch et arbre de travail propre.
+
+Aucune modification Cloud, migration, donnée personnelle de production, archive chiffrée, clé privée ou fichier `.env` touché/versionné. Aucun nouveau service/hébergement, tunnel ou déploiement. Les certificats, builds et fichiers temporaires restent ignorés. La première sauvegarde chiffrée de 2C reste intacte ; sa duplication sur un second support relève toujours de l’utilisateur.

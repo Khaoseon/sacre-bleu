@@ -24,7 +24,7 @@ Snapshot relu après mutation, polling toutes les cinq secondes lorsque l’appl
 
 Validation : parcours réel automatisé à deux comptes avec emails Mailpit et confirmation depuis un client neuf ; UI sur deux origines, scans 1 → 5 → 3 → annulation, panne réelle de l’API et reprise après rechargement sans double mouvement, thèmes mobiles et confidentialité à la déconnexion. Résultats détaillés dans `VALIDATION.md`, transmission dans `HANDOFF_2B.md`.
 
-Limites 2B : pas de cache privé persistant après fermeture, de file d’édition hors ligne, de Storage complet, de restauration partagée ni de validation sur téléphones réels. Le passage à Cloud est traité dans l’intervention 2C ci-dessous. La phase 3 n’est pas commencée. Les paragraphes suivants rappellent les critères de l’étape 2 et ne demandent pas de recréer le backend déjà livré.
+Limites 2B : pas de cache privé persistant après fermeture, de file d’édition hors ligne, de Storage complet, de restauration partagée ni de validation sur téléphones réels. Le passage à Cloud est traité dans l’intervention 2C ci-dessous. La caméra fait désormais l’objet de la phase 3 ci-dessous. Les paragraphes suivants rappellent les critères de l’étape 2 et ne demandent pas de recréer le backend déjà livré.
 
 ### Phase 2C — Supabase Free hébergé : validée
 
@@ -39,6 +39,8 @@ Implémenter les mouvements de stock transactionnels côté serveur avec identif
 Critères : deux utilisateurs invités voient la même réserve ; un tiers ne peut accéder à aucune donnée ; invitations invalides/expirées refusées ; modifications concurrentes sans perte ; même requête rejouée sans double traitement ; stock jamais négatif ; refus serveur sans faux succès ; déconnexion révoquant l’accès au cache privé. Tester les politiques RLS et transactions avec une instance locale avant services distants.
 
 ## Étape 3 — Caméra et scan continu
+
+**Implémentation livrée, recette physique encore ouverte.** ZXing Browser 0.2.1 / ZXing JS 0.23.0 chargés sur demande, formats EAN-13/EAN-8/UPC-A, clé et stabilité vérifiées. Caméra arrière, prévisualisation, pause de détection pour inconnu/attente réseau, nettoyage des pistes et reprise explicite après arrière-plan. Verrou par présentation, autre produit stable ou retrait/représentation, répétition explicite ; mêmes RPC et journal idempotent. Saisie manuelle, thèmes et compteur conservés. Aucune migration ni phase 4. Node 24+ requis. Comparaison/architecture : `SCANNER.md` ; HTTPS privé et matrice de recette : `TESTS_TELEPHONES.md` ; contrôles exécutés : `VALIDATION.md` et `HANDOFF_3.md`. L’essai sur iPhone/Samsung, les performances et le réglage final du filtre restent nécessaires avant validation complète de cette étape.
 
 Choisir une bibliothèque maintenue après essai Android et Safari iOS sur appareils réels. Caméra conservée durant la session, permissions, autofocus, visibilité de page et libération du flux à la sortie. Pause pendant la résolution d’un inconnu ; reprise sans fermeture. Distinguer doublon involontaire et exemplaire volontaire (retrait du cadre ou commande explicite).
 
