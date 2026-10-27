@@ -1,6 +1,6 @@
 # Spécification produit — App_reserve
 
-Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C prépare la mise en service du même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; état dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. Aucun déploiement PWA ; caméra et Open Food Facts restent futurs.
+Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. Aucun déploiement PWA ; caméra et Open Food Facts restent futurs.
 
 ## Contexte du produit
 

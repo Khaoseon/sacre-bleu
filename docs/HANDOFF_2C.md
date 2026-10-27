@@ -1,6 +1,6 @@
-# Transmission — phase 2C en cours de validation
+# Transmission — clôture de la phase 2C
 
-État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Ne pas annoncer la phase close : recette Cloud à deux comptes et restauration complète restent à valider.** Première livraison email et premier compte confirmé validés ci-dessous. Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.
+État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Phase 2C validée : recette Cloud à deux comptes et répétition de restauration réussies.** Ne pas confondre la répétition avec une sauvegarde externe déjà disponible : cette dernière reste à constituer avant usage quotidien. Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.
 
 ## Git et confidentialité
 
@@ -83,9 +83,20 @@ La base locale 2B n’a pas été remise à zéro. La stack de validation est re
 - Compteurs après ces contrôles : **0 compte Auth et 0 ligne dans les huit tables applicatives**. Aucun faux succès métier annoncé.
 - Build Cloud réussi avec sa véritable configuration publique ; cela ne valide pas une session ni un email.
 
-### À valider avant clôture
+### Recette Cloud authentifiée exécutée
 
-Les tests locaux ne constituent pas une validation Cloud de : invitation entre deux comptes, RLS d’un tiers connecté, mutations métier/replays, concurrence et polling entre sessions. La première livraison, confirmation, connexion persistante et création réelle de réserve vide sont validées ci-dessous ; ne pas en déduire la recette complète à deux comptes.
+- Deux comptes réels inscrits et confirmés par le parcours email, puis connectés personnellement par l’utilisateur ; aucun mot de passe transmis. Le premier email a été explicitement confirmé reçu ; deux comptes vérifiés et connectés corroborés par les compteurs Auth.
+- Le second compte connecté ne voyait aucune réserve avant invitation, alors que le propriétaire voyait la réserve et son produit. Complément **SQL sous rôle `authenticated` du compte extérieur**, distinct d’un test HTTP : `cloud-outsider-audit.sql` a validé les cinq lectures vides, le snapshot absent et les refus de RPC stock/écriture directe. Aucune fixture, compte, donnée ou fonction ajouté par cet audit ; une écriture inattendue aurait annulé toute sa transaction.
+- Invitation ciblée produite depuis les paramètres propriétaire, transférée uniquement en mémoire vers l’autre origine puis acceptée par le second compte confirmé. Le fragment est retiré de l’URL ; secret et adresses non journalisés ni documentés. SQL confirme une invitation consommée, un owner et un member. Les paramètres du membre affichent les deux rôles sans formulaire d’invitation.
+- Un **produit réel expressément autorisé** a été créé, avec code-barres et conditionnement fournis. Aucun catalogue de démonstration importé ; détails d’inventaire conservés uniquement dans la réserve, pas dans le dépôt.
+- Stock : retrait jusqu’à zéro, fiche conservée et retrait désactivé ; réapprovisionnement par le membre. Deux ajouts lancés depuis les deux sessions ont cumulé leurs effets, avec convergence des écrans sans rechargement. Cela ne mesure pas à lui seul le chevauchement exact des transactions, déjà testé localement par observation des verrous.
+- Courses liées et scanner saisi : besoin temporaire cinq ; total Ajouter 1 → 5 → 3 → annulation. Depuis le stock initial, quantité finale = initial + total ; courses 0 cochées à cinq, puis 2 décochées à trois, puis exactement 5 après annulation et stock initial restauré. États SQL et seconde UI contrôlés.
+- Retirer : dernier exemplaire jusqu’à zéro, nouveau retrait refusé sans stock négatif ni modification des courses. Après ce refus, le client a retiré le contexte ajustable du scan ; le stock initial a été rétabli par Stock +. Cette limite d’UX existante ne doit pas être présentée comme une annulation de ce scan refusé.
+- `cloud-replay-audit.sql`, complément **SQL sous rôle de l’auteur**, a rejoué une intention réellement enregistrée : même reçu, snapshot/révisions et nombre de reçus inchangés ; même clé avec paramètres différents refusée. Ce contrôle ne simule pas une perte réseau HTTP Cloud ; ce dernier cas reste couvert localement.
+- La seule ligne de courses créée pour la recette a été supprimée **après accord explicite au moment de la suppression**. Aucun produit ni compte supprimé. État final SQL : **deux comptes vérifiés, une réserve, un owner et un member, un produit à sa quantité initiale, aucune course d’essai**. Audit final : `violations = []`, huit tables RLS, 47 contraintes et cinq politiques.
+- Déconnexion du membre puis rechargement : écran Auth sans données privées. La session propriétaire reste connectée sur `localhost:4173`, stock confirmé. Le membre devra se reconnecter pour réutiliser son onglet ; il n’a pas été réauthentifié artificiellement.
+
+Les captures de preuve restent sous `.tmp/`, ignorées ; aucune adresse, clé, invitation ou capture d’inventaire réel dans les commits. Ni Android/Safari iOS réels ni PWA HTTPS publique testés ici.
 
 ## SMTP, sauvegarde et prochaine action
 
@@ -105,8 +116,14 @@ La preview a été relancée sur `127.0.0.1:4173` hors du bac à sable après un
 
 La session propriétaire est sur **`http://localhost:4173/`**. L’ancienne page en cache de **`http://127.0.0.1:4173/`** a été quittée puis rouverte, laissant s’activer la mise à jour normale du service worker : l’écran Auth actuel s’y affiche, avec stockage d’origine distinct, sans effacement des données locales.
 
-Action manuelle demandée : inscrire/confirmer/connecter le second utilisateur sur `127.0.0.1:4173`, sans créer de réserve ni accepter d’invitation ; conserver le propriétaire connecté sur `localhost:4173`. Il est aussi demandé un **produit réel autorisé (nom/code-barres/quantité)** pour exercer les mutations en rétablissant sa quantité initiale, sans donnée de démonstration. Poursuivre ensuite extérieur avant invitation, deux membres/RPC/polling, exclusivement avec ces comptes et données autorisés. Ne pas récupérer de mot de passe ou session personnelle dans une conversation.
+Ces étapes d’inscription du second compte, d’invitation et de recette sur produit autorisé sont maintenant exécutées ci-dessus. Ne pas récupérer de mot de passe ou session personnelle dans une conversation.
 
-`BACKUP.md` documente export technique ciblé `public,private,auth` sans sessions, copie chiffrée externe, restauration transactionnelle sur cible neuve, intégrité/UUID Auth, reprise de pause et limites. **Aucune sauvegarde Cloud ni restauration complète exécutée à ce stade** ; exercice obligatoire avant usage quotidien. Aucun maintien artificiel d’activité ajouté. L’export/import utilisateur de phase 5 n’est pas livré sous couvert de cette procédure technique.
+`BACKUP.md` documente export technique ciblé `public,private,auth` sans sessions, copie chiffrée externe, restauration transactionnelle sur cible neuve, intégrité/UUID Auth, reprise de pause et limites. Auto-review a d’abord refusé la copie des données Auth/privées vers la cible locale, **avant exécution**, faute d’accord spécifique. L’utilisateur a ensuite explicitement autorisé cette copie temporaire et la répétition ; aucun contournement de la restriction.
+
+**Répétition de restauration réussie** avec les données réelles après cet accord : export CLI ciblé uniquement en mémoire, PostgreSQL 17.11 sur image locale `17.11.0.006`, sans réseau ni port publié, données en RAM/tmpfs. Schéma Auth vide reconstitué depuis la structure locale compatible, trois migrations appliquées sur base vierge, import en une transaction avec triggers temporairement neutralisés. Comparaison de **dix tables** (cinq publiques, trois privées, `auth.users` et `auth.identities`) : nombres de lignes et empreintes SHA-256 identiques. Tri explicite `COLLATE "C"` pour rendre les empreintes indépendantes des collations locales. Audit des grants/RLS sans violation, aucun membre orphelin, owner incohérent, stock absent ou lien de courses invalide ; `session_replication_role = origin` après import. UUID et données Auth préservés sans divulgation de leur contenu. L’exercice vérifie la restauration SQL, pas une nouvelle connexion HTTP à un serveur Auth local restauré.
+
+Le conteneur et sa copie en RAM ont été supprimés après chaque tentative ; aucune donnée Cloud modifiée, aucun dump affiché ou enregistré en fichier, stack 2B conservée. Les premières tentatives ont révélé un problème de démarrage du conteneur puis des différences de représentation/tri dans le comparateur ; ces points du banc de répétition ont été corrigés avant le résultat réussi. Aucun échec de comparaison n’a été présenté comme un succès. Preuve locale non sensible : `.tmp/restore-drill-result.json` (ignorée, aucun contenu de table).
+
+**Reste avant usage quotidien** : créer et conserver une vraie archive chiffrée hors Supabase selon `BACKUP.md` ; la répétition ne laisse volontairement aucune sauvegarde durable. La procédure de reprise après pause est documentée, mais le projet actif n’a pas été suspendu pour la tester. Aucun maintien artificiel d’activité ajouté. L’export/import utilisateur de phase 5 n’est pas livré sous couvert de cette procédure technique.
 
 Ne pas poursuivre caméra/OFF/photos/déploiement avant validation du périmètre suivant. Le dépôt doit rester strictement privé.

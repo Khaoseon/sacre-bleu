@@ -1,6 +1,6 @@
 # Réserve · App_reserve
 
-PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. **La phase 2B fonctionne avec Supabase local** : inscription et confirmation email, invitation, stock, scanner simulé et courses synchronisés. La phase 2C connecte un projet Supabase Free à Paris ; sa mise en service reste conditionnée à la recette Auth/SMTP et à la restauration. Design et thèmes conservés, aucun hébergement public de la PWA.
+PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. **La phase 2C est validée sur Supabase Free à Paris** : confirmation email via SMTP Gmail, invitation, stock, scanner par saisie et courses synchronisés entre deux comptes. Une restauration technique a été répétée sur une cible locale vierge isolée. Le fonctionnement Supabase local de phase 2B, le design et les thèmes sont conservés. Aucun hébergement public de la PWA ; une sauvegarde externe chiffrée reste à conserver avant usage quotidien.
 
 ## Démarrer localement
 
@@ -91,7 +91,7 @@ Résultats dans [docs/VALIDATION.md](docs/VALIDATION.md). Transmission : [docs/H
 
 ## Limites et suite
 
-Pas de déploiement PWA, caméra, Open Food Facts ou Storage privé complet. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’interface d’export/restauration partagé ou de gestion avancée des membres. La sauvegarde technique est documentée ; la répétition de restauration reste nécessaire avant usage quotidien. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
+Pas de déploiement PWA, caméra, Open Food Facts ou Storage privé complet. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’interface d’export/restauration partagé ou de gestion avancée des membres. La restauration technique a été répétée ; une archive externe chiffrée reste à conserver avant usage quotidien. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
 
 Polling adapté à deux membres et une petite réserve ; Realtime désactivé. Effacer plusieurs cochés applique des commandes individuelles reprises séparément, sans transaction globale du lot. Android et Safari iOS réels restent à valider ; une largeur mobile émulée ne valide pas l’installation PWA.
 

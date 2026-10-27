@@ -1,6 +1,6 @@
 # Validation — phases 1, 2A, 2B et 2C
 
-## Mise en service 2C — 27 octobre 2026
+## Clôture 2C — 27 octobre 2026
 
 Projet Supabase Free `uznbnihmdzxdnlxanjcl`, Paris, PostgreSQL 17.11 et pgcrypto 1.3. Historique Git synchronisé sur dépôt privé. Trois migrations inchangées appliquées après précontrôle, dry-run et accord explicite ; historique distant concordant. API limitée à `public`, Auth avec confirmation obligatoire et callbacks exacts. Aucune donnée de démonstration, aucun reset distant ni déploiement PWA.
 
@@ -19,7 +19,13 @@ Projet Supabase Free `uznbnihmdzxdnlxanjcl`, Paris, PostgreSQL 17.11 et pgcrypto
 
 Les compteurs après recette anonyme étaient nuls dans les huit tables et Auth. Supabase Free a d’abord refusé le modèle email avec le fournisseur intégré ; les réglages de base ont été appliqués séparément. Après configuration personnelle du SMTP Gmail, le contenu et le sujet du modèle ont été appliqués avec succès. L’utilisateur a confirmé la **réception réelle du premier email et la confirmation du compte**, corroborée par le compteur de compte vérifié. Aucun succès Mailpit n’est assimilé à cette livraison Gmail.
 
-La **connexion réelle**, la **création RPC d’une réserve vide** et la **persistance après rechargement** ont ensuite été observées dans l’UI Cloud. SQL confirme 1 réserve, 1 owner conforme et zéro produit/stock/course ; UI « Synchronisé ». Le second compte, les refus d’accès d’un extérieur connecté, l’invitation, les mutations de stock/scanner/courses et la synchronisation entre comptes restent à valider. Sauvegarde/reprise documentées, restauration complète non encore répétée. État détaillé : `HANDOFF_2C.md`.
+La **connexion réelle**, la **création RPC d’une réserve vide** et la **persistance après rechargement** ont ensuite été observées dans l’UI Cloud. Le second compte confirmé ne voyait pas cette réserve avant invitation. Les assertions SQL complémentaires sous rôle extérieur ont validé cinq lectures vides, snapshot absent et refus RPC/écriture directe ; ce contrôle de rôle SQL est distinct d’un appel HTTP signé.
+
+L’invitation ciblée a ensuite été créée et acceptée dans les deux sessions, sans journaliser son secret. Owner/member contrôlés, produit réel autorisé créé, passage à zéro conservant la fiche, réapprovisionnement membre et deux ajouts cumulés avec convergence des écrans. Scanner Ajouter 1 → 5 → 3 → annulation avec courses liées : cochage à zéro, restauration exacte des quantités/cochage et retour au stock initial. Retirer à zéro puis refus supplémentaire sans changement des courses ; stock initial rétabli par commande normale. Replay SQL d’une vraie intention : même reçu sans nouvel effet, paramètres différents refusés. La perte de réponse HTTP reste un test local, pas un test Cloud exécuté ici.
+
+Après accord explicite, la seule course d’essai est supprimée. État final contrôlé : deux comptes vérifiés, une réserve à deux membres, un produit à sa quantité initiale, zéro course. Audit final sans violation. Déconnexion/rechargement du membre : aucune donnée privée ; propriétaire toujours connecté.
+
+La répétition de restauration réelle a d’abord été refusée avant lancement par Auto-review, puis explicitement autorisée par l’utilisateur pour la copie locale temporaire d’Auth et des données privées. **Restauration réussie sur PostgreSQL local vierge, sans réseau ni port, données en RAM**, après recréation du schéma Auth et des migrations. Dix tables métier/techniques et Auth identiques par nombre de lignes et SHA-256 ; tri binaire explicite, intégrité/UUID/grants/RLS conformes et retour à `origin`. Copie jetable supprimée, aucun dump en fichier ou journal, aucune écriture Cloud. Une archive externe chiffrée reste à constituer ; la pause réelle du projet et une connexion HTTP au service Auth restauré n’ont pas été testées. État détaillé : `HANDOFF_2C.md`.
 
 Les sections suivantes restent l’historique des étapes précédentes.
 

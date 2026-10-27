@@ -1,6 +1,6 @@
 # Sauvegarde et reprise — Supabase Free
 
-Procédure administrative préparée pour deux utilisateurs, au 27 octobre 2026. **Pas encore exécutée sur Cloud ni validée par une restauration complète.** L’export JSON de démonstration ne sauvegarde pas la réserve partagée. L’import utilisateur avec prévisualisation reste une fonction future de phase 5.
+Procédure administrative pour deux utilisateurs, au 27 octobre 2026. **Export Cloud et restauration SQL répétés avec succès sur une cible locale vierge isolée**, après accord spécifique pour cette copie temporaire des données privées/Auth. Aucune archive durable n’a été conservée par l’exercice : une sauvegarde externe chiffrée reste à constituer. L’export JSON de démonstration ne sauvegarde pas la réserve partagée. L’import utilisateur avec prévisualisation reste une fonction future de phase 5.
 
 ## Quoi conserver et à quelle fréquence
 
@@ -68,4 +68,12 @@ Cette opération administrative suit la méthode du [guide officiel de restaurat
 
 Cette méthode technique conserve les données et UUID originaux, sous contrôle administratif. Si seule une copie des produits/courses est récupérable et qu’Auth est perdue, elle nécessite une **restauration distincte** avec nouveaux comptes confirmés et remappage explicite des identifiants via une procédure examinée. Ne pas copier directement les anciens `owner_id`/`user_id`, ni inventer une validation email. L’import JSON utilisateur transactionnel prévu en phase 5 répondra à ce cas ; il n’est pas annoncé comme livré ici.
 
-La [documentation des sauvegardes Supabase](https://supabase.com/docs/guides/platform/backups) recommande les exports CLI et copies externes pour Free. Cette préparation ne certifie pas encore une restauration : le projet doit rester en mise en service tant que l’exercice n’a pas réussi.
+La [documentation des sauvegardes Supabase](https://supabase.com/docs/guides/platform/backups) recommande les exports CLI et copies externes pour Free.
+
+## Répétition exécutée en 2C
+
+Après accord spécifique de l’utilisateur, le dump CLI ciblé décrit plus haut a été capturé uniquement en mémoire, sans fichier de données ni affichage. Une cible PostgreSQL 17.11 vierge a été initialisée dans un conteneur sans réseau ni port publié, avec répertoire de données en RAM/tmpfs et socket interne uniquement. La structure Auth locale compatible et les trois migrations y ont été appliquées avant l’import transactionnel.
+
+Les nombres de lignes et empreintes SHA-256 de dix tables essentielles ont été comparés avec la source : `reserves`, `reserve_members`, `products`, `product_stock`, `shopping_items`, `private.invitations`, `private.requests`, `private.scan_operations`, `auth.users`, `auth.identities`. **Égalité constatée**, y compris UUID, quantités, liens, versions et comptes. Pour une comparaison déterministe entre environnements, trier les représentations JSON avec `ORDER BY to_jsonb(ligne)::text COLLATE "C"` et comparer les champs des résultats indépendamment de l’ordre des propriétés JSON. Audit RLS/grants et contrôles d’intégrité sans violation ; rôle de réplication revenu à `origin`.
+
+La cible et les données en RAM ont ensuite été supprimées ; aucune modification de la source Cloud ou de la base locale 2B. Cet exercice confirme la restauration SQL des données actuelles, **pas** une nouvelle authentification HTTP au service Auth restauré, ni une restauration sur un autre projet hébergé ou une reprise après pause effective. Aucun secret administratif ou contenu de table n’a été commité. Répéter l’exercice après évolution du schéma ou d’Auth ; il ne remplace pas la conservation d’une archive externe chiffrée.

@@ -155,4 +155,11 @@ Après accord d’application des migrations et configuration Auth, effectuer ce
 7. Modifier dans une session, observer l’autre visible sous environ cinq secondes ; revenir au premier plan et actualiser. Deux ajouts concurrents doivent se cumuler. Vérifier conflit d’annulation après mutation de l’autre membre, déconnexion et disparition des données privées.
 8. Reporter séparément chaque résultat dans `HANDOFF_2C.md`, avec date, cible et éventuel blocage SMTP. Le succès Mailpit **ne valide pas** la livraison Cloud. Ne pas exécuter `test:db`, `test:db:api`, `test:db:concurrency` ou `test:shared` sur Cloud.
 
+Deux audits SQL complémentaires de recette sont versionnés. Ils simulent le rôle applicatif avec les identités déjà confirmées ; ils ne créent ni JWT ni compte et ne remplacent pas la connexion réelle dans les deux UI :
+
+- `scripts/backend/cloud-outsider-audit.sql` : seulement avant invitation, avec exactement une réserve, son unique owner, deux comptes vérifiés et un produit autorisé. Il attend cinq lectures vides, un snapshot absent et le refus de RPC/écriture directe. Une précondition différente arrête le test sans effet.
+- `scripts/backend/cloud-replay-audit.sql` : rejoue une intention stock/scan déjà validée, exige le reçu identique et aucun changement de snapshot ou du nombre de reçus, puis vérifie le refus de la même clé avec d’autres paramètres. À lancer pendant que les deux personnes ne modifient pas la réserve.
+
+Ils s’exécutent avec `npx --no-install supabase db query --linked --file CHEMIN_DU_SCRIPT` sur le projet vérifié. Chaque audit est une seule instruction DO ; tout accès ou effet inattendu provoque une exception annulant sa transaction. Le succès est une exécution sans erreur, sans ligne de données retournée. Ils ne sont pas des fixtures de peuplement, des tâches récurrentes ou des tests destructifs de la réserve.
+
 Avant l’usage quotidien : sauvegarde externe et exercice de restauration de `BACKUP.md`. La caméra, Open Food Facts, Storage/photos et le déploiement PWA restent hors périmètre.
