@@ -1,8 +1,29 @@
 # Validation — phases 1, 2A, 2B, 2C et 3
 
-## Recette réelle Samsung en cours — 27 octobre 2026
+## Session de recette réelle Samsung clôturée — 27 octobre 2026
 
 Téléphone personnel sous **Android 13 / One UI 5.1**, interface anglaise, navigateur **Chrome Android**. Modèle exact et version Chrome restent à relever. Résultats ci-dessous rapportés par l’utilisateur ; l’agent a préparé le serveur et examiné les captures fournies, sans piloter le téléphone.
+
+### Résultats acquis à la fin de cette session
+
+L’utilisateur confirme le succès du dernier parcours de quantités puis du test d’interruption. Ces confirmations complètent les constats historiques détaillés plus bas ; aucun audit SQL/API indépendant du stock final n’a été lancé.
+
+| Essai physique Samsung                           | Résultat confirmé par l’utilisateur                                                                                        |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| HTTPS privé, connexion existante, caméra réelle  | Écran synchronisé et aperçu obtenus ; cadrage corrigé confirmé                                                             |
+| Lecture du code EAN-13 de l’emballage autorisé   | Produit reconnu et ajouté après correction autofocus/choix d’objectif                                                      |
+| Même code maintenu dix secondes                  | Un seul ajout, pas de double lecture involontaire observée                                                                 |
+| Quantités du dernier scan Ajouter                | Parcours proposé et confirmé globalement : stock initial 1, scan → 2 ; total traité 5 → stock 6 ; total traité 3 → stock 4 |
+| Annuler après ajustements                        | Retour déclaré à **stock 1 / courses 0**, état initial de la recette                                                       |
+| Passage à l’écran d’accueil pendant dix secondes | Arrêt de l’usage caméra, disparition de l’indicateur, retour en pause puis reprise normale confirmés                       |
+
+**Clôture technique :** serveur HTTPS temporaire arrêté par l’agent et absence d’écoute sur le port 4443 contrôlée. Aucun changement de pare-feu à supprimer. Autorité de recette conservée dans le magasin du compte Windows et sur le Samsung pour la future reprise ; aucune clé privée transférée. Les fichiers TLS restent hors Git. Dépôt privé, documentation de cette session commitée et poussée après vérification.
+
+**Reste non validé physiquement :** iPhone/Safari et installation PWA ; synchronisation du stock et des courses sur le second compte/appareil ; EAN-8/UPC-A et plusieurs produits successifs ; retrait/représentation du même emballage et répétition explicite ; mode Retirer et refus à zéro ; déduction/restauration de courses ayant une quantité positive au départ ; inconnu et saisie de secours sur téléphone ; panne/réponse réseau incertaine ; refus de permission et interruptions supplémentaires ; lampe et vibration. Les tests automatisés déjà décrits couvrent une partie de ces cas, sans remplacer leur recette physique. Aucun temps chiffré de reconnaissance, modèle précis, version Chrome ou objectif effectivement choisi relevé. La netteté est suffisante pour la lecture validée, sans isoler l’effet de l’autofocus de celui du choix d’objectif. Cette clôture porte sur **la session effectuée**, pas sur une validation complète Android/iOS de la phase 3.
+
+**Contrôles de clôture :** 146 tests applicatifs / 11 fichiers, TypeScript, builds local/Cloud et formatage réussis ; règles de stock, RPC et migrations inchangées. Aucun Open Food Facts, service hébergé ou tunnel public ajouté.
+
+### Déroulement de la session (historique)
 
 - Essai USB abandonné : transfert de fichiers fonctionnel et interfaces USB/ADB sans erreur signalée par Windows, mais Chrome PC reste « Offline / Pending authentication ». La seule fenêtre photographiée était l’activation générale « Allow USB debugging? », pas une autorisation RSA de ce PC. Révocation des autorisations, reconnexion, mode PTP et réactivation n’ont pas fait apparaître la demande RSA. Cela ne valide aucun parcours du scanner par USB.
 - Après accord explicite : mkcert 1.4.4 téléchargé depuis la publication officielle, SHA-256 vérifié contre le manifeste Microsoft Winget. Autorité de recette isolée dans `.tmp/phone-tls/ca`, clé privée conservée sur le PC et ignorée par Git. Confiance Windows confirmée dans **CurrentUser/Root uniquement** ; aucun ajout LocalMachine. Seul le certificat public, vérifié sans clé privée, a été préparé pour transfert. L’utilisateur confirme son installation comme certificat CA sur le Samsung.
@@ -13,7 +34,7 @@ Correction ciblée après ce constat : aperçu en `object-fit: cover`, centré, 
 
 Vérifications du correctif : **138 tests applicatifs / 11 fichiers**, TypeScript, builds local et Cloud, formatage et `git diff --check` réussis. Treize tests de géométrie ajoutés : flux portrait dans aperçu horizontal, projection vers le cadre dans cinq rapports de dimensions, rotation et dimensions indisponibles. Les quatre rasters EAN/UPC passent encore par ZXing et vérifient la zone transmise à `drawImage`. Les tests existants de filtrage, cycle caméra et opérations stock/courses restent réussis. Aucune migration, RPC, authentification ou règle de stock modifiée ; tests backend de la livraison initiale conservés. Les captures de téléphone contiennent l’environnement personnel : **elles ne sont pas ajoutées au dépôt**. Ni clé/certificat local ni IP/MAC/identifiant d’appareil personnel n’est versionné dans ce compte rendu.
 
-À poursuivre : choix explicite d’un produit de test, rapidité et doublons, quantités/compensations, inconnu, interruptions et contrôle du second compte ; ensuite iPhone. Les paragraphes historiques ci-dessous décrivent l’état avant cette recette physique et ne remplacent pas ces nouveaux constats.
+À ce stade intermédiaire, restaient le choix du produit, les quantités et les interruptions, validés ensuite dans le résumé de clôture ci-dessus. Les autres scénarios, le second compte et l’iPhone restent ouverts. Les paragraphes historiques ci-dessous décrivent l’état avant cette recette physique et ne remplacent pas ces nouveaux constats.
 
 ### Premier emballage physique : lecture bloquée par le flou
 
