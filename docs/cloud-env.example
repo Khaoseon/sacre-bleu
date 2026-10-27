@@ -1,0 +1,4 @@
+# Copier vers .env.cloud.local (ignoré par Git), puis remplacer les deux valeurs.
+# Seulement des paramètres publics. Aucun identifiant administratif.
+VITE_SUPABASE_URL=https://REMPLACER_PAR_LA_REFERENCE.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_REMPLACER

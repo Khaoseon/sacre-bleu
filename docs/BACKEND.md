@@ -1,6 +1,6 @@
-# Backend Supabase — phases 2A et 2B
+# Backend Supabase — phases 2A, 2B et passage Cloud 2C
 
-Le backend est implémenté et testé **localement**. Aucun projet hébergé n’a été créé ou lié. La phase 2B branche maintenant les écrans React sur les RPC, avec sessions Auth et démo explicitement isolée, en conservant l’interface et les thèmes.
+Le backend est implémenté et testé **localement**. La phase 2B branche les écrans React sur les RPC, avec sessions Auth et démo explicitement isolée, en conservant l’interface et les thèmes. En phase 2C, les trois migrations inchangées ont été appliquées, après accord, sur Supabase Free `uznbnihmdzxdnlxanjcl` à Paris. L’état de recette Auth/SMTP et les limitations sont dans `HANDOFF_2C.md` ; procédures Cloud et sauvegarde dans `CLOUD.md` et `BACKUP.md`.
 
 ## Démarrage reproductible
 
@@ -124,9 +124,9 @@ Règles mises en place en phase 2B :
 
 Les mises à jour de métadonnées et les réglages manuels de courses sont des écritures partielles sérialisées, avec dernière valeur explicitement envoyée gagnante. Les ajustements/annulations de scans ont les contrôles de versions plus stricts décrits ci-dessus. Transfert de propriété, retrait de membres, suppression de comptes, import/restauration et Storage privé complet ne sont pas des interfaces de cette phase.
 
-## Connexion future à un projet Supabase Free
+## Passage à Supabase Free (phase 2C)
 
-Instructions préparées, **non exécutées dans cette intervention** :
+Les instructions historiques de préparation ci-dessous sont complétées par `CLOUD.md`, qui utilise la CLI verrouillée, un dry-run `--skip-vault`, des configurations Cloud ciblées distinctes de Docker et des audits SQL sans mutation. La création/liaison/migration ont désormais été réalisées en 2C après accord ; ne pas rejouer cette procédure comme une nouvelle installation sur la réserve existante. Le modèle email est séparé car Free refuse sa modification sans SMTP personnalisé.
 
 1. Créer ultérieurement un projet Free vide avec la bonne région ; vérifier sa version PostgreSQL et les règles Auth (confirmation email, URLs exactes, limites, éventuel SMTP) avant usage. Prévoir la sauvegarde/restauration décrite dans le plan avant de dépendre du service.
 2. Se connecter à la CLI dans son terminal, sans copier de token dans une conversation ; lier uniquement le bon projet avec `npx supabase link --project-ref <ref-du-projet>`.

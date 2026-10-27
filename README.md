@@ -1,6 +1,6 @@
 # Réserve · App_reserve
 
-PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. **La phase 2B fonctionne avec Supabase local** : inscription et confirmation email, invitation, stock, scanner simulé et courses synchronisés. Design et thèmes conservés. Aucun projet hébergé ni déploiement n’a été créé.
+PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. **La phase 2B fonctionne avec Supabase local** : inscription et confirmation email, invitation, stock, scanner simulé et courses synchronisés. La phase 2C connecte un projet Supabase Free à Paris ; sa mise en service reste conditionnée à la recette Auth/SMTP et à la restauration. Design et thèmes conservés, aucun hébergement public de la PWA.
 
 ## Démarrer localement
 
@@ -17,6 +17,12 @@ npm run dev -- --strictPort
 Ouvrir [l’application](http://127.0.0.1:5173/) et [Mailpit](http://127.0.0.1:55324/). Vite écoute seulement sur la boucle locale. API : `127.0.0.1:55321` ; PostgreSQL : port `55322`. Ne pas exposer la stack de développement au réseau public.
 
 `env:local` génère le fichier ignoré `.env.local` avec seulement `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY`, sans afficher les clés. Une ancienne clé publique `anon` est acceptée ; une clé secrète ou `service_role` est refusée par le frontend.
+
+## Utiliser Supabase Cloud depuis cet ordinateur
+
+La configuration publique Cloud est séparée dans `.env.cloud.local` (ignoré par Git). Le modèle est `docs/cloud-env.example` ; ne jamais y mettre un secret. Démarrer avec `npm run dev:cloud -- --strictPort`. Pour compiler puis consulter sur cet ordinateur : `npm run build:cloud`, puis `npm run preview:cloud -- --strictPort`. Les fichiers Cloud vont dans `dist-cloud/`, séparément du build local `dist/` ; aucun déploiement n’est effectué.
+
+Les modes habituels restent réservés à Docker ou à la démo sans backend ; joindre le Cloud exige le mode `cloud`, une URL HTTPS de projet Supabase et une clé publishable. Les sessions Auth sont séparées par projet Cloud et gardent la clé historique en local. Procédure, Auth et choix SMTP : [docs/CLOUD.md](docs/CLOUD.md). Sauvegarde externe et reprise : [docs/BACKUP.md](docs/BACKUP.md). État précis de mise en service : [docs/HANDOFF_2C.md](docs/HANDOFF_2C.md).
 
 `db:start` applique les migrations d’une nouvelle installation sans injecter de démonstration. **`npm run db:reset` efface la base locale** : le réserver à une remise à zéro volontaire. `npm run db:stop` conserve les volumes.
 
@@ -62,7 +68,7 @@ Les photos locales JPEG/PNG/WebP de 500 Ko maximum restent disponibles en démo.
 - `src/theme.css`, `theme.ts`, `public/theme-init.js` : couleurs centralisées et initialisation avant rendu.
 - `supabase/migrations/` : trois migrations 2A conservées, RLS et RPC transactionnelles/idempotentes ; `supabase/templates/confirmation.html` : confirmation locale.
 
-Thème (`app-reserve.theme.v1`) et tri partagé (`app-reserve.sort.v1`) sont locaux. Session Auth séparée (`app-reserve.auth.v1`). Le journal `app-reserve.pending.v1:*` n’est ni un cache de catalogue ni une file d’édition hors ligne ; aucun secret d’invitation n’y figure.
+Thème (`app-reserve.theme.v1`) et tri partagé (`app-reserve.sort.v1`) sont locaux. Session Auth séparée (`app-reserve.auth.v1` en local, suffixée par origine de projet en Cloud). Le journal `app-reserve.pending.v1:*` n’est ni un cache de catalogue ni une file d’édition hors ligne ; aucun secret d’invitation n’y figure.
 
 ## Vérifications
 
@@ -85,8 +91,8 @@ Résultats dans [docs/VALIDATION.md](docs/VALIDATION.md). Transmission : [docs/H
 
 ## Limites et suite
 
-Pas de cloud, déploiement, caméra, Open Food Facts ou Storage privé complet. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’export/restauration partagé ou de gestion avancée des membres. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
+Pas de déploiement PWA, caméra, Open Food Facts ou Storage privé complet. Pas de cache privé persistant après fermeture, d’écritures hors ligne, d’interface d’export/restauration partagé ou de gestion avancée des membres. La sauvegarde technique est documentée ; la répétition de restauration reste nécessaire avant usage quotidien. Après fermeture complète de l’onglet ou déconnexion, le journal de reprise disparaît : consulter le stock confirmé avant une nouvelle intention. Le contexte ajustable du dernier scan est perdu au rechargement ; aucun mouvement n’est rejoué automatiquement.
 
 Polling adapté à deux membres et une petite réserve ; Realtime désactivé. Effacer plusieurs cochés applique des commandes individuelles reprises séparément, sans transaction globale du lot. Android et Safari iOS réels restent à valider ; une largeur mobile émulée ne valide pas l’installation PWA.
 
-Supabase Cloud nécessitera une demande distincte : revue migrations/RLS et sauvegardes, Auth/SMTP et URLs HTTPS exactes, modèle de confirmation, clé publique frontend, tests à deux identités et procédure de restauration. Aucun secret serveur dans `VITE_*`. Voir [docs/BACKEND.md](docs/BACKEND.md) et [docs/PLAN.md](docs/PLAN.md). Ne pas commencer la phase suivante sans validation de son périmètre.
+Le projet Cloud de phase 2C a été créé et migré après accord ; les validations effectives et les blocages restants sont distingués dans `HANDOFF_2C.md`. Aucun secret serveur dans `VITE_*`. Voir [docs/BACKEND.md](docs/BACKEND.md) et [docs/PLAN.md](docs/PLAN.md). Ne pas commencer la phase suivante sans validation de son périmètre.

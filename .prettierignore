@@ -1,5 +1,9 @@
 node_modules
 dist
+dist-cloud
+backups
+**/supabase/.temp
+**/supabase/.branches
 package-lock.json
 *.tsbuildinfo
 .tools

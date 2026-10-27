@@ -1,0 +1,21 @@
+# Reviewed Cloud-only settings. Never start the Docker stack from this directory.
+# Use --workdir config/cloud AND an explicit --project-ref after approval.
+project_id = "app-reserve-cloud-config"
+
+[api]
+schemas = ["public"]
+auto_expose_new_tables = false
+
+[auth]
+site_url = "http://127.0.0.1:5173"
+additional_redirect_urls = ["http://127.0.0.1:5173/auth/callback", "http://localhost:5173/auth/callback", "http://127.0.0.1:4173/auth/callback", "http://localhost:4173/auth/callback"]
+enable_refresh_token_rotation = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 12
+password_requirements = "lower_upper_letters_digits"
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true

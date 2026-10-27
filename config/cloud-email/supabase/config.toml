@@ -1,0 +1,6 @@
+# Apply only after custom SMTP is configured; Free rejects template edits otherwise.
+project_id = "app-reserve-cloud-email-config"
+
+[auth.email.template.confirmation]
+subject = "Confirmez votre adresse — réserve."
+content_path = "./supabase/templates/confirmation.html"

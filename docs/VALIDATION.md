@@ -1,4 +1,25 @@
-# Validation — phases 1, 2A et 2B
+# Validation — phases 1, 2A, 2B et 2C
+
+## Mise en service 2C — 27 octobre 2026
+
+Projet Supabase Free `uznbnihmdzxdnlxanjcl`, Paris, PostgreSQL 17.11 et pgcrypto 1.3. Historique Git synchronisé sur dépôt privé. Trois migrations inchangées appliquées après précontrôle, dry-run et accord explicite ; historique distant concordant. API limitée à `public`, Auth avec confirmation obligatoire et callbacks exacts. Aucune donnée de démonstration, aucun reset distant ni déploiement PWA.
+
+| Vérification                               | Résultat                                                                                           |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `npm test`                                 | 81 tests applicatifs réussis, 7 fichiers                                                           |
+| `npm run typecheck`                        | Réussi                                                                                             |
+| `npm run build`, `npm run build:cloud`     | Builds local et Cloud réussis, fichiers séparés                                                    |
+| `npm run format:check`, `git diff --check` | Réussis                                                                                            |
+| Base locale vierge isolée, sans effacer 2B | 80 assertions pgTAP, 6 tests concurrence, Auth/API et partagé Mailpit réussis ; linter sans erreur |
+| Types régénérés                            | Identiques aux types versionnés, aucune modification manuelle                                      |
+| Audit Cloud SQL                            | 8 tables RLS, 14 fonctions applicatives, 47 contraintes, 5 politiques ; aucune violation détectée  |
+| API Cloud anonyme                          | 5 SELECT, RPC de création et mutation directe sans ligne cible refusés 401/42501                   |
+| Profil `private`                           | Refus 406/PGRST106                                                                                 |
+| Auth public                                | Email activé, autoconfirmation désactivée                                                          |
+
+Les compteurs après recette anonyme sont nuls dans les huit tables et Auth. Les tests Cloud **avec comptes connectés**, emails, invitations, RPC et synchronisation restent à effectuer après SMTP ; aucun succès Mailpit n’est assimilé à une livraison Gmail. Supabase Free a refusé le modèle email tant que le fournisseur intégré est actif ; les réglages de base ont ensuite été appliqués séparément. Sauvegarde/reprise documentées, restauration complète non encore répétée. État détaillé : `HANDOFF_2C.md`.
+
+Les sections suivantes restent l’historique des étapes précédentes.
 
 ## Clôture 2B — 27 octobre 2026
 

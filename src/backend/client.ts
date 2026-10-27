@@ -1,23 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.generated';
+import { authStorageKey, backendEnvironmentError } from './config';
+export { isPublicKey } from './config';
 
-export const AUTH_STORAGE_KEY = 'app-reserve.auth.v1';
-export function isPublicKey(key: string): boolean {
-  if (key.startsWith('sb_publishable_')) return true;
-  try {
-    return JSON.parse(atob(key.split('.')[1])).role === 'anon';
-  } catch {
-    return false;
-  }
-}
+export const AUTH_STORAGE_KEY = authStorageKey(import.meta.env.VITE_SUPABASE_URL);
 export function configuredClient(url?: string, key?: string) {
-  if (!url || !key || !isPublicKey(key)) return null;
+  if (
+    !url ||
+    !key ||
+    backendEnvironmentError(import.meta.env.MODE, {
+      VITE_SUPABASE_URL: url,
+      VITE_SUPABASE_PUBLISHABLE_KEY: key,
+    })
+  )
+    return null;
   try {
     const parsed = new URL(url);
     if (!['http:', 'https:'].includes(parsed.protocol)) return null;
     return createClient<Database>(url, key, {
       auth: {
-        storageKey: AUTH_STORAGE_KEY,
+        storageKey: authStorageKey(url),
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: false,

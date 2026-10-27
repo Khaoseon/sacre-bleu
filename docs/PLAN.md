@@ -24,7 +24,13 @@ Snapshot relu après mutation, polling toutes les cinq secondes lorsque l’appl
 
 Validation : parcours réel automatisé à deux comptes avec emails Mailpit et confirmation depuis un client neuf ; UI sur deux origines, scans 1 → 5 → 3 → annulation, panne réelle de l’API et reprise après rechargement sans double mouvement, thèmes mobiles et confidentialité à la déconnexion. Résultats détaillés dans `VALIDATION.md`, transmission dans `HANDOFF_2B.md`.
 
-Limites : pas de cache privé persistant après fermeture, de file d’édition hors ligne, de Storage complet, de restauration partagée ni de validation sur téléphones réels. Le passage à Cloud nécessite une intervention distincte. Aucune phase 2C ou 3 n’est commencée. Les paragraphes suivants rappellent les critères de l’étape 2 et ne demandent pas de recréer le backend déjà livré.
+Limites 2B : pas de cache privé persistant après fermeture, de file d’édition hors ligne, de Storage complet, de restauration partagée ni de validation sur téléphones réels. Le passage à Cloud est traité dans l’intervention 2C ci-dessous. La phase 3 n’est pas commencée. Les paragraphes suivants rappellent les critères de l’étape 2 et ne demandent pas de recréer le backend déjà livré.
+
+### Phase 2C — Supabase Free hébergé : mise en service en cours
+
+Sécuriser et synchroniser le dépôt strictement privé ; créer manuellement le projet Free à Paris, vérifier PostgreSQL/pgcrypto et l’exposition API ; simuler puis appliquer les trois migrations existantes après accord explicite. Configurer Auth avec confirmation obligatoire et callbacks exacts, choisir le SMTP après présentation des prérequis/coûts, isoler les environnements frontend local/Cloud sans refonte. Préparer sauvegarde externe, restauration et reprise après pause, sans maintien artificiel d’activité.
+
+Projet `uznbnihmdzxdnlxanjcl`, migrations et réglages de base Auth/API appliqués après accord. Procédures dans `CLOUD.md` et `BACKUP.md`, validations et limites effectives dans `HANDOFF_2C.md`. La clôture exige les parcours Cloud à deux comptes, emails réellement reçus, RLS/extérieur, RPC, synchronisation et exercice de restauration ; ne pas déduire ces succès des seuls tests locaux. Aucun seed, fixture destructive, reset distant ou déploiement PWA. Aucun développement caméra/OFF/Storage.
 
 Après validation explicite de l’étape 1, préparer le schéma, les migrations et les opérations avant de créer des ressources. Prévoir deux comptes individuels, réserves, membres, invitation à usage unique et droits d’accès RLS. Pas de clé de service dans le client.
 

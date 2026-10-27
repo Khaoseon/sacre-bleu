@@ -1,5 +1,9 @@
 node_modules/
 dist/
+dist-cloud/
+backups/
+*.dump
+*.backup
 *.local
 .env*
 coverage/
@@ -19,3 +23,5 @@ Thumbs.db
 .aws/
 .codex/
 .agents/
+**/supabase/.temp/
+**/supabase/.branches/
