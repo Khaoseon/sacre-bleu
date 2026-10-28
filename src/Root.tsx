@@ -12,6 +12,7 @@ import { backendError } from './backend/errors';
 import { consumeLink, invitationLink, type Invitation, type IncomingLink } from './backend/links';
 import { clearPrivateIntents, PENDING_PREFIX, SharedPantryStore } from './backend/store';
 import { usePantry } from './backend/usePantry';
+import { EdgeProductProvider } from './productLookupClient';
 
 const backend = client ? new SupabaseBackend(client) : null;
 const auth = client ? new ReserveAuth(client) : null;
@@ -549,6 +550,14 @@ function PantryScreen({
   logout: () => void;
 }) {
   const view = usePantry(store);
+  const [productProvider] = useState(
+    () =>
+      new EdgeProductProvider({
+        url: import.meta.env.VITE_SUPABASE_URL,
+        publicKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        token: async () => (await client?.auth.getSession())?.data.session?.access_token,
+      }),
+  );
   if (!view.snapshot)
     return (
       <Gate title="Votre réserve." theme={theme}>
@@ -572,6 +581,7 @@ function PantryScreen({
     <App
       theme={theme}
       shared={{ store, view }}
+      productProvider={productProvider}
       accountSettings={<SharingSettings session={session} store={store} logout={logout} />}
     />
   );

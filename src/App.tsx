@@ -2,6 +2,7 @@ import {
   Modal,
   ProductForm,
   ProductImage,
+  ProductAttribution,
   Quantity,
   packageLabel,
   type Editor,
@@ -45,7 +46,6 @@ import {
   suggestions,
   undoOperation,
   ScanRecognition,
-  findProductByBarcode,
   type Product,
   type State,
   type ScanOperation,
@@ -55,6 +55,8 @@ import { load, persist, STORAGE_KEY } from './storage';
 import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
 import { snapshotState, type SharedPantryStore, type SharedView } from './backend/store';
 import { CameraScanner } from './CameraScanner';
+import { ProductSearch } from './productSearch';
+import type { ProductProvider } from './productInfo';
 
 type Page = 'stock' | 'scanner' | 'shopping';
 function initial() {
@@ -74,11 +76,13 @@ export default function App({
   shared,
   accountSettings,
   onExitDemo,
+  productProvider,
 }: {
   theme: ThemeController;
   shared?: { store: SharedPantryStore; view: SharedView };
   accountSettings?: ReactNode;
   onExitDemo?: () => void;
+  productProvider?: ProductProvider;
 }) {
   const [boot] = useState(() =>
     shared ? { state: snapshotState(shared.view.snapshot!, 'name'), error: '' } : initial(),
@@ -100,6 +104,29 @@ export default function App({
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Tout');
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [productSearch] = useState(() => new ProductSearch(productProvider));
+  const lookupInFlight = useRef(false);
+  function cancelLookup() {
+    productSearch.cancel();
+    lookupInFlight.current = false;
+  }
+  useEffect(() => {
+    return () => productSearch.cancel();
+  }, [productSearch]);
+  useEffect(() => {
+    cancelLookup();
+    setEditor((value) => (value?.lookup === 'loading' ? null : value));
+  }, [page]);
+  useEffect(() => {
+    const hidden = () => {
+      if (document.visibilityState !== 'visible') {
+        cancelLookup();
+        setEditor((value) => (value?.lookup === 'loading' ? null : value));
+      }
+    };
+    document.addEventListener('visibilitychange', hidden);
+    return () => document.removeEventListener('visibilitychange', hidden);
+  }, [productSearch]);
   const [deleting, setDeleting] = useState<Product | null>(null);
   const [settings, setSettings] = useState(false);
   const [cameraSettingsTarget, setCameraSettingsTarget] = useState<HTMLDivElement | null>(null);
@@ -248,7 +275,14 @@ export default function App({
     commit((s) => changeStock(s, p.id, delta), `${p.name} · quantité mise à jour`);
   }
   async function scan(raw: string, repeat = false, fromCamera = false) {
-    if (scanInFlight.current || editor || settings || (shared && !shared.store.writable)) return;
+    if (
+      scanInFlight.current ||
+      lookupInFlight.current ||
+      editor ||
+      settings ||
+      (shared && !shared.store.writable)
+    )
+      return;
     const barcode = raw.trim();
     if (!/^\d{4,32}$/.test(barcode)) {
       setFeedback({ text: 'Saisissez un code de 4 à 32 chiffres.', error: true });
@@ -266,11 +300,23 @@ export default function App({
       return;
     }
     recognition.hold(barcode);
-    const p = findProductByBarcode(current.current.products, barcode);
-    if (!p) {
-      setEditor({ barcode, fromScan: true, mode });
+    const resolution = productSearch.start(current.current.products, barcode);
+    if (resolution.status === 'loading') {
+      lookupInFlight.current = true;
+      setEditor({ barcode, fromScan: true, mode, lookup: 'loading' });
+      const result = await resolution.result;
+      if (!result) return;
+      lookupInFlight.current = false;
+      setEditor({
+        barcode,
+        fromScan: true,
+        mode,
+        lookup: result.status,
+        suggestion: result.status === 'found' ? result.product : undefined,
+      });
       return;
     }
+    const p = resolution.product;
     scanInFlight.current = true;
     setScanning(true);
     if (fromCamera) setCode(barcode);
@@ -749,6 +795,12 @@ export default function App({
                     <section className="last-product">
                       <div className="section-eyebrow">DERNIER PRODUIT</div>
                       <ProductImage product={lastProduct} />
+                      {lastProduct.external && (
+                        <ProductAttribution
+                          barcode={lastProduct.external.barcode}
+                          image={!!lastProduct.external.imageUrl}
+                        />
+                      )}
                       <h2>{lastProduct.name}</h2>
                       <p>
                         {[lastProduct.brand, packageLabel(lastProduct)].filter(Boolean).join(' · ')}
@@ -1065,6 +1117,30 @@ export default function App({
               </p>
             </>
           )}
+          {state.products.some((p) => p.external) && (
+            <p className="source-credit">
+              Données :{' '}
+              <a href="https://world.openfoodfacts.org" target="_blank" rel="noreferrer">
+                Open Food Facts et ses contributeurs
+              </a>
+              {' · '}
+              <a
+                href="https://opendatacommons.org/licenses/odbl/1-0/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                ODbL
+              </a>
+              {' · Photos '}
+              <a
+                href="https://creativecommons.org/licenses/by-sa/3.0/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                CC BY-SA 3.0
+              </a>
+            </p>
+          )}
         </main>
         <footer className="main-footer">
           <span>
@@ -1109,13 +1185,36 @@ export default function App({
           </button>
         </div>
       )}
-      {editor && (
+      {editor?.lookup === 'loading' && (
+        <Modal
+          title="Nouveau code-barres"
+          close={() => {
+            cancelLookup();
+            setEditor(null);
+          }}
+        >
+          <p role="status" className="form-note">
+            Recherche du produit…
+          </p>
+          <button
+            className="secondary-button"
+            onClick={() => {
+              cancelLookup();
+              setEditor({ ...editor, lookup: 'unavailable' });
+            }}
+          >
+            Saisir manuellement
+          </button>
+        </Modal>
+      )}
+      {editor && editor.lookup !== 'loading' && (
         <ProductForm
           editor={editor}
           shared={!!shared}
           blocked={locked}
           recovery={shared && (shared.view.error || shared.view.pending) ? recovery : undefined}
           close={() => {
+            cancelLookup();
             setEditor(null);
             input.current?.focus();
           }}

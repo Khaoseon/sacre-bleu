@@ -48,6 +48,8 @@ Critères : EAN courants reconnus sur les deux plateformes ; session multi-artic
 
 ## Étape 4 — Identification Open Food Facts
 
+**Implémentée et validée localement le 28 octobre 2026 ; activation Cloud et recette OFF sur téléphones en attente.** Fournisseur isolé v3.6, proxy Edge authentifié, budget partagé durable, cache mémoire et formulaire existant prérempli. Migration additive de provenance/image séparée de Storage, types régénérés, règles de stock conservées. 246 tests applicatifs, 104 assertions pgTAP, 7 tests concurrents, Auth/API et parcours partagé, runtime Edge et navigateur local validés. Trois lectures réelles sur staging OFF, distinctes des fixtures. Aucun déploiement ni changement de quantités Cloud. Comparaison, licences, coûts et procédure soumise à accord dans `OPEN_FOOD_FACTS.md` ; transmission dans `HANDOFF_4.md`.
+
 Créer une interface fournisseur indépendante de l’UI et du stockage. Ordre : catalogue personnel → fournisseur OFF → formulaire manuel. Ne pas appeler le fournisseur pour un code déjà connu. Prévoir timeout, cache, résultat incomplet, indisponibilité et absence de connexion.
 
 Vérifier à ce moment la documentation officielle, l’identification du client, les limites API, les licences de données et d’images, et l’attribution requise. Ne pas inventer de limite stable dans le code. Les quantités proposées par le fournisseur restent éditables et ne fusionnent pas deux marques ou conditionnements différents.

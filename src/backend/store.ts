@@ -50,6 +50,13 @@ export function snapshotState(snapshot: ReserveSnapshot, sort: Sort): State {
       quantity: p.quantity,
       minimum: p.minimum ?? undefined,
       updatedAt: p.updated_at,
+      external: p.off_barcode
+        ? {
+            provider: 'open-food-facts',
+            barcode: p.off_barcode,
+            imageUrl: p.off_image_url ?? undefined,
+          }
+        : undefined,
     })),
     shopping: snapshot.shopping.map((i) => ({
       id: i.id,
@@ -384,6 +391,13 @@ export class SharedPantryStore {
       unit: product.size ? (product.unit ?? null) : null,
       category: product.category ?? null,
       minimum: product.minimum ?? null,
+      // Omit new fields for legacy/manual products: compatible with phase 3 Cloud until approval.
+      ...(product.external
+        ? {
+            off_barcode: product.external.barcode,
+            off_image_url: product.external.imageUrl ?? null,
+          }
+        : {}),
     };
     const commands: ReserveCommand[] = existing
       ? [{ action: 'update_product', payload: { product_id: product.id, ...fields } }]

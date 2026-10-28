@@ -125,6 +125,27 @@ async function product(ctx, quantity = 0) {
     })
   ).product_id;
 }
+test('durable OFF budget serializes concurrent callers across Edge instances', async () =>
+  fixture(async (ctx) => {
+    await ctx.accept(ctx.b);
+    await ctx.admin.query(
+      "update private.product_lookup_gate set next_allowed_at='-infinity' where singleton",
+    );
+    const claim = async (client) =>
+      (await client.query('select public.claim_product_lookup() as allowed')).rows[0].allowed;
+    const result = await blockedPair(
+      ctx.admin,
+      ctx.a,
+      ctx.b,
+      () => claim(ctx.a),
+      () => claim(ctx.b),
+    );
+    assert.equal(result.a, true);
+    assert.equal(result.b.value, false);
+    await ctx.admin.query(
+      "update private.product_lookup_gate set next_allowed_at='-infinity' where singleton",
+    );
+  }));
 
 test('two simultaneous additions serialize without losing either delta', async () =>
   fixture(async (ctx) => {

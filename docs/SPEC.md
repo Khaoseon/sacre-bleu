@@ -1,6 +1,6 @@
 # Spécification produit — App_reserve
 
-Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. La phase 3 ajoute la caméra et conserve les contrats métier ; détails dans `SCANNER.md`, validations et limites dans `HANDOFF_3.md`. Aucun déploiement PWA ni Open Food Facts ; recette principale iPhone/Samsung validée le 28 octobre 2026, limites complémentaires dans `VALIDATION.md`.
+Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. La phase 3 ajoute la caméra et conserve les contrats métier ; détails dans `SCANNER.md`, validations et limites dans `HANDOFF_3.md`. La phase 4 prépare Open Food Facts v3.6 via une Edge Function authentifiée, avec préremplissage modifiable et priorité au catalogue personnel ; implémentation et tests locaux dans `OPEN_FOOD_FACTS.md` et `HANDOFF_4.md`, activation Cloud soumise à accord. Aucun déploiement PWA ; recette principale scanner iPhone/Samsung de phase 3 validée le 28 octobre 2026, limites complémentaires dans `VALIDATION.md`.
 
 ## Contexte du produit
 

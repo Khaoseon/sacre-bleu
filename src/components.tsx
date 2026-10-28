@@ -21,8 +21,16 @@ import {
   type Product,
   type Unit,
 } from './model';
+import { imageUrl, sourceUrl, type LookupResult, type ProductSuggestion } from './productInfo';
 
-export type Editor = { product?: Product; barcode?: string; fromScan?: boolean; mode?: 1 | -1 };
+export type Editor = {
+  product?: Product;
+  barcode?: string;
+  fromScan?: boolean;
+  mode?: 1 | -1;
+  suggestion?: ProductSuggestion;
+  lookup?: LookupResult['status'] | 'loading';
+};
 export const packageLabel = (p: Product) =>
   p.size ? `${p.size.toLocaleString('fr-FR')} ${p.unit ?? ''}` : '';
 const productIcons = {
@@ -34,14 +42,53 @@ const productIcons = {
 };
 export function ProductImage({ product }: { product: Product }) {
   const Icon = product.id === 'thon' ? Fish : productIcons[product.category ?? 'Autres'];
+  const src = product.photo ?? imageUrl(product.external?.imageUrl);
+  const [failed, setFailed] = useState<string>();
   return (
     <span className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}>
-      {product.photo ? (
-        <img src={product.photo} alt="" />
+      {src && failed !== src ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(src)}
+        />
       ) : (
         <Icon aria-hidden="true" size={28} strokeWidth={1.5} />
       )}
     </span>
+  );
+}
+export function ProductAttribution({
+  barcode,
+  image = false,
+}: {
+  barcode: string;
+  image?: boolean;
+}) {
+  return (
+    <small className="product-attribution">
+      <a href={sourceUrl(barcode)} target="_blank" rel="noreferrer">
+        Open Food Facts et ses contributeurs
+      </a>
+      {' · '}
+      <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noreferrer">
+        ODbL
+      </a>
+      {image && (
+        <>
+          {' · Photo '}
+          <a
+            href="https://creativecommons.org/licenses/by-sa/3.0/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            CC BY-SA 3.0
+          </a>
+        </>
+      )}
+    </small>
   );
 }
 export function Quantity({
@@ -140,8 +187,11 @@ export function ProductForm({
   recovery?: ReactNode;
 }) {
   const p = editor.product;
+  const proposed = editor.suggestion;
+  const defaults = p ?? proposed;
   const draftId = useRef(p?.id ?? id());
   const [photo, setPhoto] = useState(p?.photo);
+  const [external, setExternal] = useState(p?.external ?? proposed?.external);
   const [photoError, setPhotoError] = useState('');
   const [minimum, setMinimum] = useState(p?.minimum !== undefined);
   const [error, setError] = useState('');
@@ -163,6 +213,7 @@ export function ProductForm({
         unit: String(data.get('unit')) as Unit,
         category: String(data.get('category') ?? 'Autres') as Category,
         photo,
+        external,
         quantity: Number(data.get('quantity')),
         minimum: minimum ? Number(data.get('minimum')) : undefined,
         updatedAt: new Date().toISOString(),
@@ -190,6 +241,19 @@ export function ProductForm({
             : ' Indiquez sa quantité après cet ajout.'}
         </p>
       )}
+      {editor.lookup === 'missing' && (
+        <p className="form-note">Produit absent d’Open Food Facts. Complétez la fiche.</p>
+      )}
+      {editor.lookup === 'unavailable' && (
+        <p className="form-note">Recherche indisponible. Vous pouvez saisir le produit.</p>
+      )}
+      {proposed?.packageText && (
+        <small>
+          Conditionnement indiqué : {proposed.packageText}
+          {!proposed.size && ' · à vérifier'}
+        </small>
+      )}
+      {external && <ProductAttribution barcode={external.barcode} image={!!external.imageUrl} />}
       <form onSubmit={submit} className="product-form">
         <fieldset className="form-fields" disabled={blocked || saving}>
           <label>
@@ -199,31 +263,29 @@ export function ProductForm({
               autoFocus
               required
               maxLength={120}
-              defaultValue={p?.name}
+              defaultValue={defaults?.name}
               placeholder="Ex. Pois chiches"
             />
           </label>
-          {!editor.fromScan && (
-            <div className="field-row">
-              <label>
-                Marque <span>facultatif</span>
-                <input
-                  name="brand"
-                  maxLength={80}
-                  defaultValue={p?.brand}
-                  placeholder="Ex. Bonduelle"
-                />
-              </label>
-              <label>
-                Catégorie
-                <select name="category" defaultValue={p?.category ?? 'Autres'}>
-                  {categories.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          )}
+          <div className="field-row">
+            <label>
+              Marque <span>facultatif</span>
+              <input
+                name="brand"
+                maxLength={80}
+                defaultValue={defaults?.brand}
+                placeholder="Ex. Bonduelle"
+              />
+            </label>
+            <label>
+              Catégorie
+              <select name="category" defaultValue={defaults?.category ?? 'Autres'}>
+                {categories.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div className="field-row">
             <label>
               Conditionnement <span>facultatif</span>
@@ -233,13 +295,13 @@ export function ProductForm({
                 min="0.01"
                 step="0.01"
                 max="99999"
-                defaultValue={p?.size}
+                defaultValue={defaults?.size}
                 placeholder="500"
               />
             </label>
             <label>
               Unité
-              <select name="unit" defaultValue={p?.unit ?? 'g'}>
+              <select name="unit" defaultValue={defaults?.unit ?? 'g'}>
                 {units.map((u) => (
                   <option key={u}>{u}</option>
                 ))}
@@ -335,11 +397,29 @@ export function ProductForm({
               }}
             />
           </label>
-          {shared && <small>Ajout de photos indisponible en mode partagé pour le moment.</small>}
-          {photo && (
+          {shared && (
+            <small>Ajout de photos personnelles indisponible en mode partagé pour le moment.</small>
+          )}
+          {(photo || external?.imageUrl) && (
             <div className="photo-preview">
-              <img src={photo} alt="Photo du produit" />
-              <button type="button" className="text-button" onClick={() => setPhoto(undefined)}>
+              <ProductImage
+                product={{
+                  id: draftId.current,
+                  name: '',
+                  quantity: 0,
+                  updatedAt: '',
+                  photo,
+                  external,
+                }}
+              />
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  setPhoto(undefined);
+                  setExternal((r) => (r ? { ...r, imageUrl: undefined } : undefined));
+                }}
+              >
                 Retirer la photo
               </button>
             </div>

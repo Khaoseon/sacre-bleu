@@ -20,7 +20,15 @@ export interface ReserveSnapshot {
 }
 export type ProductFields = Pick<
   CatalogRow,
-  'name' | 'barcode' | 'brand' | 'size' | 'unit' | 'category' | 'photo_path'
+  | 'name'
+  | 'barcode'
+  | 'brand'
+  | 'size'
+  | 'unit'
+  | 'category'
+  | 'photo_path'
+  | 'off_barcode'
+  | 'off_image_url'
 > & { minimum: number | null };
 export type ReserveCommand =
   | {

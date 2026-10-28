@@ -98,3 +98,7 @@ Pas de déploiement PWA, Open Food Facts ou Storage privé complet. Scanner impl
 Polling adapté à deux membres et une petite réserve ; Realtime désactivé. Effacer plusieurs cochés applique des commandes individuelles reprises séparément, sans transaction globale du lot. Android et Safari iOS réels restent à valider ; une largeur mobile émulée ne valide pas l’installation PWA.
 
 Le projet Cloud de phase 2C a été créé et migré après accord ; les validations effectives et les blocages restants sont distingués dans `HANDOFF_2C.md`. Aucun secret serveur dans `VITE_*`. Voir [docs/BACKEND.md](docs/BACKEND.md) et [docs/PLAN.md](docs/PLAN.md). Ne pas commencer la phase suivante sans validation de son périmètre.
+
+## Phase 4 — Identification des nouveaux produits
+
+Open Food Facts v3.6 est implémenté via une Edge Function authentifiée, avec priorité au catalogue personnel et formulaire manuel préservé. **Validé localement, non déployé dans le Cloud.** Références externes séparées des photos privées, cache/limiteur partagé, attribution et mêmes opérations de stock. Architecture, licences et activation soumise à accord : [docs/OPEN_FOOD_FACTS.md](docs/OPEN_FOOD_FACTS.md). Tests exécutés et recette téléphone restante : [docs/HANDOFF_4.md](docs/HANDOFF_4.md). Les phases 5/6 restent hors périmètre.

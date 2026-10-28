@@ -1,5 +1,6 @@
 import { demo } from './demo';
 import { categories, MAX_QUANTITY, StaleOperationError, units, type State } from './model';
+import { isExternalReference } from './productInfo';
 export const STORAGE_KEY = 'app-reserve.local.v1';
 export function load(): State {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -33,6 +34,7 @@ export function parseState(raw: string): State {
       !p.name.trim() ||
       !count(p.quantity) ||
       !optionalText(p.brand) ||
+      (p.external !== undefined && !isExternalReference(p.external)) ||
       (p.barcode !== undefined &&
         (typeof p.barcode !== 'string' ||
           !/^\d{4,32}$/.test(p.barcode) ||

@@ -46,6 +46,8 @@ export type Database = {
           category: string | null;
           id: string;
           name: string;
+          off_barcode: string | null;
+          off_image_url: string | null;
           photo_path: string | null;
           reserve_id: string;
           size: number | null;
@@ -59,6 +61,8 @@ export type Database = {
           category?: string | null;
           id?: string;
           name: string;
+          off_barcode?: string | null;
+          off_image_url?: string | null;
           photo_path?: string | null;
           reserve_id: string;
           size?: number | null;
@@ -71,6 +75,8 @@ export type Database = {
           category?: string | null;
           id?: string;
           name?: string;
+          off_barcode?: string | null;
+          off_image_url?: string | null;
           photo_path?: string | null;
           reserve_id?: string;
           size?: number | null;
@@ -206,6 +212,7 @@ export type Database = {
         Args: { p_invitation_id: string; p_request_id: string; p_token: string };
         Returns: Json;
       };
+      claim_product_lookup: { Args: { p_cooldown_seconds?: number }; Returns: boolean };
       create_reserve: { Args: { p_name: string; p_request_id: string }; Returns: Json };
       get_reserve_snapshot: { Args: { p_reserve_id: string }; Returns: Json };
       invite_member: {

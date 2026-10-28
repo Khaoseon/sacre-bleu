@@ -139,3 +139,11 @@ Les instructions historiques de préparation ci-dessous sont complétées par `C
 - [Développement local et CLI](https://supabase.com/docs/guides/local-development/cli/getting-started), [migrations](https://supabase.com/docs/guides/local-development/database-migrations).
 - [Sécurité Data API](https://supabase.com/docs/guides/api/securing-your-api), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [fonctions SQL et permissions](https://supabase.com/docs/guides/database/functions).
 - [Supabase Auth](https://supabase.com/docs/guides/auth), [authentification par mot de passe](https://supabase.com/docs/guides/auth/passwords), [tests pgTAP](https://supabase.com/docs/guides/database/testing).
+
+## Phase 4 — métadonnées OFF et budget fournisseur
+
+Une quatrième migration additive, `20261028000100_product_sources.sql`, est testée uniquement en local. Elle ajoute `products.off_barcode` / `off_image_url` avec validation et conserve `photo_path` indépendant. `mutate_reserve` accepte ces seuls champs supplémentaires pour créer/modifier une fiche ; ses branches stock/courses/scanner et reçus ne changent pas. Le snapshot RLS les retourne naturellement avec le catalogue.
+
+`private.product_lookup_gate` reste inaccessible directement. `claim_product_lookup(integer)` vérifie Auth confirmé/non anonyme et l’appartenance à une réserve, puis sérialise un créneau toutes les six secondes pour le projet et peut prolonger un délai 429. Privilèges explicites et `search_path = ''`. Cette RPC ne modifie ni les révisions des réserves, ni les quantités, ni les reçus de stock. Les types sont générés, pas retouchés manuellement.
+
+Edge `product-lookup` préparée et exercée dans le runtime local. Aucune migration/fonction Cloud appliquée dans cette phase sans accord. Aucun Storage ni photo privée ajouté. Architecture, commandes, licences et limites : `OPEN_FOOD_FACTS.md` ; résultats : `HANDOFF_4.md`.

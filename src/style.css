@@ -547,7 +547,18 @@ h1 > span {
 .product-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+}
+.product-attribution,
+.source-credit {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.source-credit {
+  margin-top: 20px;
 }
 .image-1 {
   background: var(--can-surface);

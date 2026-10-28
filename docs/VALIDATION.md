@@ -304,3 +304,11 @@ Captures conservées dans `docs/screenshots/` : stock sur mobile et ordinateur, 
 - Ni Android ni Safari iOS réels n’ont été utilisés. Installation PWA, clavier virtuel, vibration et comportement système restent à vérifier sur ces appareils.
 - La protection temporelle de 1,2 seconde contre les lectures rapprochées est présente ; la répétition volontaire a été exercée. L’anti-doublon d’une caméra réelle reste à concevoir et tester à l’étape correspondante.
 - La saisie et les photos restent locales. Aucun service distant n’a été intégré ou créé.
+
+## Phase 4 — Open Food Facts, 28 octobre 2026
+
+Implémentation locale depuis `ba18738`, sans migration ou déploiement Cloud. **246 tests applicatifs / 16 fichiers**, TypeScript strict, builds local/Cloud et formatage. Migration rejouée depuis une base locale vierge sans seed : **104 assertions pgTAP / 2 fichiers**, **7 tests de concurrence**, Auth/API, parcours partagé réel à deux comptes SDK/Mailpit, types régénérés et linter SQL sans erreur. **1 test runtime Edge local** vérifie Auth, appartenance, codes et origine sans appeler OFF. **1 parcours Chrome** avec fournisseur fictif vérifie catalogue prioritaire, stock/courses et annulation, préremplissage/correction/enregistrement, scan suivant sans fournisseur, fermeture/réponse tardive, absence, repli manuel, image en erreur et largeurs 390/320 px. Scripts reproductibles et prérequis dans `OPEN_FOOD_FACTS.md`.
+
+Trois appels GET réels et identifiés sur **staging OFF v3.6**, espacés, HTTP 200 : `3017620422003`, `3274080005003`, `7613034626844`. Noms/marques reçus, deux conditionnements exploités ; aucune photo reçue dans ces réponses sélectionnées. Aucun inventaire transmis ni fiche Cloud créée. Les fiches staging ne garantissent pas la qualité de production ; le nom Cristaline reçu illustre le besoin de correction. Aucun essai de charge ou 429 provoqué.
+
+Recette OFF sur iPhone/Samsung **non réalisée**, déploiement de fonction/migration **non effectué**, flux complet frontend → Edge → OFF en production **non validé**. La caméra physique, les permissions, la reprise continue et les images effectivement disponibles doivent être contrôlées après activation autorisée, avec périmètre de quantités jetables approuvé. Phase 3 physique conservée, phases 5/6 non commencées. Transmission complète et activation à approuver : `HANDOFF_4.md`.

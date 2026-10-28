@@ -167,6 +167,12 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
       quantity: 0,
       minimum: 3,
       updatedAt: new Date().toISOString(),
+      external: {
+        provider: 'open-food-facts' as const,
+        barcode: '1234567890128',
+        imageUrl:
+          'https://images.openfoodfacts.org/images/products/123/456/789/0128/front_fr.1.400.jpg',
+      },
     };
     expect(await a.saveProduct(product, false)).toBe(true);
     const photoPath = `${reserveId}/${product.id}/reserved.webp`;
@@ -179,6 +185,8 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
       true,
     );
     expect(a.getSnapshot().snapshot?.products[0].photo_path === photoPath).toBe(true);
+    expect(a.getSnapshot().snapshot?.products[0].off_barcode).toBe(product.external.barcode);
+    expect(a.getSnapshot().snapshot?.products[0].off_image_url).toBe(product.external.imageUrl);
     expect(a.getSnapshot().snapshot?.products[0].quantity).toBe(0);
     await b.refresh();
     expect(b.getSnapshot().snapshot?.products[0].quantity).toBe(0);

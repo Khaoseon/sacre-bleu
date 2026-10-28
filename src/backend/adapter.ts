@@ -8,6 +8,7 @@ import type {
 } from './contracts';
 import { backendError, BackendError } from './errors';
 import { categories, units } from '../model';
+import { imageUrl, isLookupBarcode } from '../productInfo';
 
 function object(value: Json): Record<string, Json | undefined> {
   if (!value || typeof value !== 'object' || Array.isArray(value))
@@ -112,7 +113,11 @@ export class SupabaseBackend implements ReserveBackend {
         const item = object(value);
         return (
           !(item.category === null || categories.includes(item.category as never)) ||
-          !(item.unit === null || units.includes(item.unit as never))
+          !(item.unit === null || units.includes(item.unit as never)) ||
+          (item.off_barcode != null &&
+            (typeof item.off_barcode !== 'string' || !isLookupBarcode(item.off_barcode))) ||
+          (item.off_image_url != null &&
+            (imageUrl(item.off_image_url) !== item.off_image_url || !item.off_barcode))
         );
       }) ||
       row.shopping.some((value) => typeof object(value).checked !== 'boolean') ||

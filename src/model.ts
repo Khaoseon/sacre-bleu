@@ -1,3 +1,4 @@
+import type { ExternalReference } from './productInfo';
 export type Unit = 'g' | 'kg' | 'ml' | 'L' | 'pièce';
 export type Category = 'Féculents' | 'Conserves' | 'Légumineuses' | 'Épicerie' | 'Autres';
 export type Sort = 'name' | 'recent';
@@ -9,6 +10,7 @@ export interface Product {
   size?: number;
   unit?: Unit;
   photo?: string;
+  external?: ExternalReference;
   category?: Category;
   quantity: number;
   minimum?: number;
