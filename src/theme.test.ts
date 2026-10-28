@@ -8,6 +8,7 @@ import {
   saveThemePreference,
   THEME_KEY,
   watchSystemTheme,
+  THEMES,
 } from './theme';
 
 let values: Map<string, string>;
@@ -41,6 +42,14 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Préférence visuelle', () => {
+  it.each(THEMES)('mémorise et restaure %s avec le bon mode des contrôles natifs', (theme) => {
+    saveThemePreference(theme);
+    expect(readThemePreference()).toBe(theme);
+    expect(root.dataset.theme).toBe(theme === 'auto' ? 'light' : theme);
+    expect(root.style.colorScheme).toBe(
+      theme === 'dark' || theme === 'retro-petrol' ? 'dark' : 'light',
+    );
+  });
   it('suit le système uniquement en mode Automatique', () => {
     expect(resolveTheme('auto', false)).toBe('light');
     expect(resolveTheme('auto', true)).toBe('dark');
@@ -111,6 +120,18 @@ describe('Préférence visuelle', () => {
 
 describe('Initialisation avant le premier rendu', () => {
   const bootstrap = readFileSync('public/theme-init.js', 'utf8');
+  it.each(THEMES)('restaure aussi %s avant React', (theme) => {
+    const earlyRoot = { dataset: {}, style: {} };
+    runInNewContext(bootstrap, {
+      localStorage: { getItem: () => theme },
+      matchMedia: () => ({ matches: false }),
+      document: { documentElement: earlyRoot },
+    });
+    expect(earlyRoot.dataset).toEqual({ theme: theme === 'auto' ? 'light' : theme });
+    expect(earlyRoot.style).toEqual({
+      colorScheme: theme === 'dark' || theme === 'retro-petrol' ? 'dark' : 'light',
+    });
+  });
   for (const [stored, system, expected] of [
     ['dark', false, 'dark'],
     ['light', true, 'light'],

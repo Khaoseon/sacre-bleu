@@ -23,6 +23,7 @@ import {
   ScanLine,
   Search,
   Settings2,
+  Settings,
   ShoppingBasket,
   ShoppingCart,
   Trash2,
@@ -101,6 +102,7 @@ export default function App({
   const [editor, setEditor] = useState<Editor | null>(null);
   const [deleting, setDeleting] = useState<Product | null>(null);
   const [settings, setSettings] = useState(false);
+  const [cameraSettingsTarget, setCameraSettingsTarget] = useState<HTMLDivElement | null>(null);
   const [resetting, setResetting] = useState(false);
   const [feedback, setFeedback] = useState<{ text: string; error?: boolean } | null>(null);
   const lastError = useRef('');
@@ -487,28 +489,32 @@ export default function App({
           <span>
             <span className="topbar-dot" /> {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
           </span>
-          <button className="local-button" onClick={() => setSettings(true)}>
-            <span className="status-dot" />
-            {shared
-              ? shared.view.busy
-                ? 'Enregistrement…'
-                : shared.view.pending
-                  ? 'Demande à vérifier'
-                  : shared.view.status === 'ready'
-                    ? 'Synchronisé'
-                    : 'Actualisation nécessaire'
-              : online
-                ? 'Enregistré sur cet appareil'
-                : 'Hors ligne · données locales'}
-            <CircleHelp size={15} />
-          </button>
+          <div className="topbar-actions">
+            <span className="local-button">
+              <span className="status-dot" />
+              <span role="status">
+                {shared
+                  ? shared.view.busy
+                    ? 'Enregistrement…'
+                    : shared.view.pending
+                      ? 'Demande à vérifier'
+                      : shared.view.status === 'ready'
+                        ? 'Synchronisé'
+                        : 'Actualisation nécessaire'
+                  : online
+                    ? 'Enregistré sur cet appareil'
+                    : 'Hors ligne · données locales'}
+              </span>
+            </span>
+            <button className="icon-button" aria-label="Réglages" onClick={() => setSettings(true)}>
+              <Settings size={21} aria-hidden="true" />
+            </button>
+          </div>
         </header>
         <main id="main-content">
           {shared &&
-            (shared.view.error ||
-              shared.view.busy ||
-              shared.view.status !== 'ready' ||
-              shared.view.pending) &&
+            !shared.view.busy &&
+            (shared.view.error || shared.view.status !== 'ready' || shared.view.pending) &&
             recovery}
           {bootError && (
             <div role="alert" className="storage-error">
@@ -672,14 +678,6 @@ export default function App({
           )}
           {page === 'scanner' && (
             <>
-              <div className="page-heading">
-                <div>
-                  <h1>
-                    Scanner<span>.</span>
-                  </h1>
-                  <p>Ajoutez ou retirez vos produits à la suite.</p>
-                </div>
-              </div>
               <div className="scanner-layout">
                 <section
                   className={`scanner-card ${mode === -1 ? 'removing' : ''}`}
@@ -708,6 +706,7 @@ export default function App({
                     </button>
                   </div>
                   <CameraScanner
+                    settingsTarget={cameraSettingsTarget}
                     recognition={recognition}
                     paused={locked || scanning || !!bootError || !!editor || settings}
                     onCode={(barcode) => void scan(barcode, false, true)}
@@ -1220,19 +1219,21 @@ export default function App({
       )}
       {settings && (
         <Modal
-          title={shared ? 'Paramètres de la réserve' : 'Données de cet appareil'}
+          title="Préférences"
           close={() => setSettings(false)}
           error={feedback?.error ? feedback.text : undefined}
         >
           <div className="settings-content">
-            <span className="pill">
-              {shared ? 'Réserve partagée privée' : 'Démonstration locale'}
-            </span>
             <AppearanceSettings theme={theme} />
+            {page === 'scanner' && <div ref={setCameraSettingsTarget} />}
             {shared ? (
-              accountSettings
+              <details className="settings-more">
+                <summary>Compte et réserve</summary>
+                {accountSettings}
+              </details>
             ) : (
-              <>
+              <details className="settings-more">
+                <summary>Données de démonstration</summary>
                 <p>
                   Vos produits et votre liste sont sauvegardés dans ce navigateur. Les modifications
                   sont disponibles hors ligne après le premier chargement de la version compilée.
@@ -1263,7 +1264,7 @@ export default function App({
                     Quitter la démonstration
                   </button>
                 )}
-              </>
+              </details>
             )}
           </div>
         </Modal>

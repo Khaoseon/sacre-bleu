@@ -247,6 +247,11 @@ button:hover:not(:disabled) {
   align-items: center;
   color: var(--muted);
 }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .topbar-dot {
   width: 6px;
   height: 6px;
@@ -254,6 +259,8 @@ button:hover:not(:disabled) {
   border-radius: 2px;
 }
 .local-button {
+  display: flex;
+  align-items: center;
   gap: 7px;
   font-size: 10px;
   color: var(--muted);
@@ -796,11 +803,18 @@ h1 > span {
   min-height: var(--touch-target);
 }
 .camera-choice {
-  display: grid;
-  gap: 5px;
   margin-top: 8px;
   color: var(--muted);
   font-size: 12px;
+}
+.camera-choice summary {
+  min-height: var(--touch-target);
+  align-content: center;
+  cursor: pointer;
+}
+.camera-choice label {
+  display: grid;
+  gap: 5px;
 }
 .camera-choice select {
   width: 100%;
@@ -2249,6 +2263,15 @@ input::file-selector-button {
   border: 0;
   min-width: 0;
 }
+.settings-more > summary {
+  cursor: pointer;
+  min-height: var(--touch-target);
+  align-content: center;
+  color: var(--muted);
+}
+.settings-more[open] > :not(summary) {
+  margin-block: 12px;
+}
 .theme-settings legend {
   font-size: 12px;
   font-weight: 600;
@@ -2256,7 +2279,8 @@ input::file-selector-button {
   color: var(--text-strong);
 }
 .theme-options {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
 }
 .theme-options label {
@@ -2282,6 +2306,32 @@ input::file-selector-button {
   background: var(--paper);
   color: var(--text);
   font-size: 12px;
+  gap: 8px;
+}
+.theme-swatch {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.swatch-auto {
+  background: var(--selected-surface);
+}
+.swatch-light {
+  background: #f8f9f6;
+}
+.swatch-dark {
+  background: #141715;
+}
+.swatch-slate {
+  background: #dbe3ec;
+}
+.swatch-retro-cream {
+  background: #eed6a5;
+}
+.swatch-retro-petrol {
+  background: #174953;
 }
 .theme-options input:checked + span {
   background: var(--selected-surface);

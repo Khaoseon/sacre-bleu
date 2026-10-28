@@ -1,6 +1,6 @@
 # Spécification produit — App_reserve
 
-Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. La phase 3 ajoute la caméra et conserve les contrats métier ; détails dans `SCANNER.md`, validations et limites dans `HANDOFF_3.md`. Aucun déploiement PWA ni Open Food Facts ; recette physique iPhone/Samsung encore nécessaire.
+Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. La phase 3 ajoute la caméra et conserve les contrats métier ; détails dans `SCANNER.md`, validations et limites dans `HANDOFF_3.md`. Aucun déploiement PWA ni Open Food Facts ; recette principale iPhone/Samsung validée le 28 octobre 2026, limites complémentaires dans `VALIDATION.md`.
 
 ## Contexte du produit
 
@@ -154,7 +154,9 @@ Un inconnu suspend la détection, conserve le flux et ouvre le formulaire exista
 
 #### Préférences visuelles
 
-Les paramètres proposent Automatique (par défaut), Clair et Sombre. Automatique suit la préférence système et ses changements ; un choix manuel prévaut sur le système. Le changement est immédiat et la préférence est conservée dans la clé locale `app-reserve.theme.v1`, séparée des données de stock et de courses. Changer de thème n’invalide pas le dernier scan. Une préférence illisible revient à Automatique ; un échec d’écriture est signalé sans prétendre avoir mémorisé le choix.
+La roue crantée ouvre les préférences : Automatique (par défaut), Sauge claire, Sauge sombre, Ardoise, Rétro crème et Rétro pétrole, à fonds unis. Automatique suit la préférence système et ses changements ; un choix manuel prévaut sur le système. Le changement est immédiat et la préférence est conservée dans la clé locale `app-reserve.theme.v1`, séparée des données de stock et de courses. Changer de thème n’invalide pas le dernier scan. Une préférence illisible revient à Automatique ; un échec d’écriture est signalé sans prétendre avoir mémorisé le choix.
+
+Le scanner ne répète pas son titre/sous-titre au-dessus des commandes. Le choix manuel de caméra est conservé localement dans `app-reserve.camera.v1` (identifiant et libellé, secours par nom si l’ID change) ; aucun identifiant n’est transmis. Un stockage bloqué produit une erreur sans annoncer de mémorisation.
 
 Le thème s’applique à tous les écrans, formulaires, modales, navigation mobile et contrôles natifs. Un script exécuté avant le premier rendu limite le flash d’un thème incorrect. Les palettes sont centralisées dans `src/theme.css`, sans nouvelle bibliothèque d’interface ; les verts Ajouter et rouges Retirer restent distincts. Les couleurs de texte, états épuisés et contrôles désactivés restent lisibles dans les deux thèmes.
 

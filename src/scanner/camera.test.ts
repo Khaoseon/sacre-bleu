@@ -3,6 +3,7 @@ import { ScanRecognition } from '../model';
 import {
   bindCameraLifecycle,
   CameraSession,
+  preferredCamera,
   type CameraRuntime,
   type CameraView,
   type Decoder,
@@ -90,6 +91,144 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('cycle caméra (MediaStream simulé)', () => {
+  it('retrouve après rechargement le choix mémorisé même si son identifiant a changé', async () => {
+    const f = fixture();
+    f.runtime.readChoice = () => ({ id: 'old-id', label: 'Back camera' });
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'rear-0', label: 'Back camera' },
+      { kind: 'videoinput', deviceId: 'auto', label: 'camera 0, facing back' },
+    ]);
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenCalledOnce();
+    expect(f.views.at(-1)?.cameraId).toBe('rear-0');
+    f.camera.dispose();
+  });
+  it('sauvegarde le choix manuel et permet de revenir à Automatique', async () => {
+    const f = fixture();
+    const save = vi.fn();
+    f.runtime.saveChoice = save;
+    f.devices.mockResolvedValue([{ kind: 'videoinput', deviceId: 'rear-0', label: 'Back' }]);
+    await f.camera.start();
+    await f.camera.selectCamera('rear-0');
+    expect(save).toHaveBeenLastCalledWith({ id: 'rear-0', label: 'Back' });
+    await f.camera.selectCamera('');
+    expect(save).toHaveBeenLastCalledWith(null);
+    f.camera.dispose();
+  });
+  it('conserve le flux et le choix précédent si la mémorisation échoue', async () => {
+    const f = fixture();
+    f.runtime.saveChoice = () => {
+      throw new Error('quota');
+    };
+    f.devices.mockResolvedValue([{ kind: 'videoinput', deviceId: 'rear-0', label: 'Back' }]);
+    await f.camera.start();
+    await f.camera.selectCamera('rear-0');
+    expect(f.getMedia).toHaveBeenCalledOnce();
+    expect(f.track.stop).not.toHaveBeenCalled();
+    expect(f.views.at(-1)?.error).toContain('Impossible de mémoriser');
+    f.camera.dispose();
+  });
+  it.each([
+    'camera 0, facing back',
+    'Double caméra grand angle arrière',
+    'Double camera grand angle arriere',
+    'Back Dual Wide Camera',
+  ])('privilégie le nom validé %s sans dépendre de son indice dans la liste', (label) => {
+    expect(
+      preferredCamera([
+        { id: 'front', label: 'Front camera' },
+        { id: 'tele', label: 'Téléobjectif arrière' },
+        { id: 'preferred', label },
+      ]),
+    ).toBe('preferred');
+    expect(preferredCamera([{ id: 'unknown', label: 'Caméra 1' }])).toBeUndefined();
+  });
+  it('choisit l’objectif validé avant tout décodage, ferme le flux provisoire et garde le choix à la reprise', async () => {
+    const f = fixture();
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'rear-0', label: 'Back camera' },
+      { kind: 'videoinput', deviceId: 'preferred', label: 'Double caméra grand angle arrière' },
+    ]);
+    const preferredTrack = Object.assign(new EventTarget(), {
+      readyState: 'live',
+      stop: vi.fn(),
+      getSettings: () => ({ deviceId: 'preferred' }),
+    });
+    const preferredStream = {
+      getTracks: () => [preferredTrack],
+      getVideoTracks: () => [preferredTrack],
+    } as unknown as MediaStream;
+    f.getMedia.mockResolvedValueOnce(f.stream).mockImplementation(async () => {
+      expect(f.track.stop).toHaveBeenCalledOnce();
+      expect(f.decoder.read).not.toHaveBeenCalled();
+      return preferredStream;
+    });
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenCalledTimes(2);
+    expect(f.getMedia).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        video: expect.objectContaining({ deviceId: { exact: 'preferred' } }),
+      }),
+    );
+    expect(f.video.srcObject).toBe(preferredStream);
+    expect(f.views.at(-1)).toMatchObject({ status: 'running', cameraId: 'preferred' });
+    vi.advanceTimersByTime(450);
+    expect(f.onCode).toHaveBeenCalledOnce();
+    f.getMedia.mockResolvedValue(preferredStream);
+    f.camera.stop('paused');
+    await f.camera.start();
+    vi.advanceTimersByTime(450);
+    expect(f.onCode).toHaveBeenCalledOnce();
+    f.camera.dispose();
+  });
+  it('ne rouvre pas une caméra déjà sélectionnée par le navigateur et respecte le choix manuel', async () => {
+    const f = fixture();
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'rear-0', label: 'camera 0, facing back' },
+      { kind: 'videoinput', deviceId: 'other', label: 'Back camera' },
+    ]);
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenCalledOnce();
+    await f.camera.selectCamera('other');
+    expect(f.getMedia).toHaveBeenCalledTimes(2);
+    expect(f.getMedia).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        video: expect.objectContaining({ deviceId: { exact: 'other' } }),
+      }),
+    );
+    f.camera.dispose();
+  });
+  it('revient au choix arrière du navigateur si l’objectif préféré échoue, sans boucle', async () => {
+    const f = fixture();
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'preferred', label: 'Double caméra grand angle arrière' },
+    ]);
+    f.getMedia
+      .mockResolvedValueOnce(f.stream)
+      .mockRejectedValueOnce({ name: 'OverconstrainedError' })
+      .mockResolvedValue(f.stream);
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenCalledTimes(3);
+    expect(f.getMedia).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        video: expect.objectContaining({ facingMode: { ideal: 'environment' } }),
+      }),
+    );
+    expect(f.views.at(-1)?.status).toBe('running');
+    f.camera.dispose();
+  });
+  it('ne réessaie pas automatiquement une permission refusée sur l’objectif préféré', async () => {
+    const f = fixture();
+    f.devices.mockResolvedValue([
+      { kind: 'videoinput', deviceId: 'preferred', label: 'camera 0, facing back' },
+    ]);
+    f.getMedia.mockResolvedValueOnce(f.stream).mockRejectedValueOnce({ name: 'NotAllowedError' });
+    await f.camera.start();
+    expect(f.getMedia).toHaveBeenCalledTimes(2);
+    expect(f.loadDecoder).not.toHaveBeenCalled();
+    expect(f.views.at(-1)?.status).toBe('error');
+    f.camera.dispose();
+  });
   it('demande une meilleure définition sans minimum strict et active la mise au point continue seulement si annoncée', async () => {
     const f = fixture();
     f.track.getCapabilities.mockReturnValue({ torch: true, focusMode: ['manual', 'continuous'] });
@@ -224,12 +363,12 @@ describe('cycle caméra (MediaStream simulé)', () => {
     const f = fixture();
     const inventory = deferred<[]>();
     f.devices.mockReturnValueOnce(inventory.promise);
-    await f.camera.start();
+    const opening = f.camera.start();
+    await Promise.resolve();
     f.camera.stop();
     const count = f.views.length;
     inventory.resolve([]);
-    await Promise.resolve();
-    await Promise.resolve();
+    await opening;
     expect(f.views.length).toBe(count);
     f.camera.dispose();
   });
@@ -296,8 +435,8 @@ describe('cycle caméra (MediaStream simulé)', () => {
     const pending = deferred<Decoder>();
     f.loadDecoder.mockReturnValue(pending.promise);
     const start = f.camera.start();
-    await Promise.resolve();
-    await Promise.resolve();
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+    expect(f.loadDecoder).toHaveBeenCalledOnce();
     f.camera.dispose();
     pending.resolve(f.decoder);
     await start;

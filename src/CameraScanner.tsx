@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Camera, Flashlight, Square } from 'lucide-react';
 import { ScanRecognition } from './model';
 import { bindCameraLifecycle, CameraSession, type CameraView } from './scanner/camera';
@@ -8,10 +9,12 @@ export function CameraScanner({
   recognition,
   paused,
   onCode,
+  settingsTarget,
 }: {
   recognition: ScanRecognition;
   paused: boolean;
   onCode: (code: string) => void;
+  settingsTarget?: HTMLElement | null;
 }) {
   const video = useRef<HTMLVideoElement>(null);
   const session = useRef<CameraSession | null>(null);
@@ -98,23 +101,37 @@ export function CameraScanner({
           )}
         </div>
       )}
-      {view.cameras.length > 1 && (
-        <label className="camera-choice">
-          Caméra
-          <select
-            value={view.cameraId}
-            disabled={paused || view.status === 'starting'}
-            onChange={(event) => void session.current?.selectCamera(event.target.value)}
-          >
-            <option value="">Arrière automatique</option>
-            {view.cameras.map((camera) => (
-              <option key={camera.id} value={camera.id}>
-                {camera.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+      {settingsTarget &&
+        createPortal(
+          <fieldset className="theme-settings camera-choice">
+            <legend>Caméra</legend>
+            {view.cameras.length ? (
+              <label>
+                <span className="sr-only">Objectif</span>
+                <select
+                  value={view.cameraId}
+                  disabled={view.status === 'starting'}
+                  onChange={(event) => void session.current?.selectCamera(event.target.value)}
+                >
+                  <option value="">Arrière automatique</option>
+                  {view.cameras.map((camera) => (
+                    <option key={camera.id} value={camera.id}>
+                      {camera.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <p>Activez la caméra pour choisir un objectif.</p>
+            )}
+            {view.error && (
+              <p role="alert" className="form-error">
+                {view.error}
+              </p>
+            )}
+          </fieldset>,
+          settingsTarget,
+        )}
     </div>
   );
 }

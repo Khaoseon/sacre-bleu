@@ -1,5 +1,7 @@
 # Recette privée sur iPhone et Samsung
 
+**Clôture du 28 octobre 2026 :** recette principale iPhone/Samsung et synchronisation des deux comptes confirmées, référence finale stock 2 / courses 0. Préférences/choix caméra persistant confirmés ensuite. Serveur arrêté, autorité Windows et clés/fichiers de recette supprimés ; nettoyage des deux téléphones confirmé par l’utilisateur. Les mentions de certificats conservés plus bas décrivent la clôture Samsung précédente. La procédure reste une référence pour une nouvelle recette autorisée : recréer une autorité isolée, ne pas réutiliser des clés supprimées. Cas complémentaires non réalisés détaillés dans `VALIDATION.md` ; ne pas les considérer validés par cette matrice.
+
 **Première session Samsung clôturée le 27 octobre 2026, iPhone et synchronisation entre comptes encore à effectuer.** Après accords distincts : certificat local installé sur le compte Windows et sur Samsung, serveur HTTPS LAN lancé ; aucun pare-feu modifié, tunnel public ou déploiement créé. Aperçu corrigé, première lecture, maintien dix secondes sans doublon, ajustements/annulation et arrière-plan/reprise confirmés par l’utilisateur sur Samsung. Serveur HTTPS ensuite arrêté ; liste détaillée des cas restants dans le résumé de clôture de VALIDATION.md. Résultats dans `VALIDATION.md`. Les instructions générales ci-dessous restent la procédure reproductible ; ne pas réinstaller une autorité déjà préparée. L’accès Cloud existant est conservé ; utiliser les deux comptes déjà confirmés. Ne pas lancer les fixtures locales contre le Cloud.
 
 La session de recette utilise une autorité isolée dans `.tmp/phone-tls/ca` et la confiance **Windows CurrentUser/Root uniquement**. Le dossier de transfert `.tmp/phone-public` contient seulement `App_reserve-recette.crt`, copie publique de `rootCA.pem` ; aucune clé privée à copier. Cette variante n’utilise pas l’autorité par défaut de mkcert. Pour la retirer à la fin, identifier son empreinte depuis ce certificat public et retirer seulement le certificat correspondant dans le magasin Windows de l’utilisateur (`certmgr.msc` → Trusted Root Certification Authorities → Certificates), ainsi que la CA installée sur le téléphone. Un `mkcert -uninstall` lancé avec le CAROOT par défaut ne vise pas cette autorité isolée. Arrêter le serveur séparément ; demander une autorisation avant de modifier le pare-feu. Les clés locales ne sont pas supprimées pendant la recette.
@@ -16,8 +18,11 @@ Le plus direct pour Safari iPhone et Samsung Internet est un certificat local de
    $phoneIphoneIp = '192.168.1.11'
    $phoneSamsungIp = '192.168.1.12'
    New-Item -ItemType Directory -Path .tmp/phone-tls -Force
-   ./.tools/mkcert.exe -install
+   $env:CAROOT = Join-Path (Get-Location) '.tmp/phone-tls/ca'
+   New-Item -ItemType Directory -Path $env:CAROOT -Force
    ./.tools/mkcert.exe -cert-file .tmp/phone-tls/server.pem -key-file .tmp/phone-tls/server-key.pem $phonePcIp localhost 127.0.0.1
+   # Après accord, confiance limitée au compte Windows :
+   certutil.exe -user -addstore Root .tmp/phone-tls/ca/rootCA.pem
    ./.tools/mkcert.exe -CAROOT
    ```
 
@@ -43,13 +48,15 @@ Le plus direct pour Safari iPhone et Samsung Internet est un certificat local de
 
 8. Ouvrir l’URL dans Safari sur iPhone, Chrome puis Samsung Internet sur Samsung. Connexion normale avec les comptes existants, sans modifier les callbacks Supabase. L’inscription, les liens de confirmation, les nouvelles invitations et la réinitialisation du mot de passe ne sont pas nécessaires à cette recette : l’origine LAN n’est pas ajoutée automatiquement aux callbacks Cloud. La session est distincte de celle du PC. Un stock « Synchronisé » doit apparaître avant les scans.
 
-Après la recette : Ctrl+C dans le terminal serveur ; supprimer la règle via `Remove-NetFirewallRule -DisplayName 'App_reserve recette HTTPS'`. Retirer le profil CA de l’iPhone et le certificat utilisateur du Samsung si cette autorité était réservée à cet essai ; `./.tools/mkcert.exe -uninstall` pour la confiance PC. Conserver les clés privées hors des échanges et du dépôt. Fermer les onglets ; le cache de l’application ne contient pas de catalogue privé, mais les sessions Auth persistées suivent les réglages habituels du navigateur. Se déconnecter sur un appareil prêté.
+Après la recette : Ctrl+C dans le terminal serveur ; supprimer la règle via `Remove-NetFirewallRule -DisplayName 'App_reserve recette HTTPS'`. Retirer le profil CA de l’iPhone et le certificat utilisateur du Samsung si cette autorité était réservée à cet essai ; retirer uniquement l’autorité isolée identifiée par son empreinte dans **CurrentUser/Root** pour la confiance PC (ne pas utiliser le CAROOT par défaut). Après retrait des confiances, supprimer les clés et fichiers de recette dédiés si le nettoyage a été autorisé ; ils restent hors des échanges et du dépôt. Fermer les onglets ; le cache de l’application ne contient pas de catalogue privé, mais les sessions Auth persistées suivent les réglages habituels du navigateur. Se déconnecter sur un appareil prêté.
 
 ## Variante Samsung Chrome par USB
 
 Pour Chrome Android, le [transfert de port DevTools par USB](https://developer.chrome.com/docs/devtools/remote-debugging/local-server) permet de consulter le PC à `http://localhost:4173/` sur le téléphone. L’origine localhost est un contexte sécurisé pour `getUserMedia`, même en HTTP. Lancer `npm run preview:cloud -- --strictPort` sur le PC, activer temporairement les options développeur/débogage USB du Samsung, brancher et autoriser ce PC, puis Chrome ordinateur → `chrome://inspect/#devices` → Port forwarding : port téléphone 4173 vers `localhost:4173`, Enable port forwarding. Ouvrir `http://localhost:4173/` dans Chrome Android. Désactiver le transfert et le débogage USB après l’essai. Cela ne valide ni Safari iOS ni Samsung Internet ; la méthode Wi-Fi HTTPS ci-dessus reste la recette commune. Aucun tunnel public requis.
 
 ## Parcours à exécuter sur chaque appareil
+
+Depuis la recette du 28 octobre, le lecteur privilégie après permission les libellés validés « camera 0, facing back » et « Double camera grand angle arriere » (accents/casse normalisés ; variante anglaise « Back Dual Wide Camera »). Ces préférences sont empiriques, sans mesure automatique de netteté. Si absentes, le choix arrière du navigateur reste utilisé ; si l’ouverture de l’objectif préféré échoue matériellement, repli unique vers ce choix. Le choix manuel est désormais persistant sur cet appareil, dans la roue crantée depuis Scanner ; après rechargement, le lecteur retrouve le libellé si l’identifiant a changé. Valider physiquement sur les deux téléphones le choix initial, l’absence de code pendant le changement et l’interruption/reprise ; noter si un réglage manuel reste nécessaire.
 
 Après le constat de flou sur Samsung, le lecteur demande la mise au point continue si le navigateur l’annonce et une définition idéale 1920×1080. Si l’image reste floue, utiliser le sélecteur **Caméra** sous l’aperçu pour essayer un autre objectif arrière ; les noms dépendent du navigateur. Ne pas chercher à agrandir le code au maximum en collant le téléphone : commencer à une distance confortable, bonne lumière, puis ajuster. Le sélecteur n’apparaît que si plusieurs caméras sont exposées. Une image nette dans l’appareil photo natif ne prouve pas que Chrome utilise le même objectif ni les mêmes réglages. La netteté après changement et les lectures physiques restent des résultats à rapporter, pas des garanties du correctif.
 

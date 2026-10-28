@@ -1,4 +1,5 @@
 import { ScanRecognition } from '../model';
+import { readCameraChoice, saveCameraChoice, type CameraChoice } from './preference';
 
 export type CameraStatus = 'idle' | 'starting' | 'running' | 'paused' | 'error';
 export interface CameraView {
@@ -21,6 +22,8 @@ export interface CameraRuntime {
   cancel: (timer: ReturnType<typeof setTimeout>) => void;
   now: () => number;
   devices?: () => Promise<Pick<MediaDeviceInfo, 'deviceId' | 'label' | 'kind'>[]>;
+  readChoice?: () => CameraChoice | null;
+  saveChoice?: (choice: CameraChoice | null) => void;
 }
 const browserRuntime: CameraRuntime = {
   secure: () => window.isSecureContext && !!navigator.mediaDevices?.getUserMedia,
@@ -30,7 +33,27 @@ const browserRuntime: CameraRuntime = {
   cancel: (timer) => clearTimeout(timer),
   now: () => performance.now(),
   devices: () => navigator.mediaDevices.enumerateDevices(),
+  readChoice: readCameraChoice,
+  saveChoice: saveCameraChoice,
 };
+
+/** Preferences observed on the two recipe phones, not a universal quality ranking. */
+export function preferredCamera(cameras: CameraView['cameras']): string | undefined {
+  const normalize = (label: string) =>
+    label
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  return cameras.find(({ label }) => {
+    const name = normalize(label);
+    return (
+      /^camera\s+0\s*,\s*facing\s+back$/.test(name) ||
+      name === 'double camera grand angle arriere' ||
+      name === 'back dual wide camera'
+    );
+  })?.id;
+}
 
 export function cameraError(error: unknown): string {
   const name = (error as { name?: string })?.name;
@@ -52,6 +75,8 @@ export class CameraSession {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private detach: (() => void) | null = null;
   private selectedDeviceId = '';
+  private autoChoiceMade = false;
+  private automaticDeviceId = '';
   private continuousFocus = false;
   private view: CameraView = {
     status: 'idle',
@@ -126,6 +151,19 @@ export class CameraSession {
       const interrupted = () => this.stop('paused');
       const track = stream.getVideoTracks()[0];
       if (!track || track.readyState === 'ended') throw new DOMException('', 'NotReadableError');
+      const preferred = await this.discoverCameras(track, generation);
+      if (generation !== this.generation || this.disposed) return;
+      if (!this.autoChoiceMade && !this.selectedDeviceId && preferred) {
+        this.autoChoiceMade = true;
+        this.selectedDeviceId = preferred;
+        this.automaticDeviceId = preferred;
+        if (track.getSettings?.().deviceId !== preferred) {
+          // Close the provisional stream before opening the preferred lens; no decoding yet.
+          this.stop();
+          await this.start();
+          return;
+        }
+      }
       let capabilities: MediaTrackCapabilities & { torch?: boolean; focusMode?: string[] } = {};
       try {
         capabilities = track.getCapabilities?.() ?? {};
@@ -157,7 +195,6 @@ export class CameraSession {
       this.video.srcObject = stream;
       await this.video.play();
       if (generation !== this.generation || this.disposed) return;
-      void this.discoverCameras(track, generation);
       const decoder = await this.runtime.loadDecoder();
       if (generation !== this.generation || this.disposed) {
         decoder.dispose();
@@ -188,6 +225,20 @@ export class CameraSession {
       tick();
     } catch (error) {
       if (generation !== this.generation || this.disposed) return;
+      if (
+        this.automaticDeviceId &&
+        this.selectedDeviceId === this.automaticDeviceId &&
+        ['OverconstrainedError', 'NotFoundError', 'NotReadableError', 'AbortError'].includes(
+          (error as { name?: string })?.name ?? '',
+        )
+      ) {
+        // One fallback to the browser's rear camera, never another automatic selection loop.
+        this.selectedDeviceId = '';
+        this.automaticDeviceId = '';
+        this.stop();
+        await this.start();
+        return;
+      }
       this.stop();
       this.publish({ status: 'error', error: cameraError(error) });
     }
@@ -207,6 +258,13 @@ export class CameraSession {
         }));
       const cameraId = track.getSettings?.().deviceId ?? this.selectedDeviceId;
       this.publish({ cameras, cameraId });
+      const saved = this.runtime.readChoice?.();
+      const remembered =
+        saved &&
+        (cameras.find((camera) => camera.id === saved.id) ??
+          cameras.find((camera) => camera.label === saved.label));
+      if (remembered) return remembered.id;
+      return preferredCamera(cameras);
     } catch {
       /* Camera enumeration is optional and must not interrupt the live reader. */
     }
@@ -219,7 +277,17 @@ export class CameraSession {
       (id && !this.view.cameras.some((camera) => camera.id === id))
     )
       return;
+    try {
+      this.runtime.saveChoice?.(this.view.cameras.find((camera) => camera.id === id) ?? null);
+    } catch {
+      this.publish({
+        error: 'Impossible de mémoriser la caméra. Le choix précédent est conservé.',
+      });
+      return;
+    }
     this.selectedDeviceId = id;
+    this.autoChoiceMade = true;
+    this.automaticDeviceId = '';
     this.stop();
     this.publish({ cameraId: id });
     await this.start();

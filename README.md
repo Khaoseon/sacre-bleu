@@ -1,6 +1,6 @@
 # Réserve · App_reserve
 
-PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. Supabase Cloud privé et les deux comptes de phase 2C sont conservés. **Phase 3 : scanner caméra EAN-13/EAN-8/UPC-A implémenté**, avec saisie manuelle de secours, filtre des doublons et même parcours RPC stock/courses. Validation automatisée et navigateur effectuée ; vraie caméra, iPhone et Samsung restent à valider. Aucun hébergement public ni tunnel. Choix technique : [docs/SCANNER.md](docs/SCANNER.md) ; recette privée HTTPS : [docs/TESTS_TELEPHONES.md](docs/TESTS_TELEPHONES.md) ; transmission : [docs/HANDOFF_3.md](docs/HANDOFF_3.md).
+PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. Supabase Cloud privé et les deux comptes de phase 2C sont conservés. **Phase 3 : scanner caméra EAN-13/EAN-8/UPC-A implémenté**, avec saisie manuelle de secours, filtre des doublons et même parcours RPC stock/courses. Recette principale réelle validée sur iPhone Safari et Samsung Chrome : caméra, anti-doublon, ajustements/annulation et synchronisation des deux comptes. Cas complémentaires non réalisés documentés dans `docs/VALIDATION.md`. Serveur et certificats temporaires nettoyés. Aucun hébergement public ni tunnel. Choix technique : [docs/SCANNER.md](docs/SCANNER.md) ; recette privée HTTPS : [docs/TESTS_TELEPHONES.md](docs/TESTS_TELEPHONES.md) ; transmission : [docs/HANDOFF_3.md](docs/HANDOFF_3.md).
 
 ## Démarrer localement
 
@@ -32,7 +32,7 @@ Pour la version compilée : `npm run build`, puis `npm run preview -- --strictPo
 
 1. Sur `http://127.0.0.1:5173/`, créer un premier compte avec une adresse fictive `…@example.test` et un mot de passe de 12 caractères minimum, avec majuscule, minuscule et chiffre.
 2. Ouvrir son message dans Mailpit puis « Confirmer mon adresse email ». Le callback `/auth/callback` traite la confirmation et retire son fragment de l’URL. Créer une réserve vide.
-3. Paramètres (bouton de statut en haut ou menu latéral) → email du destinataire → générer et copier le lien valable 24 h. Un nouveau lien remplace les précédents.
+3. Roue crantée → Compte et réserve → email du destinataire → générer et copier le lien valable 24 h. Un nouveau lien remplace les précédents.
 4. Utiliser un autre profil de navigateur, ou `http://localhost:5173/` pour une session distincte. Dans ce dernier cas, remplacer seulement `127.0.0.1` par `localhost` dans le lien copié ; conserver son fragment complet.
 5. Ouvrir l’invitation, se connecter ou créer le second compte avec **l’adresse invitée**. Après confirmation email dans Mailpit, **rouvrir le lien d’invitation initial**, puis accepter. Un membre déjà présent peut rouvrir sa réserve sans consommer à nouveau l’invitation.
 6. Modifier stock et courses depuis les deux sessions. Le snapshot est relu après chaque mutation ; l’autre session s’actualise sous environ cinq secondes lorsqu’elle est visible, ainsi qu’au retour au premier plan et à la reconnexion.
@@ -47,7 +47,7 @@ Mailpit capture les emails localement, sans envoi réel. Les paramètres affiche
 - **À acheter** : articles libres ou liés, quantités, cochage, suppression, effacement des cochés et suggestions explicites. Aucun rapprochement des articles libres par leur nom.
 - **Sessions** : persistance Supabase Auth, erreurs françaises, déconnexion retirant les vues privées et demandes en attente de l’onglet. Le catalogue privé reste en mémoire.
 - **Réseau** : indicateur d’indisponibilité, dernière lecture réussie, écritures bloquées, actualisation manuelle. Une demande incertaine conserve UUID et paramètres dans `sessionStorage`, par compte/réserve. « Reprendre la demande » réutilise cette clé, même après rechargement. Aucune nouvelle écriture entre-temps ; aucun succès avant reçu serveur et snapshot courant.
-- **Apparence** : Automatique/Clair/Sombre exclusivement dans les paramètres, effet immédiat et préférence mémorisée, contrôles natifs et navigation mobile compris.
+- **Apparence** : roue crantée, Automatique, Sauge claire/sombre, Ardoise, Rétro crème/pétrole à fonds unis, préférence mémorisée et contrôles natifs adaptés. Choix caméra manuel persistant sur chaque appareil dans les préférences du Scanner ; en-tête redondant supprimé.
 
 Quantités entières entre 0 et 9 999. Métadonnées et quantités de courses : modifications partielles, dernière valeur explicitement envoyée gagnante. Stock : deltas transactionnels ; les ajustements de scan contrôlent aussi leurs versions.
 
