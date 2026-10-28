@@ -21,7 +21,7 @@
     "backup:cloud": "node scripts/backend/cloud-backup.mjs create",
     "backup:verify": "node scripts/backend/cloud-backup.mjs verify",
     "backup:extract": "node scripts/backend/cloud-backup.mjs extract",
-    "test:backup": "node --test scripts/backend/backup-archive.test.mjs",
+    "test:backup": "node --test scripts/backend/backup-archive.test.mjs scripts/backend/backup-plan.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:start": "supabase start",

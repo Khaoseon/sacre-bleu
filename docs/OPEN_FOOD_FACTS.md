@@ -98,3 +98,7 @@ L’option locale `--no-verify-jwt` permet d’exercer les refus du handler avec
 `npm run test:off:browser` utilise Chrome installé et Playwright 1.62.1 disponible comme outillage externe ; si nécessaire, `PLAYWRIGHT_PACKAGE` désigne son `package.json` absolu. Aucune dépendance npm du projet ajoutée. Le script démarre puis arrête Vite sur `127.0.0.1:5188`, utilise un contexte navigateur neuf et un fournisseur fictif ; les requêtes images sont interceptées. Le harnais de test n’entre pas dans le build de l’app.
 
 Résultats effectivement exécutés et recette téléphone restante : `HANDOFF_4.md` et `VALIDATION.md`.
+
+## Activation autorisée sous conditions, encore suspendue
+
+Les précontrôles distants du 28 octobre confirment la cible Paris et les trois migrations appliquées ; le dry-run propose uniquement la phase 4. L’archive documentée précède les dernières modifications : l’utilisateur demande une nouvelle sauvegarde avant toute application. Le mode strict `--before-phase4` de `SAUVEGARDE_CHIFFREE.md` prépare ce prérequis. Aucun changement Cloud effectué. Free et origines HTTPS restent à reconfirmer après sauvegarde ; recette préparée dans `TESTS_OFF_TELEPHONES.md`. Détails dans le complément de `HANDOFF_4.md`.

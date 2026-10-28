@@ -28,6 +28,7 @@ import {
   createGpgHome,
   equalSecrets,
 } from './backup-archive.mjs';
+import { backupPlan, fingerprintSQL, sameFingerprint } from './backup-plan.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const { values, positionals } = parseArgs({
@@ -36,12 +37,13 @@ const { values, positionals } = parseArgs({
     destination: { type: 'string' },
     archive: { type: 'string' },
     'project-ref': { type: 'string' },
+    'before-phase4': { type: 'boolean', default: false },
   },
 });
 const command = positionals[0];
 if (!['create', 'verify', 'extract'].includes(command) || positionals.length !== 1)
   throw new Error(
-    'Usage : create --destination CHEMIN --project-ref REF | verify --archive FICHIER | extract --archive FICHIER --destination DOSSIER_NEUF',
+    'Usage : create --destination CHEMIN --project-ref REF [--before-phase4] | verify --archive FICHIER | extract --archive FICHIER --destination DOSSIER_NEUF',
   );
 process.chdir(root);
 if (!process.stdin.isTTY || !process.stdout.isTTY)
@@ -166,11 +168,40 @@ try {
       'json',
     );
     const migrations = JSON.parse(history).migrations;
-    if (
-      !Array.isArray(migrations) ||
-      migrations.some((row) => !row.local || row.local !== row.remote)
-    )
-      throw new Error('Historique local/distant différent : examiner avant sauvegarde.');
+    const gitCommit = capture('Révision Git', 'git', ['rev-parse', 'HEAD']).trim();
+    const trackedSource = (source) =>
+      capture('Source versionnée', 'git', ['show', `${gitCommit}:${source}`]);
+    const migrationFiles = capture('Inventaire versionné', 'git', [
+      'ls-tree',
+      '-r',
+      '--name-only',
+      gitCommit,
+      'supabase/migrations',
+    ])
+      .trim()
+      .split(/\r?\n/)
+      .map((name) => basename(name))
+      .filter((name) => /^\d{14}_[a-z0-9_]+\.sql$/.test(name))
+      .sort();
+    const plan = backupPlan(migrations, migrationFiles, values['before-phase4']);
+    const sourceFingerprint = () => {
+      const result = JSON.parse(
+        supabase(
+          'Empreintes source',
+          'db',
+          'query',
+          '--linked',
+          fingerprintSQL(plan.tables),
+          '--output-format',
+          'json',
+        ),
+      );
+      const fingerprint = (Array.isArray(result) ? result : result.rows)?.[0]?.fingerprint;
+      if (!sameFingerprint(fingerprint, fingerprint, plan.tables))
+        throw new Error('Empreintes source incomplètes.');
+      return fingerprint;
+    };
+    const beforeFingerprint = sourceFingerprint();
     const scopeSQL =
       "select jsonb_build_object('postgres',current_setting('server_version'),'pgcrypto',(select extversion from pg_extension where extname='pgcrypto'),'auth_tables',(select jsonb_agg(tablename order by tablename) from pg_tables where schemaname='auth'),'unsupported_identities',(select count(*) from auth.identities where provider <> 'email'),'mfa_factors',(select count(*) from auth.mfa_factors),'external_auth_dependencies',(select count(*) from pg_constraint where contype='f' and conrelid in ('auth.users'::regclass,'auth.identities'::regclass) and confrelid not in ('auth.users'::regclass,'auth.identities'::regclass))) as scope";
     const scopeResult = JSON.parse(
@@ -210,23 +241,12 @@ try {
     excludes.forEach((name) => args.push('--exclude', `auth.${name}`));
     console.log('Export des données nécessaires en mémoire ; aucun dump en clair sur disque.');
     const dataSQL = supabase('Export des données', ...args);
-    const expectedTables = [
-      'auth.users',
-      'auth.identities',
-      'public.reserves',
-      'public.reserve_members',
-      'public.products',
-      'public.product_stock',
-      'public.shopping_items',
-      'private.invitations',
-      'private.requests',
-      'private.scan_operations',
-    ].sort();
+    const expectedTables = plan.tables;
     const copiedTables = [...dataSQL.matchAll(/^COPY\s+"?(\w+)"?\."?(\w+)"?\s*\(/gm)]
       .map((match) => `${match[1]}.${match[2]}`)
       .sort();
     if (JSON.stringify(copiedTables) !== JSON.stringify(expectedTables))
-      throw new Error('Le périmètre SQL exporté diffère des dix tables attendues.');
+      throw new Error('Le périmètre SQL exporté diffère des tables attendues.');
     const files = {
       'data.sql': dataSQL,
       'schema.sql': supabase(
@@ -240,24 +260,7 @@ try {
       'migration-history.json': history,
       'RECUPERATION.md': recoveryGuide,
     };
-    const gitCommit = capture('Révision Git', 'git', ['rev-parse', 'HEAD']).trim();
-    const trackedSource = (source) =>
-      capture('Source versionnée', 'git', ['show', `${gitCommit}:${source}`]);
-    const migrationFiles = capture('Inventaire versionné', 'git', [
-      'ls-tree',
-      '-r',
-      '--name-only',
-      gitCommit,
-      'supabase/migrations',
-    ])
-      .trim()
-      .split(/\r?\n/)
-      .map((name) => basename(name))
-      .filter((name) => /^\d{14}_[a-z0-9_]+\.sql$/.test(name))
-      .sort();
-    if (migrationFiles.length !== migrations.length)
-      throw new Error('Inventaire des migrations incohérent.');
-    migrationFiles.forEach((name) => {
+    plan.files.forEach((name) => {
       files[`migrations/${name}`] = trackedSource(`supabase/migrations/${name}`);
     });
     for (const [name, source] of Object.entries({
@@ -276,10 +279,18 @@ try {
         JSON.stringify(migrations.map((row) => [row.local, row.remote]))
     )
       throw new Error('Historique modifié pendant l’export : recommencer au calme.');
+    const databaseFingerprint = sourceFingerprint();
+    if (!sameFingerprint(beforeFingerprint, databaseFingerprint, plan.tables))
+      throw new Error(
+        'La base a changé pendant l’export. Suspendre les deux sessions et recommencer.',
+      );
     const metadata = {
       createdAt: new Date().toISOString(),
       projectRef,
       gitCommit,
+      appliedMigrations: plan.appliedVersions,
+      pendingMigration: plan.pendingVersion,
+      databaseFingerprint,
       postgres: scope.postgres,
       pgcrypto: scope.pgcrypto,
       supabaseCLI: cli.version,
@@ -322,6 +333,9 @@ try {
           verifiedAt: new Date().toISOString(),
           archiveSha256: archiveHash,
           projectRef,
+          appliedMigrations: plan.appliedVersions,
+          pendingMigration: plan.pendingVersion,
+          databaseFingerprint,
           openPGPIntegrity: true,
           decryptedPayloadMatchesExport: true,
           internalFileHashesVerified: true,
