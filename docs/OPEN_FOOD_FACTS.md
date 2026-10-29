@@ -1,5 +1,7 @@
 # Identification des produits — phase 4
 
+**Correctif post-4B préparé, non déployé :** [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md). Même créneau partagé de six secondes, protocole séparant cooldown interne et refus fournisseur, délais précis sans cache d'erreur et indicateur local. Migration `20261029000100_lookup_budget_details.sql` + Edge nécessitent un accord Cloud distinct. Les délais d'au moins 60 s décrits dans l'état de phase 4 ci-dessous restent ceux de l'ancienne version, pas du correctif préparé.
+
 Implémentation et déploiement validés le **28 octobre 2026**, depuis `ba18738`. **Phase 4 active sur le projet Supabase Free Paris existant**, après sauvegarde vérifiée et autorisation. Trois préremplissages réels validés depuis l’ordinateur sans création de fiche. Recette iPhone/Samsung restante ; phases 5/6 non commencées.
 
 ## Choix technique

@@ -6,6 +6,10 @@ PWA React/TypeScript, en français, pour partager une réserve alimentaire entre
 
 ## Démarrer localement
 
+Revue corrective post-4B : [audit sécurité et CI](docs/REVUE_CORRECTIVE_4B.md). La seule modification Cloud autorisée puis appliquée est la fermeture des inscriptions (`disable_signup=true`), comptes et données préservés. Corrections de code et CI préparées en commits locaux uniquement : [livraison contrôlée V1](docs/LIVRAISON_CORRECTIFS_V1.md), précontrôles, compatibilité, arrêts et recette physique obligatoire. Aucun push ni publication ; [scans simultanés et délais OFF](docs/SCANS_SIMULTANES_OFF.md), migration/Edge soumis à des accords distincts.
+
+**Livraison corrective bloquée :** la nouvelle exécution SDK locale échoue au refus d'ajustement périmé via PostgREST 14.18 (expiration, demande incertaine). Les tests SQL directs restent réussis. Résolution nécessaire avant fusion/publication ; le rapport V1 distingue ce blocage des validations précédentes.
+
 La phase 4 Open Food Facts est active sur le backend existant. En **phase 4B**, le frontend **Sacré bleu** est publié après accord sur [sacre-bleu.pages.dev](https://sacre-bleu.pages.dev), avec logo, icônes téléphone et en-têtes statiques vérifiés. Production automatique conservée et previews désactivées ; URL Auth et origine OFF configurées après accord. La connexion et les derniers contrôles Samsung sont confirmés par l’utilisateur. Les essais iPhone 4B restent non réalisés et acceptés comme limite de livraison. Réglages, validations et limites : [docs/CLOUDFLARE_PAGES.md](docs/CLOUDFLARE_PAGES.md).
 
 Prérequis : Node.js 24+, npm, Docker Desktop avec moteur Linux démarré pour le backend local.

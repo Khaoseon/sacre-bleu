@@ -1,5 +1,7 @@
 # Backend Supabase — phases 2A, 2B et passage Cloud 2C
 
+**Préparation corrective du 29 octobre 2026 :** [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md). La cinquième migration précise le motif/délai du singleton OFF et conserve la RPC booléenne pour les anciens Edge. Aucune modification des RPC stock/scan ou de leurs refus périmés. Migration validée uniquement sur base locale vierge, types régénérés automatiquement ; Cloud encore sur les quatre migrations précédentes tant qu'aucun accord séparé n'est donné.
+
 Le backend est implémenté et testé **localement**. La phase 2B branche les écrans React sur les RPC, avec sessions Auth et démo explicitement isolée, en conservant l’interface et les thèmes. En phase 2C, les trois migrations inchangées ont été appliquées, après accord, sur Supabase Free `uznbnihmdzxdnlxanjcl` à Paris. L’état de recette Auth/SMTP et les limitations sont dans `HANDOFF_2C.md` ; procédures Cloud et sauvegarde dans `CLOUD.md` et `BACKUP.md`.
 
 ## Démarrage reproductible

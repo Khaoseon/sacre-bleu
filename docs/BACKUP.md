@@ -14,6 +14,8 @@ Les exports Auth contiennent des adresses et empreintes de mots de passe, les jo
 
 ## Sauvegarde chiffrée reproductible
 
+Pour la seule migration de budget OFF préparée après 4B, le code local accepte `--before-lookup-budget` avec `backup:cloud create`, après autorisation de cette sauvegarde et avant application de migration. Ce mode exige exactement les quatre migrations historiques appliquées et la cinquième `20261029000100` en attente ; il sauvegarde les quatre sources réellement appliquées. Le mode ordinaire continue de refuser une migration en attente. Cette option ne déploie rien et n'a pas été exécutée sur le Cloud pendant l'investigation. Les deux modes avant migration ne se cumulent pas.
+
 Voir [la procédure courte](SAUVEGARDE_CHIFFREE.md) pour créer, vérifier et extraire une archive. Elle remplace les exports SQL manuels en fichiers, en conservant le périmètre de restauration éprouvé ci-dessous.
 
 ## Reprendre un projet suspendu
