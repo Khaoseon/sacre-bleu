@@ -2,9 +2,11 @@
 
 PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. Supabase Cloud privé et les deux comptes de phase 2C sont conservés. **Phase 3 : scanner caméra EAN-13/EAN-8/UPC-A implémenté**, avec saisie manuelle de secours, filtre des doublons et même parcours RPC stock/courses. Recette principale réelle validée sur iPhone Safari et Samsung Chrome : caméra, anti-doublon, ajustements/annulation et synchronisation des deux comptes. Cas complémentaires non réalisés documentés dans `docs/VALIDATION.md`. Serveur et certificats temporaires nettoyés. Le frontend HTTPS est désormais publié en phase 4B ; aucun tunnel nécessaire. Choix technique : [docs/SCANNER.md](docs/SCANNER.md) ; recette privée HTTPS : [docs/TESTS_TELEPHONES.md](docs/TESTS_TELEPHONES.md) ; transmission : [docs/HANDOFF_3.md](docs/HANDOFF_3.md).
 
+**Phase 4B clôturée le 29 octobre 2026.** Hébergement permanent, recette Samsung confirmée par l’utilisateur ; iPhone non testé, limite acceptée. Rapport complet et transmission : [docs/HANDOFF_4B.md](docs/HANDOFF_4B.md). La phase 5 n’est pas commencée.
+
 ## Démarrer localement
 
-La phase 4 Open Food Facts est active sur le backend existant. En **phase 4B**, le frontend **Sacré bleu** est publié après accord sur [sacre-bleu.pages.dev](https://sacre-bleu.pages.dev), avec logo, icônes téléphone et en-têtes statiques vérifiés. Production automatique conservée et previews désactivées ; URL Auth et origine OFF configurées après accord. La recette de connexion et les essais sur téléphones restent à réaliser ; ne pas considérer la livraison complète comme validée. Réglages, validations et limites : [docs/CLOUDFLARE_PAGES.md](docs/CLOUDFLARE_PAGES.md).
+La phase 4 Open Food Facts est active sur le backend existant. En **phase 4B**, le frontend **Sacré bleu** est publié après accord sur [sacre-bleu.pages.dev](https://sacre-bleu.pages.dev), avec logo, icônes téléphone et en-têtes statiques vérifiés. Production automatique conservée et previews désactivées ; URL Auth et origine OFF configurées après accord. La connexion et les derniers contrôles Samsung sont confirmés par l’utilisateur. Les essais iPhone 4B restent non réalisés et acceptés comme limite de livraison. Réglages, validations et limites : [docs/CLOUDFLARE_PAGES.md](docs/CLOUDFLARE_PAGES.md).
 
 Prérequis : Node.js 24+, npm, Docker Desktop avec moteur Linux démarré pour le backend local.
 

@@ -1,6 +1,6 @@
 # Sacré bleu — essais HTTPS et installation téléphone
 
-**Préparés, retours partiels obtenus.** Adresse canonique : **https://sacre-bleu.pages.dev**. Cloudflare Pages Free, interface publique et réserve privée par Supabase Auth/RLS. Deux comptes existants ; aucune nouvelle inscription, invitation ou donnée de test nécessaire. Ne pas commencer la phase 5.
+**Recette 4B clôturée le 29 octobre 2026 après confirmation globale de l’utilisateur pour Samsung. iPhone non testé, limite acceptée.** Adresse canonique : **https://sacre-bleu.pages.dev**. Cloudflare Pages Free, interface publique et réserve privée par Supabase Auth/RLS. Deux comptes existants ; aucune nouvelle inscription, invitation ou donnée de test nécessaire. Ne pas commencer la phase 5.
 
 Relever pour chaque téléphone : modèle, système, navigateur/version, mode navigateur ou app installée, résultat et date. Ne pas enregistrer email, session, mot de passe ou capture de stock personnel dans Git.
 
@@ -68,11 +68,13 @@ Quand une version suivante existe, toucher **Plus tard** : l'app doit rester uti
 
 Pour les essais de protection sans stock réel, utiliser une démonstration isolée : laisser une saisie de courses non envoyée, vérifier que l'actualisation explique le blocage et garde le texte ; terminer/effacer la saisie, puis réessayer. Tester aussi une vérification sans Internet : message explicite, aucune annonce de succès et possibilité de réessayer au retour réseau. La recette automatisée A → B de `npm run test:pwa:browser` utilise uniquement deux builds locaux, une session anonyme et des données fictives ; validation physique iPhone/Samsung de ce nouveau parcours encore à confirmer. Les changements de plein écran/nom/icône Android restent distincts et peuvent nécessiter une mise à jour WebAPK par Chrome.
 
-## Résultats à compléter
+## Résultats de clôture
 
-| Appareil         | Consultation / session | Icône / installation / relance               | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                                                          |
-| ---------------- | ---------------------- | -------------------------------------------- | -------------------------- | --------------------------------- | -------------------------------------------------------------------- |
-| iPhone / Safari  | Non confirmé           | Non confirmé                                 | Non confirmé               | Non confirmé                      | Non confirmé                                                         |
-| Samsung / Chrome | Consultation confirmée | Nom/logo, app installée et relance confirmés | Non confirmé               | Non confirmé                      | Interface actualisée ; plein écran confirmé après mise à jour WebAPK |
+L’utilisateur confirme la réception du gestionnaire de mises à jour, puis confirme que tous les derniers contrôles fonctionnent. Les résultats Samsung ci-dessous sont déclaratifs. La bascule A → B accompagnée reste prouvée dans Chrome local ; sa répétition après clôture sur téléphone n’est pas revendiquée. Modèle et versions non relevés.
+
+| Appareil         | Consultation / session     | Icône / installation / relance                           | Caméra / OFF sans écriture       | Réseau mobile / ordinateur éteint | Mise à jour                                                                     |
+| ---------------- | -------------------------- | -------------------------------------------------------- | -------------------------------- | --------------------------------- | ------------------------------------------------------------------------------- |
+| iPhone / Safari  | Non testé, limite acceptée | Non testé, limite acceptée                               | Non testé, limite acceptée       | Non testé, limite acceptée        | Non testé, limite acceptée                                                      |
+| Samsung / Chrome | Confirmée                  | Nom/logo, installation, relance et plein écran confirmés | Confirmation globale utilisateur | Confirmation globale utilisateur  | Gestionnaire reçu et contrôle manuel confirmé ; bascule A → B testée localement |
 
 Un test de largeur sur ordinateur ou une icône présente dans le manifeste ne remplace pas ces essais physiques. La synchronisation de deux appareils peut être observée en lecture seule ; une nouvelle recette de mouvements exigerait un accord distinct sur des données jetables.

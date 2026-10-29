@@ -2,6 +2,8 @@
 
 Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie les écrans au backend Supabase local sécurisé de phase 2A. La phase 2C a validé le même backend sur Supabase Free à Paris, avec modes de configuration et sessions séparés ; résultats dans `HANDOFF_2C.md`. Le mode démo reste explicitement isolé. La phase 3 ajoute la caméra et conserve les contrats métier ; détails dans `SCANNER.md`, validations et limites dans `HANDOFF_3.md`. La phase 4 active Open Food Facts v3.6 via une Edge Function authentifiée après autorisation, avec préremplissage modifiable et priorité au catalogue personnel ; déploiement et tests réels ordinateur dans `OPEN_FOOD_FACTS.md` et `HANDOFF_4.md`. Quatre origines locales et `https://sacre-bleu.pages.dev` autorisées après accord ; frontend HTTPS publié en phase 4B, Auth configuré. Recette OFF et installation PWA sur téléphone encore à effectuer ; recette principale scanner iPhone/Samsung de phase 3 validée le 28 octobre 2026, limites complémentaires dans `VALIDATION.md`.
 
+**Clôture 4B le 29 octobre 2026 :** hébergement et fonctionnalités livrés, derniers contrôles Samsung confirmés globalement par l’utilisateur. iPhone non testé en 4B, compatibilité supposée et limite acceptée. L’état de livraison actuel et les limites priment sur les indications chronologiques ci-dessous : [HANDOFF_4B.md](HANDOFF_4B.md). Phase 5 non commencée.
+
 ## Contexte du produit
 
 Le nom public de l'application est **Sacré bleu**, choisi en phase 4B. Il apparaît dans l'interface, le titre du navigateur et les noms du manifeste PWA. `App_reserve` reste le nom technique du dépôt ; les identifiants de stockage, de session et du backend existants sont conservés.

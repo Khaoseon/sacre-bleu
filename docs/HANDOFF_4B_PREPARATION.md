@@ -1,5 +1,7 @@
 # Transmission — préparation de la phase 4B
 
+**Document historique. Phase 4B désormais clôturée le 29 octobre 2026 : état actuel et transmission dans [HANDOFF_4B.md](HANDOFF_4B.md).**
+
 Clôture du **29 octobre 2026**, depuis `feda7f3`. **Phase 4 terminée ; phase 4B non commencée.** Cible demandée : **Cloudflare Pages Free**. Aucun projet, domaine ou configuration Cloudflare créé ici.
 
 ## État à conserver

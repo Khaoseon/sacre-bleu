@@ -1,6 +1,10 @@
 # Phase 4B — préparation et suivi de publication
 
-## État actuel après première publication
+## État de clôture
+
+**Phase 4B clôturée le 29 octobre 2026 à la demande de l’utilisateur**, après confirmation globale des contrôles Samsung. Version applicative confirmée : `43c8897428e4`. iPhone non testé, compatibilité supposée et limite acceptée ; journal détaillé Node/npm distant non inspecté. Rapport de livraison : [HANDOFF_4B.md](HANDOFF_4B.md). Les sections suivantes conservent la chronologie des accords, préparations et vérifications ; leurs mentions d’essais restants sont à lire à leur date. Phase 5 non commencée.
+
+## Historique après première publication
 
 L'utilisateur confirme le forfait **Free**, puis autorise explicitement la première publication. Il effectue **Save and Deploy** et fournit la capture du Dashboard : production réussie sur `main`, commit `b11d74a`, projet `sacre-bleu`, domaine **https://sacre-bleu.pages.dev**. Le préfixe `[CF-Pages-Skip]` n'a pas empêché cette première publication manuelle. La capture indique **Automatic deployments enabled**. Après explication, l'utilisateur choisit explicitement de **conserver Production automatique : tout push sur `main` doit publier la version finale**. Il confirme ensuite les opérations de désactivation des previews et de retrait de leurs deux variables Supabase, après rappel de rétablir la clé de Production effacée seulement pour la capture. Ces derniers réglages sont attestés par l'utilisateur, pas par une lecture API Cloudflare. URL Auth et origine OFF sont désormais configurées après accord, selon le compte-rendu ci-dessous.
 
