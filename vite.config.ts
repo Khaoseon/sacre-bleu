@@ -12,10 +12,10 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'prompt',
-        includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+        includeAssets: ['favicon.png', 'logo.png', 'apple-touch-icon.png'],
         manifest: {
-          name: 'Réserve — Garde-manger',
-          short_name: 'Réserve',
+          name: 'Sacré bleu',
+          short_name: 'Sacré bleu',
           lang: 'fr',
           description: 'Votre réserve alimentaire, simplement.',
           theme_color: '#284f40',

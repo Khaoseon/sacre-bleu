@@ -482,15 +482,19 @@ export default function App({
         <a
           className="brand"
           href="#stock"
+          aria-label="Sacré bleu"
           onClick={(e) => {
             e.preventDefault();
             setPage('stock');
           }}
         >
           <span className="brand-icon">
-            <ShoppingBasket size={24} />
+            <img src="/logo.png" width="40" height="40" alt="" />
           </span>
-          réserve<span className="brand-dot">.</span>
+          Sacré bleu
+          <span className="brand-dot" aria-hidden="true">
+            .
+          </span>
         </a>
         <div className="sidebar-label">MON GARDE-MANGER</div>
         <nav aria-label="Navigation principale">
@@ -532,9 +536,15 @@ export default function App({
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <span>
-            <span className="topbar-dot" /> {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
-          </span>
+          <div className="topbar-identity">
+            <span className="mobile-brand">
+              <img src="/logo.png" width="28" height="28" alt="" />
+              <span>Sacré bleu</span>
+            </span>
+            <span className="topbar-reserve">
+              <span className="topbar-dot" /> {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
+            </span>
+          </div>
           <div className="topbar-actions">
             <span className="local-button">
               <span className="status-dot" />
@@ -1148,7 +1158,7 @@ export default function App({
               ? 'Réserve privée · actualisation toutes les 5 s.'
               : 'Données de démonstration sur cet appareil.'}
           </span>
-          <span>réserve · {shared ? 'partagée' : 'démo'} 0.2</span>
+          <span>Sacré bleu · {shared ? 'partagée' : 'démo'} 0.2</span>
         </footer>
       </div>
       <nav className="mobile-nav" aria-label="Navigation mobile">

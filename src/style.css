@@ -111,14 +111,17 @@ button:hover:not(:disabled) {
   margin: 0 0 55px 6px;
 }
 .brand-icon {
-  width: 36px;
-  height: 38px;
-  background: var(--green);
-  color: var(--border);
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
   margin-right: 10px;
+}
+.brand-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .brand-dot {
   color: var(--muted);
@@ -241,11 +244,18 @@ button:hover:not(:disabled) {
   font-size: 11px;
   background: var(--surface-header);
 }
-.topbar > span {
+.topbar-reserve {
   display: flex;
   gap: 9px;
   align-items: center;
   color: var(--muted);
+}
+.mobile-brand {
+  display: none;
+}
+.topbar-identity,
+.topbar-actions {
+  min-width: 0;
 }
 .topbar-actions {
   display: flex;
@@ -1239,6 +1249,9 @@ h1 > span {
   align-items: center;
   justify-content: space-between;
 }
+.account-card .brand {
+  margin: 0;
+}
 .account-card h1 {
   font-size: 27px;
   letter-spacing: -1px;
@@ -1514,9 +1527,36 @@ h1 > span {
   .topbar {
     height: 61px;
     padding: 0 22px;
+    gap: 12px;
   }
-  .topbar > span {
-    font-size: 11px;
+  .topbar-identity {
+    display: grid;
+    gap: 3px;
+  }
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+  .mobile-brand img {
+    display: block;
+    border-radius: 7px;
+  }
+  .topbar-reserve {
+    display: block;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+  }
+  .topbar-dot {
+    display: inline-block;
   }
   .local-button {
     font-size: 9px;

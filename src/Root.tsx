@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Settings2, ShoppingBasket } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import App from './App';
 import { Modal } from './components';
 import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
@@ -36,11 +36,14 @@ function Gate({
     <main className="account-shell">
       <section className="account-card">
         <header>
-          <a className="brand" href="/" aria-label="réserve">
+          <a className="brand" href="/" aria-label="Sacré bleu">
             <span className="brand-icon">
-              <ShoppingBasket size={24} />
+              <img src="/logo.png" width="40" height="40" alt="" />
             </span>
-            réserve<span className="brand-dot">.</span>
+            Sacré bleu
+            <span className="brand-dot" aria-hidden="true">
+              .
+            </span>
           </a>
           <button className="icon-button" aria-label="Paramètres" onClick={() => setSettings(true)}>
             <Settings2 size={22} />

@@ -4,6 +4,10 @@ Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie l
 
 ## Contexte du produit
 
+Le nom public de l'application est **Sacré bleu**, choisi en phase 4B. Il apparaît dans l'interface, le titre du navigateur et les noms du manifeste PWA. `App_reserve` reste le nom technique du dépôt ; les identifiants de stockage, de session et du backend existants sont conservés.
+
+Le logo fourni en phase 4B (sac bleu illustré) apparaît à côté du nom et sert aux icônes PWA, Apple et navigateur. La variante Android adaptative conserve une marge de sécurité. Source et dérivés documentés dans `assets/branding/README.md` ; installation physique à valider après hébergement HTTPS.
+
 App_reserve est une application personnelle, installable sur Android et iOS sans publication sur les stores.
 
 Elle permet à deux utilisateurs de gérer une même réserve alimentaire, principalement composée de produits secs et de conserves.

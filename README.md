@@ -1,8 +1,10 @@
-# Réserve · App_reserve
+# Sacré bleu · App_reserve
 
 PWA React/TypeScript, en français, pour partager une réserve alimentaire entre deux comptes. Supabase Cloud privé et les deux comptes de phase 2C sont conservés. **Phase 3 : scanner caméra EAN-13/EAN-8/UPC-A implémenté**, avec saisie manuelle de secours, filtre des doublons et même parcours RPC stock/courses. Recette principale réelle validée sur iPhone Safari et Samsung Chrome : caméra, anti-doublon, ajustements/annulation et synchronisation des deux comptes. Cas complémentaires non réalisés documentés dans `docs/VALIDATION.md`. Serveur et certificats temporaires nettoyés. Aucun hébergement public ni tunnel. Choix technique : [docs/SCANNER.md](docs/SCANNER.md) ; recette privée HTTPS : [docs/TESTS_TELEPHONES.md](docs/TESTS_TELEPHONES.md) ; transmission : [docs/HANDOFF_3.md](docs/HANDOFF_3.md).
 
 ## Démarrer localement
+
+La phase 4 Open Food Facts est active sur le backend existant. La **phase 4B** prépare l'hébergement Cloudflare Pages Free : nom public **Sacré bleu**, logo fourni et icônes téléphone, build Cloud et en-têtes statiques. Le site n'est pas encore publié ; la première publication et les changements d'origines Supabase attendent des accords distincts. Réglages, validations et limites : [docs/CLOUDFLARE_PAGES.md](docs/CLOUDFLARE_PAGES.md).
 
 Prérequis : Node.js 24+, npm, Docker Desktop avec moteur Linux démarré pour le backend local.
 
