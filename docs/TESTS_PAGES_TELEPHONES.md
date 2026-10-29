@@ -4,7 +4,7 @@
 
 Relever pour chaque téléphone : modèle, système, navigateur/version, mode navigateur ou app installée, résultat et date. Ne pas enregistrer email, session, mot de passe ou capture de stock personnel dans Git.
 
-Retour déjà obtenu : l'utilisateur confirme la connexion et l'accès à la réserve ; sa capture Samsung montre le nom/logo et la consultation connectée. L'appareil du premier retour n'était pas précisé. La capture privée n'est pas ajoutée au dépôt. Icône d'accueil, relance, ordinateur éteint, OFF et iPhone restent à confirmer séparément.
+Retour déjà obtenu : l'utilisateur confirme la connexion et l'accès à la réserve ; sa capture Samsung montre le nom/logo et la consultation connectée. Le lancement depuis l'icône, la mise à jour de l'interface et le plein écran Samsung sont ensuite confirmés le 29 octobre 2026. Les captures privées ne sont pas ajoutées au dépôt. Ordinateur éteint, OFF et iPhone restent à confirmer séparément.
 
 ## 1. Vérifier la consultation
 
@@ -30,11 +30,15 @@ Le manifeste demande maintenant `display: fullscreen`, au lieu de `standalone`, 
 
 Vérifier sur Samsung : fermeture/réouverture depuis l'icône, disparition habituelle des boutons système, réaffichage par geste, nom/logo/réglages non masqués par la caméra frontale, clavier et retour à l'app. Le navigateur décide du comportement et du délai de mise à jour du manifeste installé ; ne pas promettre l'effet immédiat d'un simple rechargement. Commencer par fermer toutes les fenêtres de Sacré bleu et rouvrir depuis l'icône. Si l'ancien mode reste actif, suivre la procédure de mise à jour WebAPK avant d'envisager une réinstallation ; ne pas effacer les données de site pour ce seul motif.
 
-Sources consultées le 29 octobre 2026 : [architecture Android Chromium, mode immersif](https://chromium.googlesource.com/chromium/src/+/HEAD/components/webapps/docs/android_architecture.md), [mises à jour du manifeste Chrome](https://web.dev/articles/manifest-updates), [évolution du mécanisme Chrome 144](https://developer.chrome.com/blog/improvements-to-web-app-updates). Plein écran physique Samsung **non encore validé**.
+Sources consultées le 29 octobre 2026 : [architecture Android Chromium, mode immersif](https://chromium.googlesource.com/chromium/src/+/HEAD/components/webapps/docs/android_architecture.md), [mises à jour du manifeste Chrome](https://web.dev/articles/manifest-updates), [évolution du mécanisme Chrome 144](https://developer.chrome.com/blog/improvements-to-web-app-updates). Plein écran physique Samsung **confirmé par l'utilisateur le 29 octobre 2026**, après la procédure ci-dessous. Modèle et versions Android/Chrome non relevés ; clavier, encoches et gestes de retour système restent à vérifier séparément.
 
 L'utilisateur signale ensuite que les deux barres système restent visibles après fermeture/réouverture. Pour distinguer l'ancien JavaScript d'une configuration Android non actualisée, ouvrir les réglages et relever **Version**, puis **Diagnostic d'affichage → Affichage détecté**. Le mode demandé par le build doit être Plein écran. Une version récente avec un mode détecté standard oriente le diagnostic vers l'installation/manifeste ou la prise en charge du navigateur ; cela ne prouve pas à lui seul une cause unique.
 
 Si aucune ligne Version n'apparaît, cette interface est antérieure au diagnostic. On peut comparer en ouvrant l'adresse canonique dans une fenêtre privée de Chrome, puis les paramètres de l'écran de connexion : aucune connexion ni manipulation de stock nécessaire pour lire ces informations. Ne pas effacer les données de site pour obtenir une version. Ce diagnostic ne force ni le worker ni la mise à jour du WebAPK Android.
+
+Résultat obtenu : fermer les onglets du site puis forcer l'arrêt de l'app et de Chrome a permis de charger `2896ab88e57e`. La capture du diagnostic indique alors « Plein écran » demandé, mais « Application installée · standard » détecté. La mise à jour du contenu et celle du manifeste Android sont donc à distinguer.
+
+Pour actualiser l'installation : téléphone branché et en Wi-Fi, fermer l'app et forcer son arrêt, ouvrir `chrome://webapks` dans Chrome, repérer Sacré bleu et toucher Update. Le message réellement observé précise que la recherche démarre au prochain lancement de l'app ; le bouton garde son libellé. Ouvrir Sacré bleu depuis son icône, puis fermer et forcer son arrêt à nouveau ; laisser quelques minutes à l'installation. Le champ **Update Status** peut afficher **Scheduled** sur ce Chrome, plutôt que **Pending** indiqué dans la documentation. Le message demande d'espacer les requêtes d'au moins une minute après la fin de la précédente. Après ce parcours, l'utilisateur confirme que le plein écran fonctionne ; aucune valeur finale du diagnostic n'a été fournie. Aucun effacement de données ni réinstallation demandé.
 
 ## 5. Vérifier scanner et OFF sans modifier les stocks
 
@@ -50,9 +54,9 @@ Chaque push validé sur `main` publie une nouvelle version après réussite du b
 
 ## Résultats à compléter
 
-| Appareil         | Consultation / session | Icône / installation / relance                             | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                                                   |
-| ---------------- | ---------------------- | ---------------------------------------------------------- | -------------------------- | --------------------------------- | ------------------------------------------------------------- |
-| iPhone / Safari  | Non confirmé           | Non confirmé                                               | Non confirmé               | Non confirmé                      | Non confirmé                                                  |
-| Samsung / Chrome | Consultation confirmée | Logo dans l'app visible ; installation/relance à confirmer | Non confirmé               | Non confirmé                      | Barres encore visibles après relance ; version/mode à relever |
+| Appareil         | Consultation / session | Icône / installation / relance               | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                                                          |
+| ---------------- | ---------------------- | -------------------------------------------- | -------------------------- | --------------------------------- | -------------------------------------------------------------------- |
+| iPhone / Safari  | Non confirmé           | Non confirmé                                 | Non confirmé               | Non confirmé                      | Non confirmé                                                         |
+| Samsung / Chrome | Consultation confirmée | Nom/logo, app installée et relance confirmés | Non confirmé               | Non confirmé                      | Interface actualisée ; plein écran confirmé après mise à jour WebAPK |
 
 Un test de largeur sur ordinateur ou une icône présente dans le manifeste ne remplace pas ces essais physiques. La synchronisation de deux appareils peut être observée en lecture seule ; une nouvelle recette de mouvements exigerait un accord distinct sur des données jetables.
