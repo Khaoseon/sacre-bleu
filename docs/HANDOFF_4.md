@@ -2,6 +2,8 @@
 
 État au **28 octobre 2026**. Base de départ `ba18738`. **Phase 4 déployée après autorisation sur Supabase Free Paris ; parcours OFF réel validé depuis le navigateur de l’ordinateur.** Recette iPhone/Samsung encore à effectuer. Aucun début des phases 5/6.
 
+**Clôture définitive de la conversation le 29 octobre 2026.** Le dernier commit d’activation est `feda7f3`. Les faits de déploiement et tests ci-dessous sont ceux constatés le 28 octobre ; cette clôture ne modifie ni ne reconfigure Supabase. Prochaine conversation : **phase 4B — hébergement HTTPS sur Cloudflare Pages Free**, non commencée. Transmission courte : [HANDOFF_4B_PREPARATION.md](HANDOFF_4B_PREPARATION.md). Les quatre origines locales restent celles listées dans le bilan ; les essais OFF iPhone/Samsung et l’ajout de la future origine HTTPS restent à réaliser.
+
 ## Livré
 
 - Port fournisseur indépendant, OFF v3.6 via Edge authentifiée et URL fixe ; noms français prioritaires, marque, conditionnement, catégorie exploitable et image facultative.

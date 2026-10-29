@@ -58,6 +58,12 @@ Vérifier à ce moment la documentation officielle, l’identification du client
 
 Critères : catalogue prioritaire ; code inconnu enrichi quand possible ; pas de dépendance dure à OFF ; création manuelle toujours possible ; code mémorisé ; attribution et limites respectées ; pas de succès de mouvement avant écriture serveur.
 
+## Phase 4B — Hébergement HTTPS sur Cloudflare Pages Free
+
+**Prochaine conversation, non commencée.** Phase 4 clôturée le 29 octobre 2026 ; préparer uniquement sa transmission ici. Déployer ultérieurement le frontend existant avec `npm run build:cloud`, sortie `dist-cloud`, après vérification de l’offre Free, du runtime Node 24+ et de la politique d’accès au site. Dépôt GitHub strictement privé ; aucun secret ni donnée personnelle dans les fichiers publiés. Choisir l’origine HTTPS exacte avant d’adapter les callbacks Supabase Auth et la liste CORS OFF, avec les autorisations nécessaires. Ne pas confondre dépôt privé et site privé ; encadrer aussi les previews.
+
+Validation attendue en 4B : build Cloud correct, HTTPS et retour SPA/Auth, accès privés aux données, refus d’accès et recherches OFF sans mutation réelle ; préparer ensuite les essais iPhone/Samsung encore non effectués. Aucun changement des règles métier, données, SMTP ou schéma nécessaire à cette clôture. Ni configuration Cloudflare, ni création de ressource, ni publication réalisées ici. Détails : `HANDOFF_4B_PREPARATION.md`. La phase 5 reste distincte ; l’installation et la certification PWA complètes ne sont pas acquises par le seul hébergement.
+
 ## Étape 5 — Hors ligne, sauvegarde et restauration
 
 Conserver le dernier état synchronisé privé pour consultation hors ligne. Afficher la date du dernier succès et désactiver les mutations sans connexion dans cette V1 ; une file d’écritures hors ligne n’est pas requise. Gérer les mises à jour du service worker sans interruption de saisie.
@@ -68,6 +74,6 @@ Critères : consultation du dernier stock après coupure ; aucune promesse de mu
 
 ## Étape 6 — Validation PWA et livraison privée
 
-Choisir un hébergement HTTPS privé et installer depuis Android et Safari iOS sans store. Tester affichage, safe areas, clavier, contraste, navigation tactile, permissions et ouverture depuis l’écran d’accueil. Documenter la mise à jour et la récupération.
+Après mise à disposition de l’hébergement HTTPS en phase 4B, valider l’accès prévu et l’installation depuis Android et Safari iOS sans store. Tester affichage, safe areas, clavier, contraste, navigation tactile, permissions et ouverture depuis l’écran d’accueil. Documenter la mise à jour et la récupération.
 
 Critères : installation et relance sur les deux plateformes ; scanner et consultation en conditions réelles ; deux appareils synchronisés ; aucune donnée publique ; budget et configuration validés ; toutes les règles métier testées ; sauvegarde restaurable avant usage quotidien.
