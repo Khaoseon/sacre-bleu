@@ -14,6 +14,8 @@ Choisir une phrase secrète unique d’au moins 20 caractères, idéalement six 
 
 ### Sauvegarde préalable au déploiement de phase 4
 
+**Étape préalable terminée : la phase 4 est maintenant appliquée.** Pour une nouvelle sauvegarde de la base actuelle, utiliser la commande normale du début de document, **sans `--before-phase4`**. L’exemple ci-dessous conserve la procédure utilisée avant migration ; ce mode refusera l’état distant désormais aligné à quatre migrations.
+
 Le 28 octobre 2026, la vérification distante confirme les trois migrations historiques appliquées et la seule migration `20261028000100` en attente. Le mode normal refuse cet écart. Le mode explicite ci-dessous accepte **uniquement cet état précis**, pas une divergence ou une autre migration manquante :
 
 ```powershell

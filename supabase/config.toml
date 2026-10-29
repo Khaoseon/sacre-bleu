@@ -73,3 +73,6 @@ enabled = false
 
 [analytics]
 enabled = false
+
+[functions.product-lookup]
+verify_jwt = true

@@ -1,6 +1,6 @@
 # Identification des produits — phase 4
 
-Implémentation validée localement le **28 octobre 2026**, depuis `ba18738`. **Aucune migration ni fonction déployée dans le Cloud.** La production reste en phase 3 jusqu’à accord. Les phases 5 et 6 ne sont pas commencées.
+Implémentation et déploiement validés le **28 octobre 2026**, depuis `ba18738`. **Phase 4 active sur le projet Supabase Free Paris existant**, après sauvegarde vérifiée et autorisation. Trois préremplissages réels validés depuis l’ordinateur sans création de fiche. Recette iPhone/Samsung restante ; phases 5/6 non commencées.
 
 ## Choix technique
 
@@ -59,15 +59,15 @@ Sources de licence consultées : [guide officiel de réutilisation](https://open
 
 Les pages `terms-of-use` et le wiki ODbL ont renvoyé un blocage anti-robot lors de la consultation ; le guide officiel et les textes de licences ont été lus. Le [formulaire d’usage de l’API](https://openfoodfacts.github.io/openfoodfacts-server/api/#before-you-start) est à compléter par le propriétaire avant mise en service ; aucun message, compte OFF ou formulaire externe n’a été soumis sans instruction.
 
-## Mise en service proposée, soumise à accord
+## Configuration Cloud appliquée et évolutions
 
-Ressources : **une migration additive** sur le projet Supabase existant, **une Edge Function `product-lookup`**, configuration des origines HTTPS exactes par `OFF_ALLOWED_ORIGINS`. Aucun changement SMTP, Storage, invitation, hébergement PWA, quantité ou ligne de courses. La fonction doit garder la vérification JWT plateforme par défaut en Cloud ; elle vérifie aussi le token et les droits elle-même. [Authentification Edge officielle](https://supabase.com/docs/guides/functions/auth).
+Ressources : **une migration additive** sur le projet Supabase existant, **une Edge Function `product-lookup`**, configuration des quatre origines locales explicitement autorisées par `OFF_ALLOWED_ORIGINS`. Aucun changement SMTP, Storage, invitation, hébergement PWA, quantité ou ligne de courses. La fonction conserve la vérification JWT plateforme en Cloud ; elle vérifie aussi le token et les droits elle-même. [Authentification Edge officielle](https://supabase.com/docs/guides/functions/auth).
 
 Le [tarif Supabase](https://supabase.com/pricing), consulté le 28/10/2026, inclut 500 000 invocations Edge dans Free à 0 USD/mois, sous ses autres limites. L’usage de deux personnes devrait rester dans cette enveloppe ; c’est une estimation, sans changement de forfait ni garantie de coût en cas d’évolution. Les références images n’occupent pas Storage. Les lectures Auth/RLS, RPC et sorties réseau consomment les ressources du projet existant.
 
-Après accord seulement : vérifier le projet cible, la visibilité privée Git et une sauvegarde selon `BACKUP.md` ; lister les migrations et simuler le push ciblé. Appliquer uniquement la nouvelle migration, configurer les origines et déployer la fonction (sans désactiver la validation JWT Cloud). Ne jamais copier la configuration locale entière ni lancer reset/fixtures sur le Cloud. Faire ensuite une lecture publique limitée et une recette avec données jetables explicitement autorisées. Les commandes usuelles sont `supabase db push --linked --dry-run --skip-vault`, puis le push approuvé et `supabase functions deploy product-lookup --project-ref <référence vérifiée>` ; aucune de ces mutations distantes n’a été exécutée ici.
+Après contrôles et accord, la seule migration phase 4 a été appliquée avec `supabase db push --linked --skip-vault`, puis `product-lookup` déployée via la CLI avec `verify_jwt=true`. Aucun push global de configuration ou reset/fixture Cloud. La comparaison des dix tables préexistantes à la sauvegarde a réussi juste après migration ; les huit tables applicatives préexistantes restent identiques après les recherches réelles. Résultats et limites dans `HANDOFF_4.md`. Toute évolution doit reprendre les précontrôles et respecter les autorisations ; une recette de mouvements Cloud exige toujours un accord distinct.
 
-En attendant, les nouvelles colonnes ne sont pas envoyées pour les fiches historiques/manuelles sans provenance. Le frontend reste compatible avec le backend Cloud de phase 3 ; la fonction absente produit un repli manuel. La démo ne fait aucun appel OFF par défaut, car le proxy exige un compte membre.
+Les nouvelles colonnes ne sont pas envoyées pour les fiches historiques/manuelles sans provenance. La démo ne fait aucun appel OFF par défaut, car le proxy exige un compte membre. Une indisponibilité du service conserve le formulaire manuel.
 
 ## Tests reproductibles
 
@@ -99,6 +99,6 @@ L’option locale `--no-verify-jwt` permet d’exercer les refus du handler avec
 
 Résultats effectivement exécutés et recette téléphone restante : `HANDOFF_4.md` et `VALIDATION.md`.
 
-## Activation autorisée sous conditions, encore suspendue
+## Activation et origines effectivement autorisées
 
-Les précontrôles distants du 28 octobre confirment la cible Paris et les trois migrations appliquées ; le dry-run propose uniquement la phase 4. L’archive documentée précède les dernières modifications : l’utilisateur demande une nouvelle sauvegarde avant toute application. Le mode strict `--before-phase4` de `SAUVEGARDE_CHIFFREE.md` prépare ce prérequis. Aucun changement Cloud effectué. Free et origines HTTPS restent à reconfirmer après sauvegarde ; recette préparée dans `TESTS_OFF_TELEPHONES.md`. Détails dans le complément de `HANDOFF_4.md`.
+Sauvegarde chiffrée du 28 octobre vérifiée, empreintes source identiques, Free et Paris confirmés, dry-run ciblé et quatre migrations maintenant alignées. `OFF_ALLOWED_ORIGINS` vaut exactement `http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173`. Ces ports sont ceux résolus par Vite ; les quatre preflights CORS passent et une origine étrangère est refusée. Aucun joker. Seuls le navigateur de l’ordinateur et ces origines HTTP locales sont utilisables actuellement. Un accès HTTPS privé téléphone sera préparé ultérieurement avec accord et ajout de son origine exacte ; ne recréer ni certificat, ni accès LAN, ni hébergement PWA maintenant. Une future adresse HTTPS permanente relèvera de la phase d’hébergement. Recette préparée dans `TESTS_OFF_TELEPHONES.md`.

@@ -1,6 +1,6 @@
 # Transmission — phase 4 Open Food Facts
 
-État au **28 octobre 2026**. Base de départ `ba18738`. **Phase 4 implémentée et validée localement ; activation Cloud en attente d’accord explicite.** Aucun début des phases 5/6.
+État au **28 octobre 2026**. Base de départ `ba18738`. **Phase 4 déployée après autorisation sur Supabase Free Paris ; parcours OFF réel validé depuis le navigateur de l’ordinateur.** Recette iPhone/Samsung encore à effectuer. Aucun début des phases 5/6.
 
 ## Livré
 
@@ -34,17 +34,17 @@ Trois GET espacés, non destructifs et identifiés, vers **l’environnement off
 
 Ces fiches ne sont pas des fixtures automatisées et n’ont pas été enregistrées dans une réserve. Pas d’essai de charge, de 429 volontaire, de comparaison d’exhaustivité staging/production ni de lecture des fiches production. Les photos disponibles et erreurs sont couvertes par fixtures et interception navigateur, pas par une photo réellement obtenue lors de ces trois lectures. Le test réseau initial dans le sandbox a échoué ; les trois lectures ont ensuite réussi avec accès réseau autorisé.
 
-## Cloud et validation téléphone restantes
+## Périmètre Cloud et validation téléphone
 
-Aucune migration distante, fonction déployée, nouvelle ressource, modification Auth/SMTP/Storage ou quantité réelle modifiée. Dépôt conservé privé et sauvegardes/secrets/archives préexistants préservés. La fonction non déployée laisse actuellement le formulaire manuel en Cloud.
+Une migration additive et la fonction `product-lookup` sont désormais appliquées sur le projet existant après tous les précontrôles ; détails ci-dessous. Aucun changement SMTP, administration de comptes, Storage, donnée de test Cloud, quantité réelle ou course. Dépôt conservé privé et sauvegardes/secrets/archives préexistants préservés.
 
-Accord requis pour appliquer la migration et déployer `product-lookup` dans le projet existant, puis autoriser les origines HTTPS exactes. Free inclut actuellement 500 000 invocations ; coût supplémentaire attendu nul pour deux personnes dans ses quotas, à revérifier avant activation. Détails et liens officiels dans `OPEN_FOOD_FACTS.md`. Aucun tunnel ou hébergement public nécessaire à cette demande.
+L’utilisateur a autorisé les quatre seules origines locales HTTP des ports 5173/4173. Aucune origine HTTPS téléphone actuellement active, aucun joker, certificat, accès LAN ou hébergement PWA créé. Free confirmé dans le Dashboard ; aucun changement de forfait ni ressource payante. Détails dans `OPEN_FOOD_FACTS.md`.
 
 Après activation approuvée : recette privée iPhone/Samsung avec un nouveau code, proposition/correction/photo absente ou présente, reprise caméra sans réactivation, deuxième code, connu suivant sans OFF, fermeture/recherche lente et repli manuel. Les essais de quantités Cloud demandent un périmètre jetable autorisé et un état initial/restauré explicite. Les validations physiques de phase 3 restent acquises ; elles ne valent pas validation OFF sur téléphone. Aucune mesure de latence ou installation PWA finale revendiquée.
 
 Les serveurs Vite temporaires sont arrêtés (aucune écoute sur 5178/5188), ainsi que le conteneur Edge ajouté pour la recette ; les cinq conteneurs de base préexistants sont conservés. Le dossier temporaire dédié aux essais OFF est supprimé après vérification de son chemin. Aucun certificat ou règle réseau créé.
 
-## Précontrôles d’activation Cloud — autorisation conditionnelle du 28 octobre
+## Historique préalable — première suspension du 28 octobre
 
 L’utilisateur autorise la migration unique et la fonction Edge uniquement après vérification de la cible Free/Paris, de l’historique, des permissions, d’une sauvegarde actuelle et du dry-run. Aucune création de test Cloud, modification de quantité/courses/compte/SMTP ou nouvelle ressource payante autorisée. En cas d’anomalie préalable, arrêter le déploiement.
 
@@ -57,4 +57,36 @@ Contrôles réalisés en lecture seule :
 
 L’outil de sauvegarde est adapté à ce prérequis : option stricte `--before-phase4`, trois migrations appliquées seulement dans l’archive, empreintes des dix tables comparées avant/après export et inscrites dans le reçu privé. Toute autre divergence reste refusée. Après phase 4, le mode normal inclut aussi le budget technique. Huit tests synthétiques de sauvegarde/GnuPG réussis, requête d’empreintes contrôlée sur la base locale, sans export Cloud à ce stade. La phrase secrète sera saisie uniquement par l’utilisateur dans son terminal personnel. Commande dans `SAUVEGARDE_CHIFFREE.md`.
 
-Après réception du chemin de la nouvelle archive vérifiée : vérifier son SHA-256 et son reçu, comparer les empreintes à la base actuelle, reconfirmer Free et les origines HTTPS exactes, puis refaire historique/dry-run avant toute mutation distante. L’autorisation conditionnelle reste acquise ; elle ne vaut pas constat de réussite de ces contrôles. Recette iPhone/Samsung préparée dans `TESTS_OFF_TELEPHONES.md`, sans création ni mouvement sur les données Cloud réelles.
+Ces contrôles ont ensuite été complétés lors de la reprise ci-dessous. La procédure de recette physique reste dans `TESTS_OFF_TELEPHONES.md`, sans création ni mouvement sur les données Cloud réelles sans nouvel accord distinct.
+
+## Déploiement et contrôle Cloud effectivement réalisés
+
+L’utilisateur confirme une nouvelle sauvegarde vérifiée et demande la reprise, puis autorise explicitement les origines locales en attendant une future recette HTTPS privée.
+
+- Archive `app-reserve-2026-10-28T21-39-41Z-7f587fcb.json.gz.gpg`, 25 770 octets, créée à 21:39:41 UTC et vérifiée à 21:39:47 UTC par saisie indépendante de l’utilisateur. Fichiers `.sha256` et `.verification.json` présents ; empreinte du fichier identique à chacun. Reçu conforme : bon projet, trois migrations appliquées, phase 4 seule en attente, onze fichiers internes et vérifications de chiffrement réussies. Aucun déchiffrement par l’agent ni secret demandé.
+- Les dix empreintes source du reçu correspondent exactement à la base Cloud avant mutation, contrôle répété immédiatement avant application. CLI et Dashboard confirment `app-reserve`, `uznbnihmdzxdnlxanjcl`, Paris `eu-west-3`, PostgreSQL 17.11, état Healthy ; Dashboard de l’organisation : **Free plan usage**.
+- Historique, permissions et dry-run revérifiés : seule migration `20261028000100_product_sources.sql`. Application avec `db push --linked --skip-vault` ; les quatre migrations sont maintenant alignées. Comparaison juste après : les dix tables préexistantes sont identiques à la sauvegarde, en projetant les anciennes colonnes de `products` ; les deux nouvelles colonnes sont toutes nulles. RLS, refus des écritures directes, droits de la table privée et `search_path` vide confirmés. Aucune fixture Cloud.
+- Une seule fonction déployée : `product-lookup`, version 1, état **ACTIVE**, **verify_jwt=true** confirmé par la CLI distante et déclaré dans `supabase/config.toml`. Contrôles Auth, email confirmé, non-anonymat, appartenance RLS, code strict et URL OFF fixe conservés. Aucun autre réglage Cloud appliqué.
+- `OFF_ALLOWED_ORIGINS` vaut exactement `http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173`. Ports résolus par la configuration Vite installée : 5173 et 4173. Les quatre preflights donnent 204 avec l’origine exacte ; origine étrangère 403 sans autorisation CORS ; POST sans token, token invalide ou clé publishable utilisée comme token utilisateur : 401.
+
+### Parcours réel ordinateur → Edge Cloud → OFF production
+
+Preview du build Cloud temporaire sur **127.0.0.1:4173 seulement**, sans écoute LAN. Connexion effectuée par l’utilisateur avec son compte existant ; aucun identifiant lu ou saisi par l’agent. Un ancien service worker affichait d’abord le scanner simulé : fermeture/réouverture de l’onglet a activé le build actuel en conservant la session. Aucun code soumis dans l’ancienne version, aucun développement de gestion du cache de phase 5.
+
+Les trois codes ci-dessous ont été confirmés absents du catalogue en lecture seule **avant** saisie, pour éviter le mouvement automatique d’un produit connu. Caméra non activée ; formulaires ouverts puis fermés sans enregistrer.
+
+| Code            | Résultat affiché dans le formulaire                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `3017620422003` | Nutella ; Nutella/Ferrero ; texte source `400 g e`, champ numérique laissé vide/à vérifier ; photo publique chargée et attribution visible |
+| `3274080005003` | « isabelle » ; Cristaline ; 1 500 ml proposés ; référence photo et attribution présentes                                                   |
+| `7613034626844` | Céréales Chocapic ; Nestlé/Chocapic ; 430 g proposés ; photo publique chargée et attribution visible                                       |
+
+Quantité initiale proposée 1 ; correction du nom Nutella essayée puis abandonnée avec Fermer. Le nom source Cristaline illustre une fiche imparfaite, sans correction automatique inventée. Le suffixe `e` reste hors du parseur conservateur et exige une vérification manuelle. Pas de création, mouvement, ajustement, annulation ou course réelle exécuté. Les huit tables applicatives préexistantes correspondent toujours aux empreintes de sauvegarde après les essais ; les métadonnées normales de connexion Auth ne sont pas utilisées pour cette dernière comparaison. Seul le budget technique neuf est mis à jour par les lectures OFF.
+
+### Régressions et limites après déploiement
+
+Base locale recréée sans seed : **104 assertions pgTAP, 7 tests de concurrence, Auth/API et parcours SDK/Mailpit partagé réussis** ; types régénérés sans différence et linter SQL sans erreur. **246 tests applicatifs**, TypeScript strict, builds local/Cloud, parcours navigateur fictif 390/320 px et deux tests du serveur téléphone réussis. Les tests d’écriture, annulation, ajustement, stock/courses et création/reconnaissance suivante restent dans cet environnement isolé.
+
+La réussite des trois préremplissages valide le chemin authentifié réel et les images indiquées, pas la caméra physique, une écriture Cloud post-déploiement ou tous les rôles de comptes sur le réseau. Les accès non-membre/unverified, erreurs 404/429/5xx et pannes restent couverts par les suites locales et fixtures, sans compte ou charge Cloud de test. OFF sur iPhone/Samsung reste à valider ultérieurement après accord pour HTTPS privé et origine exacte ; ne pas scanner de produit connu ni enregistrer une fiche dans la réserve réelle sans périmètre autorisé. Phases 5/6 non commencées.
+
+Clôture de la recette ordinateur : deux onglets de contrôle fermés, preview arrêtée, aucune écoute résiduelle constatée sur 4173/5178/5188. Scripts temporaires de contrôle supprimés après vérification du chemin ; archives chiffrées et fichiers associés conservés intacts. Aucun certificat, règle réseau, tunnel ou hébergement PWA créé. La fonction Cloud reste active avec la liste CORS autorisée.

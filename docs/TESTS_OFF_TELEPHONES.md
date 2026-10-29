@@ -1,11 +1,11 @@
 # Recette Open Food Facts — iPhone et Samsung
 
-**Préparée, non exécutée.** Activation Cloud suspendue à une sauvegarde actuelle vérifiée ; les tests physiques de phase 3 ne valident pas cette intégration. Cette recette ne commence pas la phase 5 ou une installation PWA de phase 6.
+**Recette physique préparée, non exécutée.** Phase 4 activée sur Supabase Free Paris le 28 octobre 2026 après sauvegarde et contrôles ; trois recherches réelles validées depuis l’ordinateur sans enregistrement. Les tests physiques de phase 3 ne valident pas cette intégration. Cette recette ne commence pas la phase 5 ou une installation PWA de phase 6.
 
 ## Prérequis avant essai
 
-1. Achever les précontrôles de `HANDOFF_4.md`, notamment sauvegarde, forfait Free, région Paris, historique et dry-run. Après réussite seulement, appliquer l’unique migration phase 4 et déployer `product-lookup` avec JWT plateforme conservé et contrôles Auth/RLS internes.
-2. Relever l’origine HTTPS exacte utilisée par chaque téléphone et l’inscrire dans `OFF_ALLOWED_ORIGINS` ; ne pas autoriser `*`. Les anciens certificats/serveur de phase 3 ont été supprimés. La présente autorisation de déploiement ne demande pas de réinstaller une autorité, ouvrir le LAN ou créer un hébergement : préparer séparément l’accès privé nécessaire avec les accords correspondants, selon `TESTS_TELEPHONES.md`. Aucune origine LAN ancienne ne doit être supposée encore valide.
+1. Les précontrôles et le déploiement initial décrits dans `HANDOFF_4.md` sont réalisés. Avant une future recette, vérifier à nouveau l’état actif, JWT et les accès ; ne pas réappliquer la migration déjà alignée.
+2. À la demande explicite de l’utilisateur, les seules origines actuelles sont `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:4173` et `http://127.0.0.1:4173`. Aucun HTTPS téléphone n’est actif. Après accord ultérieur pour l’accès privé, relever son origine HTTPS exacte et l’ajouter à `OFF_ALLOWED_ORIGINS` ; ne pas autoriser `*`. Les anciens certificats/serveur de phase 3 ont été supprimés. Ne pas recréer de certificats, ouvrir le LAN ou héberger la PWA maintenant. Aucune IP ne doit être supposée.
 3. Choisir quelques **codes publics absents du catalogue personnel**, après contrôle de cette absence en lecture seule. Candidats : `3017620422003`, `3274080005003`, `7613034626844`. Ne pas les scanner dans le Cloud s’ils sont déjà personnels : un connu déclenche un mouvement automatique.
 4. Aucune création de données de test Cloud n’est autorisée actuellement. Ne pas enregistrer la nouvelle fiche, ne pas scanner de produit connu et ne pas utiliser les boutons de stock, d’ajustement, d’annulation ou de courses dans la réserve réelle. Ces opérations sont vérifiées dans l’environnement local isolé. Une recette de mouvements Cloud exigerait un accord distinct sur une réserve/fiche jetable et son nettoyage.
 
