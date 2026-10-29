@@ -1,5 +1,7 @@
 # Supabase Cloud — procédure de phase 2C
 
+**Évolution phase 4B du 29 octobre 2026 :** le frontend est publié sur `https://sacre-bleu.pages.dev`. Après accord, Site URL et callback HTTPS sont configurés, les quatre callbacks locaux conservés. La configuration versionnée `config/cloud` est alignée ; `config/pages-auth` fournit aussi la variante limitée aux seules URL Auth. État actuel et contrôles dans `CLOUDFLARE_PAGES.md`, essais dans `TESTS_PAGES_TELEPHONES.md`. Les procédures et valeurs de phase 2C ci-dessous décrivent leur contexte historique.
+
 Procédure de phase 2C au 27 octobre 2026. Le projet `uznbnihmdzxdnlxanjcl` est créé à Paris, lié et migré après accord ; voir `HANDOFF_2C.md` pour l’état effectif et les validations. Les trois migrations 2A et la configuration Docker locale sont conservées.
 
 ## 1. Créer le projet (action manuelle)
@@ -112,13 +114,13 @@ Dans **Authentication**, conserver Email/Password, confirmation email obligatoir
 
 Avant les premières inscriptions, régler **URL Configuration** :
 
-| Paramètre               | Valeur actuelle pour les essais sur ordinateur |
-| ----------------------- | ---------------------------------------------- |
-| Site URL                | `http://127.0.0.1:5173`                        |
-| Redirect URL            | `http://127.0.0.1:5173/auth/callback`          |
-| Redirect URL            | `http://localhost:5173/auth/callback`          |
-| Redirect URL de preview | `http://127.0.0.1:4173/auth/callback`          |
-| Redirect URL de preview | `http://localhost:4173/auth/callback`          |
+| Paramètre               | Valeur historique phase 2C sur ordinateur |
+| ----------------------- | ----------------------------------------- |
+| Site URL                | `http://127.0.0.1:5173`                   |
+| Redirect URL            | `http://127.0.0.1:5173/auth/callback`     |
+| Redirect URL            | `http://localhost:5173/auth/callback`     |
+| Redirect URL de preview | `http://127.0.0.1:4173/auth/callback`     |
+| Redirect URL de preview | `http://localhost:4173/auth/callback`     |
 
 Pas de joker. Le frontend compose `emailRedirectTo` depuis son origine réelle. Après SMTP, appliquer `config/cloud-email` ci-dessus, ou copier **le contenu exact de `supabase/templates/confirmation.html`** dans le modèle « Confirm signup » du Dashboard ; sujet « Confirmez votre adresse — réserve. ». Le lien doit utiliser `{{ .RedirectTo }}#confirm={{ .TokenHash }}`. Le callback consomme le token par `verifyOtp` et retire le fragment. Le modèle Cloud par défaut avec `ConfirmationURL` n’est pas le modèle validé par cette application. Désactiver la réécriture des liens / click tracking chez le SMTP, si proposée.
 

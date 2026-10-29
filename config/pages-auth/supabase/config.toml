@@ -1,0 +1,7 @@
+# Phase 4B: Auth URLs only. Never start the local stack from this directory.
+# Apply only after explicit approval, with --project-ref uznbnihmdzxdnlxanjcl.
+project_id = "app-reserve-pages-auth-config"
+
+[auth]
+site_url = "https://sacre-bleu.pages.dev"
+additional_redirect_urls = ["http://127.0.0.1:5173/auth/callback", "http://localhost:5173/auth/callback", "http://127.0.0.1:4173/auth/callback", "http://localhost:4173/auth/callback", "https://sacre-bleu.pages.dev/auth/callback"]
