@@ -1,8 +1,10 @@
 # Sacré bleu — essais HTTPS et installation téléphone
 
-**Préparés, non réalisés à ce stade.** Adresse canonique : **https://sacre-bleu.pages.dev**. Cloudflare Pages Free, interface publique et réserve privée par Supabase Auth/RLS. Deux comptes existants ; aucune nouvelle inscription, invitation ou donnée de test nécessaire. Ne pas commencer la phase 5.
+**Préparés, retours partiels obtenus.** Adresse canonique : **https://sacre-bleu.pages.dev**. Cloudflare Pages Free, interface publique et réserve privée par Supabase Auth/RLS. Deux comptes existants ; aucune nouvelle inscription, invitation ou donnée de test nécessaire. Ne pas commencer la phase 5.
 
 Relever pour chaque téléphone : modèle, système, navigateur/version, mode navigateur ou app installée, résultat et date. Ne pas enregistrer email, session, mot de passe ou capture de stock personnel dans Git.
+
+Retour déjà obtenu : l'utilisateur confirme la connexion et l'accès à la réserve ; sa capture Samsung montre le nom/logo et la consultation connectée. L'appareil du premier retour n'était pas précisé. La capture privée n'est pas ajoutée au dépôt. Icône d'accueil, relance, ordinateur éteint, OFF et iPhone restent à confirmer séparément.
 
 ## 1. Vérifier la consultation
 
@@ -22,13 +24,21 @@ Si l'action manque, Safari permet de l'ajouter depuis **Modifier les actions** d
 
 Dans Chrome, menu **⋮** → **Installer et créer un raccourci** → **Installer**, ou l'entrée **Ajouter à l'écran d'accueil** selon la version. Vérifier **Sacré bleu** et l'icône du sac bleu, puis ouvrir depuis l'icône. Référence : [guide Chrome Android](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=fr), consulté le 29 octobre 2026.
 
-## 4. Vérifier scanner et OFF sans modifier les stocks
+## 4. Vérifier le plein écran Android demandé pendant la recette
+
+Le manifeste demande maintenant `display: fullscreen`, au lieu de `standalone`, pour masquer les boutons système Android dans les navigateurs compatibles lors de l'ouverture depuis l'icône installée. Chrome synthétise un mode immersif pour ce réglage ; la barre supérieure peut également disparaître. Les commandes peuvent revenir avec un geste depuis le bord ou lorsque le système en a besoin. Les barres propres à Sacré bleu (Stock, Scanner, À acheter) restent visibles.
+
+Vérifier sur Samsung : fermeture/réouverture depuis l'icône, disparition habituelle des boutons système, réaffichage par geste, nom/logo/réglages non masqués par la caméra frontale, clavier et retour à l'app. Le navigateur décide du comportement et du délai de mise à jour du manifeste installé ; ne pas promettre l'effet immédiat d'un simple rechargement. Commencer par fermer toutes les fenêtres de Sacré bleu et rouvrir depuis l'icône. Si l'ancien mode reste actif, suivre la procédure de mise à jour WebAPK avant d'envisager une réinstallation ; ne pas effacer les données de site pour ce seul motif.
+
+Sources consultées le 29 octobre 2026 : [architecture Android Chromium, mode immersif](https://chromium.googlesource.com/chromium/src/+/HEAD/components/webapps/docs/android_architecture.md), [mises à jour du manifeste Chrome](https://web.dev/articles/manifest-updates), [évolution du mécanisme Chrome 144](https://developer.chrome.com/blog/improvements-to-web-app-updates). Plein écran physique Samsung **non encore validé**.
+
+## 5. Vérifier scanner et OFF sans modifier les stocks
 
 Suivre `TESTS_OFF_TELEPHONES.md` : uniquement des codes publics confirmés absents du catalogue, proposition OFF puis **Fermer sans enregistrer**. Commencer par une saisie manuelle, puis activer la caméra explicitement avec un emballage correspondant à un code autorisé. Vérifier la reprise après fermeture du formulaire et après retour d'arrière-plan. Aucun scan connu, création, ajustement ou annulation dans la réserve réelle.
 
 Une recherche OFF actualise son budget technique, sans modifier le catalogue ou les quantités. L'appel peut échouer ou proposer une fiche imparfaite ; le formulaire manuel doit rester disponible et corrigeable.
 
-## 5. Vérifier l'indépendance de l'ordinateur et les mises à jour
+## 6. Vérifier l'indépendance de l'ordinateur et les mises à jour
 
 Sur un téléphone en réseau mobile, Wi-Fi coupé, ouvrir l'app avec l'ordinateur éteint. Vérifier la consultation de la réserve et la relance depuis l'icône. Le réseau Internet reste nécessaire pour relire les données privées ; aucune consultation privée persistante hors ligne n'est livrée ici. Supabase Free peut se mettre en pause après une période de faible activité : suivre `BACKUP.md`/`CLOUD.md` pour la reprise, sans maintien artificiel d'activité.
 
@@ -36,9 +46,9 @@ Chaque push validé sur `main` publie une nouvelle version après réussite du b
 
 ## Résultats à compléter
 
-| Appareil         | Consultation / session | Icône / installation / relance | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour |
-| ---------------- | ---------------------- | ------------------------------ | -------------------------- | --------------------------------- | ----------- |
-| iPhone / Safari  | Non réalisé            | Non réalisé                    | Non réalisé                | Non réalisé                       | Non réalisé |
-| Samsung / Chrome | Non réalisé            | Non réalisé                    | Non réalisé                | Non réalisé                       | Non réalisé |
+| Appareil         | Consultation / session | Icône / installation / relance                             | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                          |
+| ---------------- | ---------------------- | ---------------------------------------------------------- | -------------------------- | --------------------------------- | ------------------------------------ |
+| iPhone / Safari  | Non confirmé           | Non confirmé                                               | Non confirmé               | Non confirmé                      | Non confirmé                         |
+| Samsung / Chrome | Consultation confirmée | Logo dans l'app visible ; installation/relance à confirmer | Non confirmé               | Non confirmé                      | Nouveau mode plein écran à confirmer |
 
 Un test de largeur sur ordinateur ou une icône présente dans le manifeste ne remplace pas ces essais physiques. La synchronisation de deux appareils peut être observée en lecture seule ; une nouvelle recette de mouvements exigerait un accord distinct sur des données jetables.

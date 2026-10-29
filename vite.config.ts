@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
           description: 'Votre réserve alimentaire, simplement.',
           theme_color: '#284f40',
           background_color: '#f7f8f4',
-          display: 'standalone',
+          display: 'fullscreen',
           start_url: '/',
           scope: '/',
           icons: [

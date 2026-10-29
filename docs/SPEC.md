@@ -8,6 +8,8 @@ Le nom public de l'application est **Sacré bleu**, choisi en phase 4B. Il appar
 
 Le logo fourni en phase 4B (sac bleu illustré) apparaît à côté du nom et sert aux icônes PWA, Apple et navigateur. La variante Android adaptative conserve une marge de sécurité. Source et dérivés documentés dans `assets/branding/README.md` ; installation physique à valider après hébergement HTTPS.
 
+À la demande de l'utilisateur pendant la recette Samsung, le manifeste demande le mode `fullscreen` pour les navigateurs compatibles, afin de masquer les commandes système Android dans l'app installée. Ce mode peut également masquer la barre d'heure/batterie ; Android garde la possibilité de réafficher ses commandes par geste. Les marges de sécurité du téléphone sont respectées en plein écran. Ce n'est pas une garantie identique sur tous les navigateurs ; validation physique et mise à jour du manifeste installé restent nécessaires.
+
 App_reserve est une application personnelle, installable sur Android et iOS sans publication sur les stores.
 
 Elle permet à deux utilisateurs de gérer une même réserve alimentaire, principalement composée de produits secs et de conserves.
