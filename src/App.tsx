@@ -53,6 +53,7 @@ import {
 import { demo } from './demo';
 import { load, persist, STORAGE_KEY } from './storage';
 import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
+import { AppInformation } from './AppInformation';
 import { snapshotState, type SharedPantryStore, type SharedView } from './backend/store';
 import { CameraScanner } from './CameraScanner';
 import { ProductSearch } from './productSearch';
@@ -1158,7 +1159,7 @@ export default function App({
               ? 'Réserve privée · actualisation toutes les 5 s.'
               : 'Données de démonstration sur cet appareil.'}
           </span>
-          <span>Sacré bleu · {shared ? 'partagée' : 'démo'} 0.2</span>
+          <span>Sacré bleu · {shared ? 'partagée' : 'démo'}</span>
         </footer>
       </div>
       <nav className="mobile-nav" aria-label="Navigation mobile">
@@ -1375,6 +1376,7 @@ export default function App({
                 )}
               </details>
             )}
+            <AppInformation />
           </div>
         </Modal>
       )}

@@ -2400,6 +2400,40 @@ input::file-selector-button {
   font-size: 11px;
   margin-top: 9px;
 }
+.app-information {
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.app-information .app-version {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.app-information code {
+  user-select: text;
+}
+.app-information summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.app-information summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.app-information dl {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+.app-information dt {
+  font-weight: 600;
+}
+.app-information dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .search-input:focus-within,
 .sort-control:focus-within {
   outline: 3px solid var(--focus);

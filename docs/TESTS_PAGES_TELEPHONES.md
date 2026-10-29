@@ -32,6 +32,10 @@ Vérifier sur Samsung : fermeture/réouverture depuis l'icône, disparition habi
 
 Sources consultées le 29 octobre 2026 : [architecture Android Chromium, mode immersif](https://chromium.googlesource.com/chromium/src/+/HEAD/components/webapps/docs/android_architecture.md), [mises à jour du manifeste Chrome](https://web.dev/articles/manifest-updates), [évolution du mécanisme Chrome 144](https://developer.chrome.com/blog/improvements-to-web-app-updates). Plein écran physique Samsung **non encore validé**.
 
+L'utilisateur signale ensuite que les deux barres système restent visibles après fermeture/réouverture. Pour distinguer l'ancien JavaScript d'une configuration Android non actualisée, ouvrir les réglages et relever **Version**, puis **Diagnostic d'affichage → Affichage détecté**. Le mode demandé par le build doit être Plein écran. Une version récente avec un mode détecté standard oriente le diagnostic vers l'installation/manifeste ou la prise en charge du navigateur ; cela ne prouve pas à lui seul une cause unique.
+
+Si aucune ligne Version n'apparaît, cette interface est antérieure au diagnostic. On peut comparer en ouvrant l'adresse canonique dans une fenêtre privée de Chrome, puis les paramètres de l'écran de connexion : aucune connexion ni manipulation de stock nécessaire pour lire ces informations. Ne pas effacer les données de site pour obtenir une version. Ce diagnostic ne force ni le worker ni la mise à jour du WebAPK Android.
+
 ## 5. Vérifier scanner et OFF sans modifier les stocks
 
 Suivre `TESTS_OFF_TELEPHONES.md` : uniquement des codes publics confirmés absents du catalogue, proposition OFF puis **Fermer sans enregistrer**. Commencer par une saisie manuelle, puis activer la caméra explicitement avec un emballage correspondant à un code autorisé. Vérifier la reprise après fermeture du formulaire et après retour d'arrière-plan. Aucun scan connu, création, ajustement ou annulation dans la réserve réelle.
@@ -46,9 +50,9 @@ Chaque push validé sur `main` publie une nouvelle version après réussite du b
 
 ## Résultats à compléter
 
-| Appareil         | Consultation / session | Icône / installation / relance                             | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                          |
-| ---------------- | ---------------------- | ---------------------------------------------------------- | -------------------------- | --------------------------------- | ------------------------------------ |
-| iPhone / Safari  | Non confirmé           | Non confirmé                                               | Non confirmé               | Non confirmé                      | Non confirmé                         |
-| Samsung / Chrome | Consultation confirmée | Logo dans l'app visible ; installation/relance à confirmer | Non confirmé               | Non confirmé                      | Nouveau mode plein écran à confirmer |
+| Appareil         | Consultation / session | Icône / installation / relance                             | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                                                   |
+| ---------------- | ---------------------- | ---------------------------------------------------------- | -------------------------- | --------------------------------- | ------------------------------------------------------------- |
+| iPhone / Safari  | Non confirmé           | Non confirmé                                               | Non confirmé               | Non confirmé                      | Non confirmé                                                  |
+| Samsung / Chrome | Consultation confirmée | Logo dans l'app visible ; installation/relance à confirmer | Non confirmé               | Non confirmé                      | Barres encore visibles après relance ; version/mode à relever |
 
 Un test de largeur sur ordinateur ou une icône présente dans le manifeste ne remplace pas ces essais physiques. La synchronisation de deux appareils peut être observée en lecture seule ; une nouvelle recette de mouvements exigerait un accord distinct sur des données jetables.

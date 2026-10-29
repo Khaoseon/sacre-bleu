@@ -4,6 +4,7 @@ import { Settings2 } from 'lucide-react';
 import App from './App';
 import { Modal } from './components';
 import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
+import { AppInformation } from './AppInformation';
 import { useThemePreference } from './theme';
 import { client } from './backend/client';
 import { SupabaseBackend } from './backend/adapter';
@@ -60,6 +61,7 @@ function Gate({
       {settings && (
         <Modal title="Paramètres" close={() => setSettings(false)}>
           <AppearanceSettings theme={theme} />
+          <AppInformation />
         </Modal>
       )}
     </main>

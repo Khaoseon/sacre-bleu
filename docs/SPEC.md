@@ -10,6 +10,8 @@ Le logo fourni en phase 4B (sac bleu illustré) apparaît à côté du nom et se
 
 À la demande de l'utilisateur pendant la recette Samsung, le manifeste demande le mode `fullscreen` pour les navigateurs compatibles, afin de masquer les commandes système Android dans l'app installée. Ce mode peut également masquer la barre d'heure/batterie ; Android garde la possibilité de réafficher ses commandes par geste. Les marges de sécurité du téléphone sont respectées en plein écran. Ce n'est pas une garantie identique sur tous les navigateurs ; validation physique et mise à jour du manifeste installé restent nécessaires.
 
+Les réglages affichent discrètement la version réellement chargée : version du paquet et référence du code injectées au build. Un diagnostic dépliable ajoute la date de compilation (affichée dans le fuseau du téléphone), le mode demandé par ce build et le mode détecté à l'exécution. Disponible aussi avant connexion, sans exposer de compte ou données de réserve. Aucun rechargement, effacement de cache ou appel réseau déclenché par ce diagnostic. Le numéro fixe `0.2` du pied de page est retiré pour éviter une fausse identification de version.
+
 App_reserve est une application personnelle, installable sur Android et iOS sans publication sur les stores.
 
 Elle permet à deux utilisateurs de gérer une même réserve alimentaire, principalement composée de produits secs et de conserves.
