@@ -9,7 +9,7 @@ const snapshot = (revision = 1): ReserveSnapshot => ({
   products: [],
   shopping: [],
 });
-function setup() {
+function setup(requestTimeoutMs = 12000) {
   const data = new Map<string, string>();
   const journal = {
     getItem: (key: string) => data.get(key) ?? null,
@@ -24,7 +24,7 @@ function setup() {
   const getSnapshot = vi.fn<ReserveBackend['getSnapshot']>().mockResolvedValue(snapshot());
   const backend = { execute, getSnapshot } as unknown as ReserveBackend;
   let online = true;
-  const store = new SharedPantryStore(backend, 'u', 'r', journal, () => online);
+  const store = new SharedPantryStore(backend, 'u', 'r', journal, () => online, requestTimeoutMs);
   return {
     store,
     backend,
@@ -39,6 +39,81 @@ function setup() {
 }
 const command = { action: 'stock', payload: { product_id: 'p', delta: 1 } } as const;
 describe('camera intentions through the existing shared store', () => {
+  it('bounds a hung polling read, ignores its late result and resumes scanning without a reload', async () => {
+    const f = setup(20);
+    await f.store.refresh();
+    let late!: (value: ReserveSnapshot) => void;
+    f.getSnapshot.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          late = resolve;
+        }),
+    );
+    const polling = f.store.refresh();
+    f.execute.mockResolvedValue({ revision: 2, product_id: 'local' });
+    f.getSnapshot.mockResolvedValue(snapshot(2));
+    const mutation = f.store.scanProduct('local', 1);
+    await polling;
+    expect(await mutation).toBe(true);
+    late(snapshot(1));
+    await Promise.resolve();
+    expect(f.store.getSnapshot().snapshot?.reserve.revision).toBe(2);
+    expect(f.store.getSnapshot().lastProductId).toBe('local');
+    expect(f.store.writable).toBe(true);
+  });
+  it('keeps the local scan identity after a remote revision and a local catalogue edit', async () => {
+    const f = setup();
+    await f.store.refresh();
+    f.execute.mockResolvedValue({
+      revision: 2,
+      product_id: 'local',
+      scan_id: 'scan',
+      processed: 1,
+      stock: 1,
+      scan_version: 1,
+    });
+    f.getSnapshot.mockResolvedValue(snapshot(3));
+    expect(await f.store.scanProduct('local', 1)).toBe(true);
+    expect(f.store.getSnapshot().scan).toBeNull();
+    expect(f.store.getSnapshot().lastProductId).toBe('local');
+    f.execute.mockResolvedValue({ revision: 3, product_id: 'edited' });
+    await f.store.saveProduct(
+      { id: 'edited', name: 'Autre produit', quantity: 0, updatedAt: '' },
+      true,
+    );
+    expect(f.store.getSnapshot().lastProductId).toBe('local');
+  });
+  it('does not publish a mismatched receipt as a different local product', async () => {
+    const f = setup();
+    await f.store.refresh();
+    f.execute.mockResolvedValue({ revision: 2, product_id: 'remote' });
+    expect(await f.store.scanProduct('local', 1)).toBe(false);
+    expect(f.store.getSnapshot().lastProductId).toBeNull();
+    expect(f.store.getSnapshot().completed).toBe(0);
+    expect(f.store.getSnapshot().pending).not.toBeNull();
+  });
+  it('retains an uncertain write key after timeout; late receipt cannot trigger a second success', async () => {
+    const f = setup(20);
+    await f.store.refresh();
+    let late!: (value: { revision: number; product_id: string }) => void;
+    f.execute.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          late = resolve;
+        }),
+    );
+    expect(await f.store.scanProduct('local', 1)).toBe(false);
+    const key = f.execute.mock.calls[0][0];
+    expect(f.store.getSnapshot().pending).not.toBeNull();
+    late({ revision: 2, product_id: 'local' });
+    await Promise.resolve();
+    expect(f.store.getSnapshot().completed).toBe(0);
+    f.execute.mockResolvedValue({ revision: 2, product_id: 'local' });
+    f.getSnapshot.mockResolvedValue(snapshot(2));
+    expect(await f.store.resume()).toBe(true);
+    expect(f.execute.mock.calls[1][0]).toBe(key);
+    expect(f.store.getSnapshot().completed).toBe(1);
+  });
   it('blocks duplicates until both the receipt AND coherent stock/shopping are available', async () => {
     const f = setup();
     await f.store.refresh();
@@ -62,7 +137,7 @@ describe('camera intentions through the existing shared store', () => {
     expect(await f.store.scanProduct('p', 1)).toBe(false);
     expect(f.execute).toHaveBeenCalledOnce();
     releaseReceipt({ revision: 2 });
-    await Promise.resolve();
+    await vi.waitFor(() => expect(releaseSnapshot).toBeTypeOf('function'));
     expect(f.store.getSnapshot().completed).toBe(0);
     expect(f.store.getSnapshot().snapshot?.reserve.revision).toBe(1);
     expect(f.store.writable).toBe(false);

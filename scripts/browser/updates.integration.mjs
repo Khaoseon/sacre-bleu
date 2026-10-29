@@ -108,6 +108,8 @@ try {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(origin);
+  await page.getByText('Accès réservé aux comptes autorisés.', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Créer un compte', exact: true }).count(), 0);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   await page.reload();
@@ -156,6 +158,9 @@ try {
   );
   await editor.getByRole('button', { name: 'Fermer', exact: true }).click();
   controls = await settings(true);
+  await page.getByText('Données de démonstration', { exact: true }).click();
+  await page.getByText(/La recherche Open Food Facts est désactivée/).waitFor();
+  assert.equal(await page.getByText(/Open Food Facts viendra plus tard/).count(), 0);
   await controls.getByRole('button', { name: 'Vérifier les mises à jour' }).click();
   await controls.getByText('Nouvelle version disponible.', { exact: true }).waitFor();
 

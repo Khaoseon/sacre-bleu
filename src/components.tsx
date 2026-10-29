@@ -30,6 +30,7 @@ export type Editor = {
   mode?: 1 | -1;
   suggestion?: ProductSuggestion;
   lookup?: LookupResult['status'] | 'loading';
+  lookupReason?: Extract<LookupResult, { status: 'unavailable' }>['reason'];
 };
 export const packageLabel = (p: Product) =>
   p.size ? `${p.size.toLocaleString('fr-FR')} ${p.unit ?? ''}` : '';
@@ -245,7 +246,15 @@ export function ProductForm({
         <p className="form-note">Produit absent d’Open Food Facts. Complétez la fiche.</p>
       )}
       {editor.lookup === 'unavailable' && (
-        <p className="form-note">Recherche indisponible. Vous pouvez saisir le produit.</p>
+        <p className="form-note">
+          {editor.lookupReason === 'cooldown'
+            ? 'Le créneau partagé OFF est occupé. Consultez le délai dans le scanner ou saisissez le produit.'
+            : editor.lookupReason === 'rate-limit'
+              ? 'Open Food Facts est temporairement limité. Vous pouvez saisir le produit.'
+              : editor.lookupReason === 'auth'
+                ? 'L’accès à la recherche OFF doit être vérifié. Vous pouvez saisir le produit.'
+                : 'Recherche indisponible. Vous pouvez saisir le produit.'}
+        </p>
       )}
       {proposed?.packageText && (
         <small>

@@ -60,6 +60,7 @@ import { ProductSearch } from './productSearch';
 import type { ProductProvider } from './productInfo';
 import { usePageSwipe, type Page } from './usePageSwipe';
 import { useUpdateBlocker } from './AppUpdates';
+import { LookupIndicator } from './LookupIndicator';
 
 function initial() {
   try {
@@ -108,7 +109,9 @@ export default function App({
   const [editor, setEditor] = useState<Editor | null>(null);
   const [productSearch] = useState(() => new ProductSearch(productProvider));
   const lookupInFlight = useRef(false);
+  const lookupGeneration = useRef(0);
   function cancelLookup() {
+    lookupGeneration.current++;
     productSearch.cancel();
     lookupInFlight.current = false;
   }
@@ -211,7 +214,7 @@ export default function App({
       (product) => product.id === shared.view.pending?.productId,
     );
     if (pendingProduct?.barcode) recognition.hold(pendingProduct.barcode);
-  }, [shared?.view.pending, shared?.view.snapshot, recognition]);
+  }, [shared?.view.pending, recognition]);
   useEffect(() => {
     if (shared) return;
     const network = () => setOnline(navigator.onLine);
@@ -331,16 +334,18 @@ export default function App({
     recognition.hold(barcode);
     const resolution = productSearch.start(current.current.products, barcode);
     if (resolution.status === 'loading') {
+      const generation = ++lookupGeneration.current;
       lookupInFlight.current = true;
       setEditor({ barcode, fromScan: true, mode, lookup: 'loading' });
       const result = await resolution.result;
-      if (!result) return;
+      if (!result || generation !== lookupGeneration.current) return;
       lookupInFlight.current = false;
       setEditor({
         barcode,
         fromScan: true,
         mode,
         lookup: result.status,
+        lookupReason: result.status === 'unavailable' ? result.reason : undefined,
         suggestion: result.status === 'found' ? result.product : undefined,
       });
       return;
@@ -790,6 +795,29 @@ export default function App({
                       <Minus size={19} /> Retirer
                     </button>
                   </div>
+                  <LookupIndicator provider={productProvider} />
+                  {shared && (
+                    <details className="scanner-diagnostics">
+                      <summary>Diagnostic du scanner</summary>
+                      <p>
+                        Version {__APP_BUILD_INFO__.revision} · révision synchronisée{' '}
+                        {state.revision}.
+                      </p>
+                      <p>
+                        Actions locales confirmées : {shared.view.completed}. Dernière lecture
+                        locale : {shared.view.lastProductId ? 'présente' : 'aucune'}.
+                      </p>
+                      <p>
+                        Ajustement : {lastScan ? 'possible' : 'désactivé'}. Demande locale :{' '}
+                        {shared.view.busy
+                          ? 'en cours'
+                          : shared.view.pending
+                            ? 'à vérifier'
+                            : 'aucune'}
+                        .
+                      </p>
+                    </details>
+                  )}
                   <CameraScanner
                     settingsTarget={cameraSettingsTarget}
                     recognition={recognition}
@@ -1378,7 +1406,8 @@ export default function App({
                 </p>
                 <p>
                   Cette démonstration reste sur cet appareil, sans synchronisation. La caméra est
-                  disponible en contexte sécurisé ; la recherche Open Food Facts viendra plus tard.
+                  disponible en contexte sécurisé. La recherche Open Food Facts est désactivée dans
+                  cette démonstration ; elle est disponible dans la réserve connectée.
                 </p>
                 <button className="secondary-button" onClick={exportData}>
                   <Download size={17} /> Exporter les données JSON

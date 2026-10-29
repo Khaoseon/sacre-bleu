@@ -2411,6 +2411,19 @@ input::file-selector-button {
   color: var(--muted);
   font-size: 11px;
 }
+.lookup-indicator,
+.scanner-diagnostics {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+.lookup-indicator time {
+  white-space: nowrap;
+}
+.scanner-diagnostics summary {
+  cursor: pointer;
+}
 .app-information .app-version {
   font-size: 11px;
   overflow-wrap: anywhere;

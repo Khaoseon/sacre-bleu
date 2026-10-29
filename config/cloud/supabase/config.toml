@@ -7,6 +7,7 @@ schemas = ["public"]
 auto_expose_new_tables = false
 
 [auth]
+enable_signup = false
 site_url = "https://sacre-bleu.pages.dev"
 additional_redirect_urls = ["http://127.0.0.1:5173/auth/callback", "http://localhost:5173/auth/callback", "http://127.0.0.1:4173/auth/callback", "http://localhost:4173/auth/callback", "https://sacre-bleu.pages.dev/auth/callback"]
 enable_refresh_token_rotation = true

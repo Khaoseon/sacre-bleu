@@ -16,9 +16,23 @@ export interface ProductSuggestion {
 export type LookupResult =
   | { status: 'found'; product: ProductSuggestion }
   | { status: 'missing' }
-  | { status: 'unavailable'; reason: 'network' | 'invalid' | 'rate-limit' | 'disabled' };
+  | {
+      status: 'unavailable';
+      reason: 'network' | 'invalid' | 'rate-limit' | 'cooldown' | 'auth' | 'disabled';
+    };
+export interface LookupSlot {
+  allowed: boolean;
+  reason: 'cooldown' | 'rate-limit';
+  retryAfterSeconds: number;
+}
+export interface LookupStatus {
+  reason: 'unknown' | 'cooldown' | 'rate-limit' | 'network' | 'auth';
+  until: number;
+}
 export interface ProductProvider {
   lookup(barcode: string, signal: AbortSignal): Promise<LookupResult>;
+  subscribe?: (listener: () => void) => () => void;
+  getStatus?: () => LookupStatus;
 }
 export const isLookupBarcode = (code: string) => /^\d{4,32}$/.test(code);
 export const sourceUrl = (code: string) => `https://world.openfoodfacts.org/product/${code}`;
@@ -128,7 +142,7 @@ export function parseLookupResult(value: unknown, barcode: string): LookupResult
   if (r?.status === 'missing') return { status: 'missing' };
   if (
     r?.status === 'unavailable' &&
-    ['network', 'invalid', 'rate-limit', 'disabled'].includes(String(r.reason))
+    ['network', 'invalid', 'rate-limit', 'cooldown', 'auth', 'disabled'].includes(String(r.reason))
   )
     return {
       status: 'unavailable',

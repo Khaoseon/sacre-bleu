@@ -20,6 +20,26 @@ test('ordinary backups reject pending migrations and include the budget only aft
   assert.equal(backupPlan(applied.slice(0, 3), files.slice(0, 3)).tables.length, 10);
   assert.throws(() => backupPlan(applied, files, true), /trois migrations/);
 });
+test('explicit lookup-budget preflight backs up four applied migrations with only the reviewed fifth pending', () => {
+  const next = '20261029000100';
+  const rows = [...applied, { local: next, remote: '' }];
+  const names = [...files, `${next}_lookup_budget_details.sql`];
+  assert.throws(() => backupPlan(rows, names), /en attente/);
+  const plan = backupPlan(rows, names, false, true);
+  assert.equal(plan.pendingVersion, next);
+  assert.equal(plan.files.length, 4);
+  assert.equal(plan.tables.length, 11);
+  assert.throws(() => backupPlan(rows, names, true, true));
+  assert.throws(() =>
+    backupPlan(
+      rows.map((r, i) => (i === 1 ? { ...r, remote: '' } : r)),
+      names,
+      false,
+      true,
+    ),
+  );
+  assert.equal(backupPlan([...applied, { local: next, remote: next }], names).pendingVersion, null);
+});
 test('predeployment exception cannot hide divergence, missing history, unknown versions or extra pending migrations', () => {
   for (const rows of [
     pending.slice(1),

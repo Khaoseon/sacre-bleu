@@ -1,5 +1,6 @@
 const baselineVersions = ['20261026000100', '20261026000200', '20261026000300'];
 const phase4Version = '20261028000100';
+const lookupBudgetVersion = '20261029000100';
 const baselineTables = [
   'auth.users',
   'auth.identities',
@@ -14,7 +15,9 @@ const baselineTables = [
 ];
 
 /** Only the explicit, reviewed phase-4 predeployment state may differ from local. */
-export function backupPlan(rows, filenames, beforePhase4 = false) {
+export function backupPlan(rows, filenames, beforePhase4 = false, beforeLookupBudget = false) {
+  if (beforePhase4 && beforeLookupBudget)
+    throw new Error('Choisir un seul précontrôle de migration.');
   if (
     !Array.isArray(rows) ||
     !Array.isArray(filenames) ||
@@ -29,7 +32,11 @@ export function backupPlan(rows, filenames, beforePhase4 = false) {
     names.some((name, index) => name.slice(0, 14) !== local[index])
   )
     throw new Error('Inventaire local et sources versionnées différents.');
-  const supported = [...baselineVersions, ...(rows.length === 4 ? [phase4Version] : [])];
+  const supported = [
+    ...baselineVersions,
+    ...(rows.length >= 4 ? [phase4Version] : []),
+    ...(rows.length === 5 ? [lookupBudgetVersion] : []),
+  ];
   if (
     local.length !== supported.length ||
     local.some((version, index) => version !== supported[index])
@@ -49,6 +56,17 @@ export function backupPlan(rows, filenames, beforePhase4 = false) {
       throw new Error(
         'Le mode avant phase 4 exige exactement les trois migrations de référence appliquées et la seule phase 4 en attente.',
       );
+  } else if (beforeLookupBudget) {
+    if (
+      rows.length !== 5 ||
+      applied.length !== 4 ||
+      rows[4].local !== lookupBudgetVersion ||
+      rows[4].remote ||
+      rows.slice(0, 4).some((row) => row.local !== row.remote)
+    )
+      throw new Error(
+        'Le précontrôle du budget OFF exige quatre migrations appliquées et cette seule migration en attente.',
+      );
   } else if (applied.length !== rows.length) {
     throw new Error(
       'Migration en attente : utiliser le mode avant phase 4 uniquement après précontrôle.',
@@ -56,7 +74,7 @@ export function backupPlan(rows, filenames, beforePhase4 = false) {
   }
   return {
     appliedVersions: applied.map((row) => row.remote),
-    pendingVersion: beforePhase4 ? phase4Version : null,
+    pendingVersion: beforePhase4 ? phase4Version : beforeLookupBudget ? lookupBudgetVersion : null,
     files: names.filter((name) => applied.some((row) => name.startsWith(row.remote + '_'))),
     tables: [
       ...baselineTables,

@@ -1,4 +1,4 @@
-import { test, expect } from 'vitest';
+import { test, expect, vi } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -264,6 +264,80 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
     expect(await c.undoScan()).toBe(true);
     expect(c.getSnapshot().snapshot?.products.length).toBe(count! + 1);
     expect(c.getSnapshot().snapshot?.products.find((p) => p.id === unknown.id)?.quantity).toBe(0);
+    // Independent scanner identities on the SAME real reserve, two distinct accounts.
+    const concurrentProducts = ['A', 'B'].map((suffix, index) => ({
+      id: crypto.randomUUID(),
+      name: `Concurrence ${suffix}`,
+      barcode: `000000000000${index + 1}`,
+      quantity: 0,
+      updatedAt: new Date().toISOString(),
+    }));
+    const previousLocalIdentity = a.getSnapshot().lastProductId;
+    for (const entry of concurrentProducts) {
+      expect(await a.saveProduct(entry, false)).toBe(true);
+      expect(await a.addShopping(entry.name, 5, entry.id)).toBe(true);
+    }
+    expect(a.getSnapshot().lastProductId).toBe(previousLocalIdentity);
+    await Promise.all([a.refresh(), b.refresh()]);
+    expect(
+      await Promise.all([
+        a.scanProduct(concurrentProducts[0].id, 1),
+        b.scanProduct(concurrentProducts[1].id, 1),
+      ]),
+    ).toEqual([true, true]);
+    await Promise.all([a.refresh(), b.refresh()]);
+    expect(a.getSnapshot().lastProductId).toBe(concurrentProducts[0].id);
+    expect(b.getSnapshot().lastProductId).toBe(concurrentProducts[1].id);
+    for (const entry of concurrentProducts) {
+      expect(a.getSnapshot().snapshot?.products.find((p) => p.id === entry.id)?.quantity).toBe(1);
+      expect(
+        b.getSnapshot().snapshot?.shopping.find((p) => p.product_id === entry.id)?.quantity,
+      ).toBe(4);
+    }
+    // >20 deliberate known scans/minute without a provider or shared OFF claim.
+    for (let index = 0; index < 24; index++)
+      expect(
+        await (index % 2 ? a : b).scanProduct(concurrentProducts[index % 2 ? 0 : 1].id, 1),
+      ).toBe(true);
+    await Promise.all([a.refresh(), b.refresh()]);
+    expect(a.getSnapshot().lastProductId).toBe(concurrentProducts[0].id);
+    expect(b.getSnapshot().lastProductId).toBe(concurrentProducts[1].id);
+    console.log(
+      'PASS two independent local identities, concurrent distinct scans, 24 rapid known movements, coherent stock/shopping.',
+    );
+    // Polling captured before B's write arrives late while A's mutation waits.
+    const liveRead = owner.backend.getSnapshot.bind(owner.backend);
+    let releasePoll: (() => void) | undefined;
+    let delayPoll = true;
+    owner.backend.getSnapshot = async (id) => {
+      const old = await liveRead(id);
+      if (!delayPoll) return old;
+      delayPoll = false;
+      return new Promise((resolve) => {
+        releasePoll = () => resolve(old);
+      });
+    };
+    try {
+      const polling = a.refresh();
+      await vi.waitFor(() => expect(releasePoll).toBeTypeOf('function'));
+      const localScan = a.scanProduct(concurrentProducts[0].id, 1);
+      expect(await b.scanProduct(concurrentProducts[1].id, 1)).toBe(true);
+      releasePoll!();
+      await polling;
+      expect(await localScan).toBe(true);
+      await Promise.all([a.refresh(), b.refresh()]);
+      expect(a.getSnapshot().lastProductId).toBe(concurrentProducts[0].id);
+      expect(b.getSnapshot().lastProductId).toBe(concurrentProducts[1].id);
+      expect(a.getSnapshot().snapshot?.reserve.revision).toBe(
+        b.getSnapshot().snapshot?.reserve.revision,
+      );
+      expect(a.writable && b.writable).toBe(true);
+    } finally {
+      owner.backend.getSnapshot = liveRead;
+    }
+    console.log(
+      'PASS late polling and parallel scan, local identities retained and scanner remains writable.',
+    );
     const linked = c.getSnapshot().snapshot!.shopping[0];
     expect(await c.updateShopping(linked.id, { checked: true })).toBe(true);
     expect(await c.updateShopping(linked.id, { checked: false })).toBe(true);

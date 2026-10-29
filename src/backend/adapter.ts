@@ -29,7 +29,9 @@ export class SupabaseBackend implements ReserveBackend {
     write = true,
   ): Promise<Json> {
     try {
-      const { data, error, status } = await this.client.rpc(name, args as never);
+      const { data, error, status } = await this.client
+        .rpc(name, args as never)
+        .abortSignal(AbortSignal.timeout(10000));
       if (error) throw backendError(error, write && (status === 0 || status >= 500));
       return data;
     } catch (error) {

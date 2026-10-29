@@ -10,6 +10,7 @@ export interface PendingIntent {
   label: string;
   productId?: string;
   scanMode?: 1 | -1;
+  localScan?: boolean;
 }
 export interface SharedScan {
   id: string;
@@ -84,6 +85,7 @@ export class SharedPantryStore {
     readonly reserveId: string,
     private journal: Journal,
     private connected: () => boolean = () => navigator.onLine,
+    private requestTimeoutMs = 12000,
   ) {
     this.key = `${PENDING_PREFIX}${userId}:${reserveId}`;
     let pending: PendingIntent | null = null;
@@ -120,7 +122,7 @@ export class SharedPantryStore {
       syncedAt: null,
       scan: null,
       scanInvalidation: '',
-      lastProductId: pending?.productId ?? null,
+      lastProductId: pending?.localScan || pending?.scanMode ? (pending.productId ?? null) : null,
       completed: 0,
       completionLabel: '',
     };
@@ -157,10 +159,36 @@ export class SharedPantryStore {
     return {};
   }
   private async readConfirmed() {
-    const snapshot = await this.backend.getSnapshot(this.reserveId);
+    const snapshot = await this.bounded(this.backend.getSnapshot(this.reserveId), false);
     if (!snapshot)
       throw new BackendError('Vous n’avez plus accès à cette réserve.', 'rejected', '42501');
     return snapshot;
+  }
+  private bounded<T>(request: Promise<T>, write: boolean): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () =>
+          reject(
+            new BackendError(
+              write
+                ? 'Réponse interrompue. Reprenez la demande pour vérifier son résultat sans la doubler.'
+                : 'Actualisation trop lente. Réessayez sans fermer l’application.',
+              write ? 'uncertain' : 'unavailable',
+            ),
+          ),
+        this.requestTimeoutMs,
+      );
+      request.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
   }
   refresh = async () => {
     if (this.disposed || this.view.busy) return;
@@ -183,6 +211,7 @@ export class SharedPantryStore {
           error: this.view.pending || this.journalBroken ? this.view.error : '',
         });
       } catch (error) {
+        if (this.view.busy) return;
         const failure = backendError(error);
         this.publish({
           status: this.view.snapshot ? 'stale' : 'error',
@@ -210,7 +239,7 @@ export class SharedPantryStore {
   async mutate(
     commands: ReserveCommand[],
     label: string,
-    meta: Pick<PendingIntent, 'productId' | 'scanMode'> = {},
+    meta: Pick<PendingIntent, 'productId' | 'scanMode' | 'localScan'> = {},
   ): Promise<boolean> {
     if (!this.writable) {
       this.publish({
@@ -254,7 +283,15 @@ export class SharedPantryStore {
       for (let index = pending.index; index < pending.steps.length; index++) {
         if (this.disposed) return false;
         const step = pending.steps[index];
-        receipt = await this.backend.execute(step.id, this.reserveId, step.command);
+        receipt = await this.bounded(
+          this.backend.execute(step.id, this.reserveId, step.command),
+          true,
+        );
+        if (pending.productId && receipt.product_id && receipt.product_id !== pending.productId)
+          throw new BackendError(
+            'Résultat incohérent avec la demande locale. Reprenez pour vérifier.',
+            'uncertain',
+          );
         if (this.disposed) return false;
         // Even a replayed receipt is followed by a CURRENT snapshot, never a historical projection.
         try {
@@ -312,7 +349,10 @@ export class SharedPantryStore {
         scanInvalidation,
         error: '',
         notice: pending.label,
-        lastProductId: pending.productId ?? this.view.lastProductId,
+        lastProductId:
+          pending.localScan || pending.scanMode || receipt.scan_id
+            ? (pending.productId ?? this.view.lastProductId)
+            : this.view.lastProductId,
         completed: this.view.completed + 1,
         completionLabel: pending.label,
       });
@@ -352,7 +392,7 @@ export class SharedPantryStore {
     return this.mutate(
       [{ action: 'scan', payload: { product_id: productId, delta: mode } }],
       mode === 1 ? 'Un exemplaire ajouté.' : 'Un exemplaire retiré.',
-      { productId, scanMode: mode },
+      { productId, scanMode: mode, localScan: true },
     );
   }
   adjustScan(delta: 1 | -1) {
@@ -418,6 +458,7 @@ export class SharedPantryStore {
       });
     return this.mutate(commands, 'Produit enregistré.', {
       productId: product.id,
+      localScan: fromScan,
       scanMode: fromScan && mode === 1 && product.quantity > 0 ? mode : undefined,
     });
   }

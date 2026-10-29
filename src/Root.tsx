@@ -18,6 +18,8 @@ import { EdgeProductProvider } from './productLookupClient';
 
 const backend = client ? new SupabaseBackend(client) : null;
 const auth = client ? new ReserveAuth(client) : null;
+// UI policy only: public signup must also be disabled in Supabase Auth.
+const cloudPersonalAccess = import.meta.env.MODE === 'cloud';
 // Read and clean BEFORE React's first render; StrictMode must not consume a link twice.
 const initialLink = consumeLink(window.location, window.history);
 let confirmation: { token: string; promise: Promise<void> } | null = null;
@@ -122,7 +124,7 @@ function AuthForm({
           setBusy(true);
           setError('');
           try {
-            if (signup) {
+            if (signup && !cloudPersonalAccess) {
               await auth.signUp(email.trim(), password, location.origin);
               setSent(true);
             } else await auth.signIn(email.trim(), password);
@@ -171,17 +173,20 @@ function AuthForm({
         <button className="primary-button" disabled={busy || !auth}>
           {busy ? 'Veuillez patienter…' : signup ? 'Créer mon compte' : 'Se connecter'}
         </button>
-        <button
-          type="button"
-          className="text-button"
-          disabled={busy}
-          onClick={() => {
-            setSignup(!signup);
-            setError('');
-          }}
-        >
-          {signup ? 'J’ai déjà un compte' : 'Créer un compte'}
-        </button>
+        {!cloudPersonalAccess && (
+          <button
+            type="button"
+            className="text-button"
+            disabled={busy}
+            onClick={() => {
+              setSignup(!signup);
+              setError('');
+            }}
+          >
+            {signup ? 'J’ai déjà un compte' : 'Créer un compte'}
+          </button>
+        )}
+        {cloudPersonalAccess && <small>Accès réservé aux comptes autorisés.</small>}
         {(sent || error) && (
           <button
             type="button"
@@ -258,6 +263,10 @@ function Membership({
   }, [session.user.id, load, invitation, creation, onSelect]);
   async function create() {
     if (busy) return;
+    if (cloudPersonalAccess && !creation) {
+      setError('La création de réserve est réservée à l’administration du projet.');
+      return;
+    }
     setBusy(true);
     setError('');
     const intent = creation ?? { id: crypto.randomUUID(), name: name.trim() };
@@ -360,7 +369,7 @@ function Membership({
                 {reserve.name}
               </button>
             ))}
-          {!invitation && (
+          {!invitation && (!cloudPersonalAccess || !!creation) && (
             <form
               className="product-form account-section"
               onSubmit={(e) => {
@@ -387,6 +396,11 @@ function Membership({
                     : 'Créer la réserve'}
               </button>
             </form>
+          )}
+          {!invitation && cloudPersonalAccess && !creation && reserves.length === 0 && (
+            <p role="status">
+              Aucune réserve accessible. Contactez la personne qui administre votre réserve.
+            </p>
           )}
           {error && (
             <p role="alert" className="form-error">
