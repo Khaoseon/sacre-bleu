@@ -42,6 +42,14 @@ Pour actualiser l'installation : téléphone branché et en Wi-Fi, fermer l'app 
 
 ## 5. Vérifier scanner et OFF sans modifier les stocks
 
+### Navigation par balayage et formulaire produit
+
+Après mise à jour de l'interface, sur chaque téléphone : depuis les 32 px du bord droit, balayer vers la gauche pour passer Stock → Scanner → À acheter ; revenir depuis le bord gauche vers la droite. Vérifier les deux limites sans boucle, le défilement vertical, le défilement horizontal des catégories et les boutons de navigation toujours utilisables. Le navigateur/système peut réserver le bord exact : commencer légèrement à l'intérieur. L'entrée Scanner ne démarre pas la caméra ; après activation explicite sans code présenté, une sortie doit arrêter le flux. Ne présenter aucun code connu pendant cet essai.
+
+Ouvrir Modifier sur un produit, consulter l'alignement des paires Marque/Catégorie, Conditionnement/Unité, Quantité/Code-barres, puis fermer sans enregistrer. Un balayage ne doit pas quitter le formulaire ni effacer une saisie ; vérifier aussi les préférences ouvertes. Aucun enregistrement ou bouton de quantité nécessaire. Les tests tactiles automatisés Chrome et les mesures d'alignement ne remplacent pas ces essais Samsung/iPhone, encore à confirmer pour ces deux correctifs.
+
+### Recherche OFF
+
 Suivre `TESTS_OFF_TELEPHONES.md` : uniquement des codes publics confirmés absents du catalogue, proposition OFF puis **Fermer sans enregistrer**. Commencer par une saisie manuelle, puis activer la caméra explicitement avec un emballage correspondant à un code autorisé. Vérifier la reprise après fermeture du formulaire et après retour d'arrière-plan. Aucun scan connu, création, ajustement ou annulation dans la réserve réelle.
 
 Une recherche OFF actualise son budget technique, sans modifier le catalogue ou les quantités. L'appel peut échouer ou proposer une fiche imparfaite ; le formulaire manuel doit rester disponible et corrigeable.

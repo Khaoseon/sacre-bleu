@@ -24,6 +24,12 @@ L'application comporte trois écrans principaux :
 - **Scanner** : ajouter ou retirer rapidement des produits à l'aide de codes-barres.
 - **À acheter** : gérer une petite liste de courses partagée.
 
+Sur mobile (largeur jusqu'à 760 px), un balayage horizontal partant des 32 px du bord droit vers la gauche ouvre l'écran suivant dans l'ordre Stock → Scanner → À acheter ; depuis le bord gauche vers la droite, il revient à l'écran précédent. Aucun passage circulaire entre les extrémités. Le geste doit parcourir au moins 64 px en moins de 850 ms, avec une trajectoire principalement horizontale. Les boutons de navigation restent disponibles, y compris au clavier. Les gestes système du navigateur ou du téléphone restent prioritaires.
+
+Le balayage ne change pas d'écran pendant une fenêtre modale, une recherche de produit, une écriture en cours ou une demande partagée incertaine. Les contrôles interactifs, le défilement vertical, les listes horizontales et les gestes à plusieurs doigts sont préservés. Quitter Scanner suit le même cycle de fermeture caméra que les boutons ; y entrer ne l'active pas automatiquement. Le changement d'écran n'écrit pas dans la réserve.
+
+Dans les formulaires produit, les deux contrôles d'une même ligne restent alignés en haut et en bas, même lorsqu'un seul libellé possède la mention facultatif. Les libellés et aides restent associés aux champs.
+
 L'interface doit être mobile-first, très épurée et sans texte superflu. Évite les écrans chargés, les étapes de confirmation inutiles et les éléments purement décoratifs.
 
 ## Spécifications fonctionnelles

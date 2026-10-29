@@ -58,8 +58,8 @@ import { snapshotState, type SharedPantryStore, type SharedView } from './backen
 import { CameraScanner } from './CameraScanner';
 import { ProductSearch } from './productSearch';
 import type { ProductProvider } from './productInfo';
+import { usePageSwipe, type Page } from './usePageSwipe';
 
-type Page = 'stock' | 'scanner' | 'shopping';
 function initial() {
   try {
     return { state: load(), error: '' };
@@ -153,6 +153,21 @@ export default function App({
   const [shoppingProduct, setShoppingProduct] = useState('');
   const [shoppingQuantity, setShoppingQuantity] = useState(1);
   const [online, setOnline] = useState(navigator.onLine);
+  const swipeRef = usePageSwipe(
+    page,
+    (next) => {
+      if (scanInFlight.current || lookupInFlight.current) return;
+      setPage(next);
+      setFeedback(null);
+    },
+    !!editor ||
+      !!deleting ||
+      settings ||
+      resetting ||
+      scanning ||
+      !!shared?.view.busy ||
+      !!shared?.view.pending,
+  );
   const canUndo = shared ? !!shared.view.scan : !!undo;
   const completion = useRef(shared?.view.completed ?? 0);
   useEffect(() => {
@@ -478,7 +493,7 @@ export default function App({
     );
   }
   return (
-    <div className="app-shell">
+    <div className="app-shell" ref={swipeRef}>
       <aside className="sidebar">
         <a
           className="brand"

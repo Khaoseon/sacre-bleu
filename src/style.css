@@ -1359,8 +1359,12 @@ h1 > span {
 }
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+.field-row > label > input,
+.field-row > label > select {
+  margin-top: auto;
 }
 .product-form .checkbox-label {
   display: flex;

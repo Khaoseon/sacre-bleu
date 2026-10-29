@@ -13,6 +13,7 @@
     "phone:serve": "node scripts/phone-serve.mjs",
     "test:phone": "node --test scripts/phone-serve.test.mjs",
     "test:off:browser": "node scripts/browser/off.integration.mjs",
+    "test:ui:browser": "node scripts/browser/navigation.integration.mjs",
     "test:off:edge": "node --test scripts/backend/off-edge.integration.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
