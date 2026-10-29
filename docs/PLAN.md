@@ -68,6 +68,8 @@ Plein écran Samsung confirmé ensuite par l'utilisateur après mise à jour Web
 
 ## Étape 5 — Hors ligne, sauvegarde et restauration
 
+L'utilisateur valide ensuite la proposition de mises à jour agréables. Cette extension ciblée de phase 4B est implémentée : avis disponible, Actualiser/Plus tard, vérification dans les réglages et protections des saisies, opérations et autres fenêtres. Le hors ligne privé, l'export/import et la restauration de phase 5 restent à réaliser ; aucun de ces autres travaux n'est commencé.
+
 Conserver le dernier état synchronisé privé pour consultation hors ligne. Afficher la date du dernier succès et désactiver les mutations sans connexion dans cette V1 ; une file d’écritures hors ligne n’est pas requise. Gérer les mises à jour du service worker sans interruption de saisie.
 
 Créer export JSON versionné des produits, codes, courses et photos nécessaires. Import validé avec prévisualisation, confirmation, traitement explicite des identifiants et restauration transactionnelle. Documenter la récupération si le projet Supabase gratuit est mis en pause : conserver l’export hors de Supabase, réactiver le projet si possible, sinon recréer le schéma par migrations, rétablir comptes/membres puis importer la réserve sans secrets ni identifiants d’authentification réutilisés à l’aveugle.

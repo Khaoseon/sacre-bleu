@@ -59,6 +59,7 @@ import { CameraScanner } from './CameraScanner';
 import { ProductSearch } from './productSearch';
 import type { ProductProvider } from './productInfo';
 import { usePageSwipe, type Page } from './usePageSwipe';
+import { useUpdateBlocker } from './AppUpdates';
 
 function initial() {
   try {
@@ -153,6 +154,18 @@ export default function App({
   const [shoppingProduct, setShoppingProduct] = useState('');
   const [shoppingQuantity, setShoppingQuantity] = useState(1);
   const [online, setOnline] = useState(navigator.onLine);
+  useUpdateBlocker(() => {
+    const view = shared?.store.getSnapshot();
+    if (scanInFlight.current || lookupInFlight.current || scanning || view?.busy || view?.pending)
+      return 'Terminez ou vérifiez l’opération en cours avant d’actualiser.';
+    if (editor || deleting || resetting)
+      return 'Terminez ou fermez le formulaire ouvert avant d’actualiser.';
+    if (shoppingName || shoppingProduct || shoppingQuantity !== 1)
+      return 'Terminez ou effacez la saisie dans À acheter avant d’actualiser.';
+    if (code) return 'Terminez ou effacez le code-barres saisi dans Scanner avant d’actualiser.';
+    if (page === 'scanner') return 'Revenez à Stock ou À acheter avant d’actualiser.';
+    return null;
+  });
   const swipeRef = usePageSwipe(
     page,
     (next) => {

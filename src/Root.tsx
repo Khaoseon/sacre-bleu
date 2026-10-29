@@ -5,6 +5,7 @@ import App from './App';
 import { Modal } from './components';
 import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
 import { AppInformation } from './AppInformation';
+import { useUpdateBlocker } from './AppUpdates';
 import { useThemePreference } from './theme';
 import { client } from './backend/client';
 import { SupabaseBackend } from './backend/adapter';
@@ -84,6 +85,13 @@ function AuthForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  useUpdateBlocker(() =>
+    busy
+      ? 'Attendez la fin de la connexion avant d’actualiser.'
+      : email || password
+        ? 'Terminez ou effacez la saisie du compte avant d’actualiser.'
+        : null,
+  );
   return (
     <Gate
       title={signup ? 'Créer votre compte.' : 'Votre réserve, à deux.'}
@@ -271,6 +279,15 @@ function Membership({
     }
   }
   const alreadyMember = invitation && reserves?.some((r) => r.id === invitation.reserveId);
+  useUpdateBlocker(() =>
+    busy || creation
+      ? 'Terminez ou vérifiez la demande de réserve avant d’actualiser.'
+      : invitation
+        ? 'Traitez l’invitation ouverte avant d’actualiser.'
+        : name !== 'Ma réserve'
+          ? 'Terminez la saisie du nom de réserve avant d’actualiser.'
+          : null,
+  );
   return (
     <Gate title="Votre réserve." theme={theme}>
       <p>{session.user.email}</p>
@@ -408,6 +425,13 @@ function SharingSettings({
     }
   });
   const snapshot = view.snapshot;
+  useUpdateBlocker(() =>
+    busy || pending
+      ? 'Terminez ou vérifiez l’invitation avant d’actualiser.'
+      : email || link
+        ? 'Terminez l’invitation ou fermez les réglages avant d’actualiser.'
+        : null,
+  );
   const owner = snapshot?.reserve.owner_id === session.user.id;
   return (
     <>
@@ -555,6 +579,12 @@ function PantryScreen({
   logout: () => void;
 }) {
   const view = usePantry(store);
+  useUpdateBlocker(() => {
+    const current = store.getSnapshot();
+    return current.busy || current.pending
+      ? 'Terminez ou vérifiez la demande en attente avant d’actualiser.'
+      : null;
+  });
   const [productProvider] = useState(
     () =>
       new EdgeProductProvider({
@@ -621,6 +651,13 @@ export default function Root() {
   const [confirming, setConfirming] = useState(!!initialLink.confirmation);
   const [confirmationError, setConfirmationError] = useState('');
   const identity = useRef<string | null>(null);
+  useUpdateBlocker(() =>
+    confirming || session === undefined
+      ? 'Attendez la vérification du compte avant d’actualiser.'
+      : incoming.invitation || incoming.confirmation
+        ? 'Terminez le traitement du lien ouvert avant d’actualiser.'
+        : null,
+  );
   useEffect(() => {
     const update = () => {
       const next = consumeLink(location, history);

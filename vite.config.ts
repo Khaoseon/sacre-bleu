@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'prompt',
+        injectRegister: false,
         includeAssets: ['favicon.png', 'logo.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'Sacré bleu',
@@ -59,6 +60,8 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          clientsClaim: true,
+          importScripts: ['/update-worker.js'],
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
           globIgnores: ['**/decoder-*.js'],
           runtimeCaching: [

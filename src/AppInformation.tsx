@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { UpdateControls } from './AppUpdates';
 
 const displayQueries = ['fullscreen', 'standalone', 'minimal-ui'] as const;
 function currentDisplay(): string {
@@ -37,6 +38,7 @@ export function AppInformation() {
       <p className="app-version">
         Version {__APP_BUILD_INFO__.version} · <code>{__APP_BUILD_INFO__.revision}</code>
       </p>
+      <UpdateControls />
       <details>
         <summary>Diagnostic d’affichage</summary>
         <dl>

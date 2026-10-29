@@ -2418,6 +2418,56 @@ input::file-selector-button {
 .app-information code {
   user-select: text;
 }
+.update-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block: 8px;
+}
+.update-controls p {
+  flex-basis: 100%;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.update-controls button {
+  min-height: var(--touch-target);
+}
+.app-update-banner {
+  position: fixed;
+  z-index: 90;
+  bottom: 24px;
+  right: 24px;
+  width: min(400px, calc(100% - 32px));
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--text);
+  box-shadow: 0 6px 24px #0003;
+  font-size: 13px;
+}
+.app-update-banner > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+.app-update-banner p {
+  overflow-wrap: anywhere;
+}
+.update-progress {
+  padding: 24px;
+  color: var(--text);
+}
+@media (max-width: 760px) {
+  .app-update-banner {
+    right: 16px;
+    bottom: calc(100px + env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+}
 .app-information summary {
   cursor: pointer;
   padding: 8px 0;

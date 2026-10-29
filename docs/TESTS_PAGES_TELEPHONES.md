@@ -60,6 +60,14 @@ Sur un téléphone en réseau mobile, Wi-Fi coupé, ouvrir l'app avec l'ordinate
 
 Chaque push validé sur `main` publie une nouvelle version après réussite du build. Une fenêtre déjà ouverte peut garder son ancien worker ; fermer complètement les fenêtres de l'app puis rouvrir avant d'envisager un effacement des données. Vérifier effectivement une mise à jour sur chaque téléphone, sans revendiquer de bascule instantanée ni ajouter une gestion de mise à jour de phase 5.
 
+### Mises à jour accompagnées, ajout approuvé ensuite
+
+Pour recevoir cette première version du gestionnaire depuis un ancien client, terminer les saisies/demandes et fermer les fenêtres du site et de l'app. Si nécessaire, reprendre l'arrêt forcé de Sacré bleu et Chrome qui a permis d'obtenir le diagnostic de version sur Samsung. Ne pas effacer le stockage. Une fois le bouton **Vérifier les mises à jour** présent dans les réglages, les mises à jour suivantes du contenu passent par cet écran ou par l'avis **Nouvelle version disponible**.
+
+Quand une version suivante existe, toucher **Plus tard** : l'app doit rester utilisable sans rechargement. Ouvrir ensuite les réglages et toucher **Vérifier les mises à jour**, puis **Actualiser** une fois les saisies terminées et les demandes vérifiées. Depuis Scanner, revenir à Stock ou À acheter. Le numéro de référence doit changer après activation ; la session et les préférences doivent être conservées sous réserve des règles d'expiration Auth habituelles. Si une autre fenêtre du site est ouverte dans Chrome ou l'app installée, la fermer puis toucher Actualiser à nouveau. Aucune fermeture générale de Chrome n'est normalement nécessaire une fois le gestionnaire installé.
+
+Pour les essais de protection sans stock réel, utiliser une démonstration isolée : laisser une saisie de courses non envoyée, vérifier que l'actualisation explique le blocage et garde le texte ; terminer/effacer la saisie, puis réessayer. Tester aussi une vérification sans Internet : message explicite, aucune annonce de succès et possibilité de réessayer au retour réseau. La recette automatisée A → B de `npm run test:pwa:browser` utilise uniquement deux builds locaux, une session anonyme et des données fictives ; validation physique iPhone/Samsung de ce nouveau parcours encore à confirmer. Les changements de plein écran/nom/icône Android restent distincts et peuvent nécessiter une mise à jour WebAPK par Chrome.
+
 ## Résultats à compléter
 
 | Appareil         | Consultation / session | Icône / installation / relance               | Caméra / OFF sans écriture | Réseau mobile / ordinateur éteint | Mise à jour                                                          |
