@@ -4,7 +4,7 @@
 
 L'utilisateur confirme désormais que les deux comptes existants se connectent depuis Samsung et iPhone à la même réserve. Cela confirme l'accès iPhone actuel, pas la recette physique de ce correctif non publié.
 
-**Contrôle ultérieur de livraison :** le parcours SDK réexécuté échoue désormais sur l'expiration d'un refus périmé via PostgREST local 14.18. Les succès ci-dessous décrivent l'investigation initiale, pas une validation finale reconfirmée. Voir le blocage, les résultats actuels et la procédure conditionnelle dans [LIVRAISON_CORRECTIFS_V1.md](LIVRAISON_CORRECTIFS_V1.md). Aucun push ni déploiement autorisé sur la foi de l'ancien bilan.
+**Contrôle ultérieur de livraison :** un échec SDK a révélé le transport 40001 relancé par PostgREST 14.18. Une sixième migration garde toutes les protections et renvoie désormais HTTP 409/code JSON 40001 via SQLSTATE PGRST ; les clients publié/actuel et les suites techniques ont été rejoués avec succès. État courant et procédure dans [LIVRAISON_CORRECTIFS_V1.md](LIVRAISON_CORRECTIFS_V1.md). Push/PR brouillon autorisés après tests verts ; aucun déploiement. La nouvelle recette physique préalable est dispensée explicitement par l'utilisateur, le bug exact de substitution reste non reproduit.
 
 ## 1. Ce qui est démontré, ce qui reste hypothétique
 

@@ -1,6 +1,7 @@
 const baselineVersions = ['20261026000100', '20261026000200', '20261026000300'];
 const phase4Version = '20261028000100';
 const lookupBudgetVersion = '20261029000100';
+const scanConflictVersion = '20261029000200';
 const baselineTables = [
   'auth.users',
   'auth.identities',
@@ -14,9 +15,15 @@ const baselineTables = [
   'private.scan_operations',
 ];
 
-/** Only the explicit, reviewed phase-4 predeployment state may differ from local. */
-export function backupPlan(rows, filenames, beforePhase4 = false, beforeLookupBudget = false) {
-  if (beforePhase4 && beforeLookupBudget)
+/** Only explicitly reviewed predeployment suffixes may differ from the local history. */
+export function backupPlan(
+  rows,
+  filenames,
+  beforePhase4 = false,
+  beforeLookupBudget = false,
+  beforeV1Conflicts = false,
+) {
+  if ([beforePhase4, beforeLookupBudget, beforeV1Conflicts].filter(Boolean).length > 1)
     throw new Error('Choisir un seul précontrôle de migration.');
   if (
     !Array.isArray(rows) ||
@@ -35,7 +42,8 @@ export function backupPlan(rows, filenames, beforePhase4 = false, beforeLookupBu
   const supported = [
     ...baselineVersions,
     ...(rows.length >= 4 ? [phase4Version] : []),
-    ...(rows.length === 5 ? [lookupBudgetVersion] : []),
+    ...(rows.length >= 5 ? [lookupBudgetVersion] : []),
+    ...(rows.length === 6 ? [scanConflictVersion] : []),
   ];
   if (
     local.length !== supported.length ||
@@ -67,14 +75,31 @@ export function backupPlan(rows, filenames, beforePhase4 = false, beforeLookupBu
       throw new Error(
         'Le précontrôle du budget OFF exige quatre migrations appliquées et cette seule migration en attente.',
       );
+  } else if (beforeV1Conflicts) {
+    if (
+      rows.length !== 6 ||
+      ![4, 5].includes(applied.length) ||
+      rows.slice(0, applied.length).some((row) => row.local !== row.remote) ||
+      rows.slice(applied.length).some((row) => row.remote)
+    )
+      throw new Error(
+        'Le précontrôle V1 exige les quatre ou cinq migrations historiques appliquées, puis uniquement les migrations V1 approuvées en attente.',
+      );
   } else if (applied.length !== rows.length) {
     throw new Error(
-      'Migration en attente : utiliser le mode avant phase 4 uniquement après précontrôle.',
+      'Migration en attente : utiliser un mode de précontrôle explicite après examen.',
     );
   }
   return {
     appliedVersions: applied.map((row) => row.remote),
-    pendingVersion: beforePhase4 ? phase4Version : beforeLookupBudget ? lookupBudgetVersion : null,
+    pendingVersion: beforePhase4
+      ? phase4Version
+      : beforeLookupBudget
+        ? lookupBudgetVersion
+        : beforeV1Conflicts
+          ? scanConflictVersion
+          : null,
+    pendingVersions: rows.filter((row) => !row.remote).map((row) => row.local),
     files: names.filter((name) => applied.some((row) => name.startsWith(row.remote + '_'))),
     tables: [
       ...baselineTables,

@@ -127,7 +127,7 @@ select is((select quantity from public.shopping_items where product_id is not nu
 select is((select count(*) from public.products),1::bigint,'Zero-stock product stays in catalogue');
 select public.mutate_reserve('20000000-0000-0000-0000-000000000002',(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'undo_scan','{"scan_id":"20000000-0000-0000-0000-000000000001","expected_version":6}');
 select is((select quantity from public.product_stock),0,'Undo replay does not compensate twice');
-select throws_ok($$select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'undo_scan','{"scan_id":"20000000-0000-0000-0000-000000000001","expected_version":7}')$$,'40001',null,'Cancelled scan cannot be undone again');
+select throws_ok($$select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'undo_scan','{"scan_id":"20000000-0000-0000-0000-000000000001","expected_version":7}')$$,'PGRST',null,'Cancelled scan cannot be undone again');
 select throws_ok($$select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'stock','{"product_id":"00000000-0000-0000-0000-000000000101","delta":-1}')$$,'23514',null,'Negative stock rejected');
 
 select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'stock','{"product_id":"00000000-0000-0000-0000-000000000101","delta":9999}');
@@ -143,7 +143,7 @@ select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::u
 select is((select quantity from public.product_stock),1,'Reducing remove scan puts one unit back');
 select is((select quantity from public.shopping_items where product_id is not null),5,'Remove mode never changes shopping');
 select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'stock','{"product_id":"00000000-0000-0000-0000-000000000101","delta":1}');
-select throws_ok($$select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'undo_scan','{"scan_id":"20000000-0000-0000-0000-000000000003","expected_version":3}')$$,'40001',null,'Concurrent modification refuses stale undo');
+select throws_ok($$select public.mutate_reserve(gen_random_uuid(),(select (value->>'reserve_id')::uuid from fixture where key='reserve'),'undo_scan','{"scan_id":"20000000-0000-0000-0000-000000000003","expected_version":3}')$$,'PGRST',null,'Concurrent modification refuses stale undo');
 select is((select quantity from public.product_stock),2,'Stale undo preserves newer stock');
 reset role;
 

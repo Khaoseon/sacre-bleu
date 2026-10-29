@@ -299,14 +299,16 @@ test('another member’s committed change prevents stale scan adjustment and com
       () => rpc(ctx.b, ctx.reserve, 'stock', { product_id: id, delta: 1 }),
       () => rpc(ctx.a, ctx.reserve, 'undo_scan', { scan_id: scan.scan_id, expected_version: 1 }),
     );
-    assert.equal(result.b.error?.code, '40001');
+    assert.equal(result.b.error?.code, 'PGRST');
+    assert.equal(JSON.parse(result.b.error.message).code, '40001');
+    assert.equal(JSON.parse(result.b.error.detail).status, 409);
     await assert.rejects(
       rpc(ctx.a, ctx.reserve, 'adjust_scan', {
         scan_id: scan.scan_id,
         expected_version: 1,
         quantity: 3,
       }),
-      (error) => error.code === '40001',
+      (error) => error.code === 'PGRST' && JSON.parse(error.message).code === '40001',
     );
     assert.equal(
       (await ctx.admin.query('select quantity from public.product_stock where product_id=$1', [id]))

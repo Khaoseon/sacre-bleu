@@ -6,6 +6,32 @@ const files = versions.map((version) => `${version}_example.sql`);
 const applied = versions.map((version) => ({ local: version, remote: version }));
 const pending = applied.map((row, i) => ({ ...row, remote: i === 3 ? '' : row.remote }));
 
+test('V1 preflight accepts exactly four or five applied versions and the reviewed pending suffix, never a hole', () => {
+  const all = [...versions, '20261029000100', '20261029000200'];
+  const names = all.map((v) => `${v}_example.sql`);
+  for (const count of [4, 5]) {
+    const rows = all.map((local, index) => ({ local, remote: index < count ? local : '' }));
+    assert.throws(() => backupPlan(rows, names), /en attente/);
+    const plan = backupPlan(rows, names, false, false, true);
+    assert.deepEqual(plan.pendingVersions, all.slice(count));
+    assert.deepEqual(plan.appliedVersions, all.slice(0, count));
+    assert.equal(plan.files.length, count);
+    assert.throws(() => backupPlan(rows, names, false, true, true));
+    assert.throws(() =>
+      backupPlan(
+        rows.map((r, i) => (i === 2 ? { ...r, remote: '' } : r)),
+        names,
+        false,
+        false,
+        true,
+      ),
+    );
+  }
+  const full = all.map((local) => ({ local, remote: local }));
+  assert.equal(backupPlan(full, names).pendingVersion, null);
+  assert.throws(() => backupPlan(full, names, false, false, true));
+});
+
 test('pre-phase-4 backup contains only the three applied migrations and ten source tables', () => {
   const plan = backupPlan(pending, files, true);
   assert.deepEqual(plan.files, files.slice(0, 3));

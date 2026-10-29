@@ -4,6 +4,8 @@
 
 Les autres propositions ci-dessous restent en attente. Une investigation supplémentaire prépare une migration de budget OFF, sans l'appliquer : [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md).
 
+**État courant V1 :** après résolution locale du blocage SDK via la sixième migration PGRST/HTTP 409/code JSON 40001, l'utilisateur autorise commit correctif, push de la seule branche corrective et PR brouillon si tous les tests techniques sont verts. Le présent audit conserve son historique ; fusion, modifications Supabase Cloud et publication restent interdites sans nouvel accord. La nouvelle recette physique préalable est dispensée explicitement, sans preuve nouvelle de résolution du bug iPhone.
+
 ## Constat distant initial en lecture seule, avant fermeture
 
 - `/auth/v1/settings` : `disable_signup=false`, seul fournisseur actif : email. Les inscriptions publiques sont donc ouvertes. Aucun compte de test créé, aucun email envoyé.

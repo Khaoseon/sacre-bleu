@@ -66,11 +66,11 @@ Samsung : connexion, installation/relance, plein écran et version récente conf
 
 ## Étape 5 — Hors ligne, sauvegarde et restauration
 
-Priorité complémentaire avant phase 5 : [scans simultanés et limiteur OFF](SCANS_SIMULTANES_OFF.md). Reproduction à deux comptes locaux et protections préparées, cinquième migration et Edge non déployés. Seule la fermeture Auth a été appliquée après accord ; accès des deux comptes sur iPhone/Samsung confirmé par l'utilisateur. [Livraison contrôlée V1](LIVRAISON_CORRECTIFS_V1.md) : commits locaux autorisés, push/PR/fusion et étapes Cloud en attente d'accord, recette physique obligatoire avant clôture du lot.
+Priorité complémentaire avant phase 5 : [scans simultanés et limiteur OFF](SCANS_SIMULTANES_OFF.md). Reproduction à deux comptes locaux et protections préparées, cinquième/sixième migrations et Edge non déployés. Seule la fermeture Auth a été appliquée après accord ; accès des deux comptes sur iPhone/Samsung confirmé par l'utilisateur. [Livraison contrôlée V1](LIVRAISON_CORRECTIFS_V1.md) : commit correctif, push de la branche et PR brouillon autorisés après tests verts ; fusion et étapes Cloud en attente d'accord. Nouvelle recette physique préalable dispensée explicitement, limite de non-reproduction consignée.
 
 **Préalable demandé après clôture 4B : revue corrective** des inscriptions publiques, des publications et des textes OFF. Audit et modifications préparés localement dans `REVUE_CORRECTIVE_4B.md` ; aucun commit/push, Cloud ou publication sans nouvel accord. Cette revue ne commence pas la phase 5.
 
-**Blocage de livraison V1 relevé au précontrôle :** test SDK local du refus périmé en échec avec PostgREST 14.18. Résoudre et refaire les validations avant autorisation de fusion/publication ; la procédure de livraison ne donne aucun accord distant implicite.
+**Blocage de livraison V1 résolu localement :** sixième migration PGRST/HTTP 409/code JSON 40001, clients publié/actuel et suites techniques validés. L'utilisateur accepte de publier sans nouvelle recette physique Samsung/iPhone préalable et de surveiller le bug de substitution non reproduit. Commit/push de la branche corrective et PR brouillon autorisés après tests verts ; aucune autorisation SQL/Edge Cloud, fusion ou publication implicite. Pas de phase 5/V1.1.
 
 **Non commencée.** La gestion des mises à jour déjà livrée en 4B sera conservée ; les autres travaux ci-dessous restent soumis à une nouvelle demande.
 
