@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const require = createRequire(
@@ -165,25 +165,67 @@ try {
   const form = page.getByRole('dialog', { name: 'Modifier le produit' });
   await form.waitFor();
   await mkdir('.tmp', { recursive: true });
-  for (const width of [320, 390, 760, 1024]) {
-    await page.setViewportSize({ width, height: 844 });
-    const rows = await form.locator('.field-row').evaluateAll((elements) =>
-      elements.map((row) =>
-        [...row.querySelectorAll('label > input, label > select')].map((control) => {
-          const rect = control.getBoundingClientRect();
-          return { top: rect.top, bottom: rect.bottom, width: rect.width };
-        }),
-      ),
-    );
-    for (const row of rows) {
-      assert.equal(row.length, 2);
-      assert.ok(Math.abs(row[0].top - row[1].top) <= 1, JSON.stringify({ width, row }));
-      assert.ok(Math.abs(row[0].bottom - row[1].bottom) <= 1, JSON.stringify({ width, row }));
-      assert.ok(Math.abs(row[0].width - row[1].width) <= 1, JSON.stringify({ width, row }));
+  const measurements = [];
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate((theme) => {
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    }, theme);
+    for (const width of [320, 390, 760, 1024]) {
+      await page.setViewportSize({ width, height: 844 });
+      const rows = await form.locator('.field-row').evaluateAll((elements) =>
+        elements.map((row) =>
+          [...row.querySelectorAll('label > input, label > select')].map((control) => {
+            const rect = control.getBoundingClientRect();
+            const css = getComputedStyle(control);
+            return {
+              name: control.name,
+              top: rect.top,
+              bottom: rect.bottom,
+              width: rect.width,
+              height: rect.height,
+              fontSize: css.fontSize,
+              lineHeight: css.lineHeight,
+              minHeight: css.minHeight,
+              padding: css.padding,
+              appearance: css.appearance,
+            };
+          }),
+        ),
+      );
+      for (const row of rows) {
+        assert.equal(row.length, 2);
+        assert.ok(Math.abs(row[0].top - row[1].top) <= 1, JSON.stringify({ theme, width, row }));
+        assert.ok(
+          Math.abs(row[0].bottom - row[1].bottom) <= 1,
+          JSON.stringify({ theme, width, row }),
+        );
+        assert.ok(
+          Math.abs(row[0].width - row[1].width) <= 1,
+          JSON.stringify({ theme, width, row }),
+        );
+        assert.ok(
+          Math.abs(row[0].height - row[1].height) <= 1,
+          JSON.stringify({ theme, width, row }),
+        );
+        assert.ok(
+          row.every((control) => control.height >= 44),
+          JSON.stringify({ theme, width, row }),
+        );
+      }
+      assert.ok(await form.evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth));
+      assert.equal(await form.locator('label > span').filter({ hasText: 'facultatif' }).count(), 4);
+      for (const name of ['name', 'brand', 'category', 'size', 'unit', 'quantity', 'barcode'])
+        assert.ok(
+          await form
+            .locator(`[name="${name}"]`)
+            .evaluate((control) => control.labels[0].textContent.trim().length > 0),
+        );
+      measurements.push({ theme, width, rows });
+      await page.screenshot({ path: `.tmp/product-form-${theme}-${width}.png` });
     }
-    assert.ok(await form.evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth));
-    if (width === 390) await page.screenshot({ path: '.tmp/product-form-aligned.png' });
   }
+  await writeFile('.tmp/product-form-metrics.json', JSON.stringify(measurements, null, 2));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
     document.documentElement.dataset.theme = 'dark';

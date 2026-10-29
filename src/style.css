@@ -1350,7 +1350,7 @@ h1 > span {
 }
 .product-form input,
 .product-form select {
-  min-height: var(--touch-target);
+  min-height: max(var(--touch-target), calc(1.5em + 22px));
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px 12px;
