@@ -1,3 +1,5 @@
+import { t, message, locale } from './i18n';
+
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { LookupStatus, ProductProvider } from './productInfo';
 const empty: LookupStatus = { reason: 'unknown', until: 0 };
@@ -21,7 +23,7 @@ export function LookupIndicator({ provider }: { provider?: ProductProvider }) {
     return () => clearInterval(timer);
   }, [status.until]);
   const seconds = Math.max(0, Math.ceil((status.until - Date.now()) / 1000));
-  const label = !provider
+  const statusLabel = !provider
     ? 'OFF · désactivé dans la démonstration'
     : status.reason === 'auth'
       ? 'OFF · connexion à vérifier'
@@ -37,15 +39,19 @@ export function LookupIndicator({ provider }: { provider?: ProductProvider }) {
   return (
     <p
       className="lookup-indicator"
-      title="Le créneau est commun aux deux appareils et vérifié par le serveur à chaque recherche. Un produit connu ne dépend pas d’OFF."
+      title={t(
+        'Le créneau est commun aux deux appareils et vérifié par le serveur à chaque recherche. Un produit connu ne dépend pas d’OFF.',
+      )}
     >
-      <span role="status">{label}</span>
+      <span role="status">{message(statusLabel)}</span>
       {seconds > 0 && (
         <>
           {' '}
           <time
             dateTime={new Date(status.until).toISOString()}
-            aria-label={`Reprise estimée à ${new Date(status.until).toLocaleTimeString('fr-FR')}`}
+            aria-label={t('Reprise estimée à {0}', {
+              0: new Date(status.until).toLocaleTimeString(locale()),
+            })}
           >
             ~{seconds} s
           </time>

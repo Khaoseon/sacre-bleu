@@ -10,6 +10,7 @@ Start with the current English guides below. They describe the code's present co
 | Work on camera or enrichment                   | [SCANNER.md](SCANNER.md), [OPEN_FOOD_FACTS.md](OPEN_FOOD_FACTS.md)                                      |
 | Understand offline copies and JSON replacement | [PHASE5.md](PHASE5.md)                                                                                  |
 | Handle administrative archives                 | [BACKUP.md](BACKUP.md) — privileged optional tools and limitations                                      |
+| Add interface translations                     | [I18N.md](I18N.md) — presentation catalogue, compatibility and coverage                                 |
 | Reproduce checks                               | [TESTING.md](TESTING.md)                                                                                |
 | Prepare public release                         | [RELEASE.md](RELEASE.md), [license scope](../THIRD_PARTY_NOTICES.md), [security policy](../SECURITY.md) |
 

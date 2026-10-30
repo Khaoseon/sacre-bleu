@@ -1,3 +1,5 @@
+import { t, message, useLanguage } from './i18n';
+
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { Settings2 } from 'lucide-react';
@@ -63,7 +65,11 @@ function Gate({
               .
             </span>
           </a>
-          <button className="icon-button" aria-label="Paramètres" onClick={() => setSettings(true)}>
+          <button
+            className="icon-button"
+            aria-label={t('Paramètres')}
+            onClick={() => setSettings(true)}
+          >
             <Settings2 size={22} />
           </button>
         </header>
@@ -71,12 +77,12 @@ function Gate({
         {children}
         {onDemo && (
           <button className="text-button demo-entry" onClick={onDemo}>
-            Essayer la démonstration sur cet appareil
+            {t('Essayer la démonstration sur cet appareil')}
           </button>
         )}
       </section>
       {settings && (
-        <Modal title="Paramètres" close={() => setSettings(false)}>
+        <Modal title={t('Paramètres')} close={() => setSettings(false)}>
           <AppearanceSettings theme={theme} />
           <AppInformation />
         </Modal>
@@ -112,24 +118,25 @@ function AuthForm({
   );
   return (
     <Gate
-      title={signup ? 'Créer votre compte.' : 'Votre réserve, à deux.'}
+      title={signup ? t('Créer votre compte.') : t('Votre réserve, à deux.')}
       theme={theme}
       onDemo={onDemo}
     >
       <p>
         {invitation
-          ? 'Connectez-vous avec l’adresse invitée pour rejoindre la réserve.'
-          : 'Connectez-vous pour retrouver votre stock et vos courses.'}
+          ? t('Connectez-vous avec l’adresse invitée pour rejoindre la réserve.')
+          : t('Connectez-vous pour retrouver votre stock et vos courses.')}
       </p>
       {!auth && (
         <p role="alert" className="form-error">
-          Connexion non configurée. Démarrez Supabase puis configurez l’environnement local comme
-          indiqué dans le README.
+          {t(
+            'Connexion non configurée. Démarrez Supabase puis configurez l’environnement local comme indiqué dans le README.',
+          )}
         </p>
       )}
       {linkError && (
         <p role="alert" className="form-error">
-          {linkError}
+          {message(linkError)}
         </p>
       )}
       <form
@@ -155,7 +162,7 @@ function AuthForm({
         }}
       >
         <label>
-          Email
+          {t('Email')}{' '}
           <input
             type="email"
             autoComplete="email"
@@ -166,7 +173,7 @@ function AuthForm({
           />
         </label>
         <label>
-          Mot de passe
+          {t('Mot de passe')}{' '}
           <input
             type="password"
             autoComplete={signup ? 'new-password' : 'current-password'}
@@ -177,20 +184,23 @@ function AuthForm({
             disabled={busy}
           />
         </label>
-        {signup && <small>12 caractères minimum, avec majuscule, minuscule et chiffre.</small>}
+        {signup && (
+          <small>{t('12 caractères minimum, avec majuscule, minuscule et chiffre.')}</small>
+        )}
         {error && (
           <p role="alert" className="form-error">
-            {error}
+            {message(error)}
           </p>
         )}
         {sent && (
           <p role="status">
-            Vérifiez votre boîte email pour confirmer votre adresse. Si vous avez une invitation,
-            rouvrez son lien après confirmation.
+            {t(
+              'Vérifiez votre boîte email pour confirmer votre adresse. Si vous avez une invitation, rouvrez son lien après confirmation.',
+            )}
           </p>
         )}
         <button className="primary-button" disabled={busy || !auth}>
-          {busy ? 'Veuillez patienter…' : signup ? 'Créer mon compte' : 'Se connecter'}
+          {busy ? t('Veuillez patienter…') : signup ? t('Créer mon compte') : t('Se connecter')}
         </button>
         {!cloudPersonalAccess && (
           <button
@@ -202,10 +212,10 @@ function AuthForm({
               setError('');
             }}
           >
-            {signup ? 'J’ai déjà un compte' : 'Créer un compte'}
+            {signup ? t('J’ai déjà un compte') : t('Créer un compte')}
           </button>
         )}
-        {cloudPersonalAccess && <small>Accès réservé aux comptes autorisés.</small>}
+        {cloudPersonalAccess && <small>{t('Accès réservé aux comptes autorisés.')}</small>}
         {(sent || error) && (
           <button
             type="button"
@@ -225,7 +235,7 @@ function AuthForm({
               }
             }}
           >
-            Renvoyer l’email de confirmation
+            {t('Renvoyer l’email de confirmation')}
           </button>
         )}
       </form>
@@ -250,7 +260,8 @@ function Membership({
 }) {
   const [reserves, setReserves] = useState<ReserveChoice[] | null>(null);
   const [error, setError] = useState('');
-  const [name, setName] = useState('Ma réserve');
+  const [defaultName] = useState(() => t('Ma réserve'));
+  const [name, setName] = useState(defaultName);
   const [busy, setBusy] = useState(false);
   const [load, setLoad] = useState(0);
   const acceptId = useRef(crypto.randomUUID());
@@ -323,23 +334,23 @@ function Membership({
       ? 'Terminez ou vérifiez la demande de réserve avant d’actualiser.'
       : invitation
         ? 'Traitez l’invitation ouverte avant d’actualiser.'
-        : name !== 'Ma réserve'
+        : name !== defaultName
           ? 'Terminez la saisie du nom de réserve avant d’actualiser.'
           : null,
   );
   return (
-    <Gate title="Votre réserve." theme={theme}>
+    <Gate title={t('Votre réserve.')} theme={theme}>
       <p>{session.user.email}</p>
       {reserves === null ? (
         <>
-          <p role="status">Chargement de vos réserves…</p>
+          <p role="status">{t('Chargement de vos réserves…')}</p>
           {error && (
             <>
               <p role="alert" className="form-error">
-                {error}
+                {message(error)}
               </p>
               <button className="secondary-button" onClick={() => setLoad((n) => n + 1)}>
-                Réessayer
+                {t('Réessayer')}
               </button>
             </>
           )}
@@ -348,11 +359,11 @@ function Membership({
         <>
           {invitation && (
             <section className="account-section">
-              <h2>Rejoindre la réserve</h2>
+              <h2>{t('Rejoindre la réserve')}</h2>
               <p>
                 {alreadyMember
-                  ? 'Vous faites déjà partie de cette réserve.'
-                  : 'L’invitation doit correspondre à votre adresse email confirmée.'}
+                  ? t('Vous faites déjà partie de cette réserve.')
+                  : t('L’invitation doit correspondre à votre adresse email confirmée.')}
               </p>
               <button
                 className="primary-button"
@@ -382,10 +393,10 @@ function Membership({
                   }
                 }}
               >
-                {alreadyMember ? 'Ouvrir la réserve' : 'Accepter l’invitation'}
+                {alreadyMember ? t('Ouvrir la réserve') : t('Accepter l’invitation')}
               </button>
               <button className="text-button" onClick={clearInvitation} disabled={busy}>
-                Ignorer cette invitation
+                {t('Ignorer cette invitation')}
               </button>
             </section>
           )}
@@ -407,9 +418,9 @@ function Membership({
                 void create();
               }}
             >
-              <h2>{creation ? 'Création à vérifier' : 'Créer une réserve vide'}</h2>
+              <h2>{creation ? t('Création à vérifier') : t('Créer une réserve vide')}</h2>
               <label>
-                Nom de la réserve
+                {t('Nom de la réserve')}{' '}
                 <input
                   required
                   maxLength={120}
@@ -420,27 +431,27 @@ function Membership({
               </label>
               <button className="primary-button" disabled={busy}>
                 {busy
-                  ? 'Veuillez patienter…'
+                  ? t('Veuillez patienter…')
                   : creation
-                    ? 'Reprendre la création'
-                    : 'Créer la réserve'}
+                    ? t('Reprendre la création')
+                    : t('Créer la réserve')}
               </button>
             </form>
           )}
           {!invitation && cloudPersonalAccess && !creation && reserves.length === 0 && (
             <p role="status">
-              Aucune réserve accessible. Contactez la personne qui administre votre réserve.
+              {t('Aucune réserve accessible. Contactez la personne qui administre votre réserve.')}
             </p>
           )}
           {error && (
             <p role="alert" className="form-error">
-              {error}
+              {message(error)}
             </p>
           )}
         </>
       )}
       <button className="text-button" onClick={logout}>
-        Se déconnecter
+        {t('Se déconnecter')}
       </button>
     </Gate>
   );
@@ -485,8 +496,8 @@ function SharingSettings({
         <ul className="member-list">
           {snapshot?.members.map((m) => (
             <li key={m.user_id}>
-              {m.user_id === session.user.id ? 'Vous' : 'Autre membre'}{' '}
-              <span>{m.role === 'owner' ? 'Propriétaire' : 'Membre'}</span>
+              {m.user_id === session.user.id ? t('Vous') : t('Autre membre')}{' '}
+              <span>{m.role === 'owner' ? t('Propriétaire') : t('Membre')}</span>
             </li>
           ))}
         </ul>
@@ -532,9 +543,9 @@ function SharingSettings({
             }
           }}
         >
-          <h3>Inviter une personne</h3>
+          <h3>{t('Inviter une personne')}</h3>
           <label>
-            Email du destinataire
+            {t('Email du destinataire')}{' '}
             <input
               type="email"
               required
@@ -548,18 +559,20 @@ function SharingSettings({
             disabled={busy || !navigator.onLine || !!view.pending}
           >
             {busy
-              ? 'Veuillez patienter…'
+              ? t('Veuillez patienter…')
               : pending
-                ? 'Reprendre l’invitation'
-                : 'Générer un lien d’invitation'}
+                ? t('Reprendre l’invitation')
+                : t('Générer un lien d’invitation')}
           </button>
-          <small>Valable 24 h pour cette adresse. Un nouveau lien remplace les précédents.</small>
+          <small>
+            {t('Valable 24 h pour cette adresse. Un nouveau lien remplace les précédents.')}
+          </small>
         </form>
       )}
       {link && (
         <div className="invitation-result">
           <label>
-            Lien temporaire
+            {t('Lien temporaire')}{' '}
             <input readOnly value={link} onFocus={(e) => e.target.select()} />
           </label>
           <button
@@ -573,38 +586,38 @@ function SharingSettings({
               }
             }}
           >
-            Copier le lien
+            {t('Copier le lien')}
           </button>
           {!!navigator.share && (
             <button
               className="text-button"
               onClick={async () => {
                 try {
-                  await navigator.share({ title: 'Rejoindre ma réserve', url: link });
+                  await navigator.share({ title: t('Rejoindre ma réserve'), url: link });
                 } catch {
                   /* Cancellation is harmless. */
                 }
               }}
             >
-              Partager
+              {t('Partager')}
             </button>
           )}
         </div>
       )}
       {error && (
         <p role="alert" className="form-error">
-          {error}
+          {message(error)}
         </p>
       )}
-      {notice && <p role="status">{notice}</p>}
+      {notice && <p role="status">{message(notice)}</p>}
       <BackupSettings store={store} />
       <p className="form-note">
-        Le dernier stock et les courses sont conservés dans ce navigateur pour consultation hors
-        ligne, sans modification possible. Sur un appareil partagé, déconnectez-vous pour effacer
-        cette copie privée. Les données locales ne sont pas chiffrées par l’application.
+        {t(
+          'Le dernier stock et les courses sont conservés dans ce navigateur pour consultation hors ligne, sans modification possible. Sur un appareil partagé, déconnectez-vous pour effacer cette copie privée. Les données locales ne sont pas chiffrées par l’application.',
+        )}
       </p>
       <button className="danger-button" onClick={logout}>
-        Se déconnecter
+        {t('Se déconnecter')}
       </button>
     </>
   );
@@ -641,20 +654,22 @@ function PantryScreen({
   );
   if (!view.snapshot)
     return (
-      <Gate title="Votre réserve." theme={theme}>
+      <Gate title={t('Votre réserve.')} theme={theme}>
         <p role="status">
-          {view.status === 'loading' ? 'Chargement du stock…' : 'La réserve est indisponible.'}
+          {view.status === 'loading'
+            ? t('Chargement du stock…')
+            : t('La réserve est indisponible.')}
         </p>
         {view.error && (
           <p role="alert" className="form-error">
-            {view.error}
+            {message(view.error)}
           </p>
         )}
         <button className="secondary-button" onClick={() => void store.refresh()}>
-          Réessayer
+          {t('Réessayer')}
         </button>
         <button className="text-button" onClick={logout}>
-          Se déconnecter
+          {t('Se déconnecter')}
         </button>
       </Gate>
     );
@@ -697,6 +712,7 @@ function SharedScope({
   ) : null;
 }
 export default function Root() {
+  useLanguage();
   const theme = useThemePreference();
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null | undefined>(() => {
@@ -837,9 +853,9 @@ export default function Root() {
   if (demo) return <App theme={theme} onExitDemo={() => setDemo(false)} />;
   if (incoming.error || confirmationError)
     return (
-      <Gate title="Lien indisponible." theme={theme}>
+      <Gate title={t('Lien indisponible.')} theme={theme}>
         <p role="alert" className="form-error">
-          {incoming.error || confirmationError}
+          {message(incoming.error || confirmationError)}
         </p>
         <button
           className="secondary-button"
@@ -848,15 +864,15 @@ export default function Root() {
             setConfirmationError('');
           }}
         >
-          Continuer
+          {t('Continuer')}
         </button>
       </Gate>
     );
   if (confirming || session === undefined)
     return (
-      <Gate title="Votre réserve." theme={theme}>
+      <Gate title={t('Votre réserve.')} theme={theme}>
         <p role="status">
-          {confirming ? 'Confirmation de votre adresse…' : 'Vérification de la session…'}
+          {confirming ? t('Confirmation de votre adresse…') : t('Vérification de la session…')}
         </p>
       </Gate>
     );

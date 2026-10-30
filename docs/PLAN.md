@@ -23,4 +23,8 @@ Preserve the invariants in [SPEC.md](SPEC.md) and [BACKEND.md](BACKEND.md). Befo
 
 Public release still requires written mascot permission/preferred credit, private security reporting, privacy review of tracked assets/history and independent hosted/device acceptance. Physical iPhone/Samsung camera testing from phase 3 does not validate every later PWA/offline/recovery change. Historical reports explicitly retain those gaps and a scanner substitution incident that was not physically reproduced.
 
-Screenshots and UI redesign are deferred. Localization, offline mutations, private photo Storage, password recovery UI and broader collaboration are not part of Phase 6B2. No remote provisioning, production mutation, visibility change, repository rename, merge or intentional deployment is authorized by this plan. The original `main` triggers Pages automatically; review that constraint before any later merge.
+Screenshots and UI redesign are deferred. Offline mutations, private photo Storage, password recovery UI and broader collaboration are not part of Phase 6B2. No remote provisioning, production mutation, visibility change, repository rename, merge or intentional deployment is authorized by this plan. The original `main` triggers Pages automatically; review that constraint before any later merge.
+
+## Phase 6C: interface localization
+
+French/English presentation, local language selection, locale-aware formatting and bilingual regression coverage are implemented on a dedicated branch. No migration, Auth/Edge change, deployment or merge is included. See [localization architecture, audit and evidence](I18N.md); public V1.0 and physical device acceptance remain separate.

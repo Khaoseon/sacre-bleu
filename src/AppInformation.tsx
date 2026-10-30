@@ -1,3 +1,5 @@
+import { t, message, locale } from './i18n';
+
 import { useEffect, useState } from 'react';
 import { UpdateControls } from './AppUpdates';
 
@@ -34,31 +36,33 @@ export function AppInformation() {
   }, []);
 
   return (
-    <section className="app-information" aria-label="Version de l’application">
+    <section className="app-information" aria-label={t('Version de l’application')}>
       <p className="app-version">
-        Version {__APP_BUILD_INFO__.version} · <code>{__APP_BUILD_INFO__.revision}</code>
+        {t('Version')} {__APP_BUILD_INFO__.version} · <code>{__APP_BUILD_INFO__.revision}</code>
       </p>
       <UpdateControls />
       <details>
-        <summary>Diagnostic d’affichage</summary>
+        <summary>{t('Diagnostic d’affichage')}</summary>
         <dl>
           <div>
-            <dt>Compilation</dt>
+            <dt>{t('Compilation')}</dt>
             <dd>
               <time dateTime={__APP_BUILD_INFO__.builtAt}>
-                {new Date(__APP_BUILD_INFO__.builtAt).toLocaleString('fr-FR')}
+                {new Date(__APP_BUILD_INFO__.builtAt).toLocaleString(locale())}
               </time>
             </dd>
           </div>
           <div>
-            <dt>Affichage demandé</dt>
+            <dt>{t('Affichage demandé')}</dt>
             <dd>
-              {__APP_BUILD_INFO__.requestedDisplay === 'fullscreen' ? 'Plein écran' : 'Standard'}
+              {__APP_BUILD_INFO__.requestedDisplay === 'fullscreen'
+                ? t('Plein écran')
+                : t('Standard')}
             </dd>
           </div>
           <div>
-            <dt>Affichage détecté</dt>
-            <dd>{display}</dd>
+            <dt>{t('Affichage détecté')}</dt>
+            <dd>{message(display)}</dd>
           </div>
         </dl>
       </details>

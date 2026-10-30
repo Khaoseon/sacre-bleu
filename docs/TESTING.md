@@ -42,13 +42,14 @@ Playwright is pinned in the lockfile. Browser scripts use installed Chrome; CI i
 
 ```sh
 npm run test:ui:browser
+npm run test:i18n:browser
 npm run test:pwa:browser
 npm run test:off:browser
 npm run test:phase5:browser
 npm run test:scanners:browser
 ```
 
-Navigation checks cover mobile swipe/keyboard guards. PWA checks build versions A/B and exercise deferred/blocked/explicit activation. OFF uses a mock provider with image requests intercepted; scanner checks use synthetic video/decoding. Phase-5 tests exercise JSON preview/replacement, stale revision/rollback/replay, offline token expiry/reconnect, account isolation, late responses and signout. These are browser behavior tests, not physical camera/OS validation.
+Navigation checks cover mobile swipe/keyboard guards. The i18n journey checks French startup in an English browser, settings before sign-in, immediate demo switching, saved preference, storage failure, form/focus/value preservation and 320px overflow without external requests. The phase-5 journey also switches a signed-in scope, a restore preview and an uncertain restore, checking Auth, server data and the pending journal. See [I18N.md](I18N.md). PWA checks build versions A/B and exercise deferred/blocked/explicit activation. OFF uses a mock provider with image requests intercepted; scanner checks use synthetic video/decoding. Phase-5 tests exercise JSON preview/replacement, stale revision/rollback/replay, offline token expiry/reconnect, account isolation, late responses and signout. These are browser behavior tests, not physical camera/OS validation.
 
 For the local Edge authorization boundary, serve `product-lookup` in a separate terminal with `npx --no-install supabase functions serve product-lookup --no-verify-jwt`, then run `npm run test:off:edge`. This local flag permits invalid-token test requests to reach the handler; its Auth checks stay active. Tests reject requests before real OFF lookup. Keep hosted `verify_jwt=true`.
 

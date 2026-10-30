@@ -1,3 +1,5 @@
+import { t, message, locale, number, label } from './i18n';
+
 import { useState, useSyncExternalStore } from 'react';
 import { BACKUP_MAX_BYTES, parseBackup, type UserBackup } from './model';
 import { backupSnapshot, downloadBackup } from './storage';
@@ -30,32 +32,33 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
   }
   return (
     <section className="account-section backup-settings">
-      <h3>Sauvegarde de la réserve</h3>
+      <h3>{t('Sauvegarde de la réserve')}</h3>
       <p>
-        Export privé des produits, quantités, codes et courses. Sans comptes ni secrets. Conservez
-        le fichier hors de Supabase, dans un emplacement personnel protégé : le JSON n’est pas
-        chiffré.
+        {t(
+          'Export privé des produits, quantités, codes et courses. Sans comptes ni secrets. Conservez le fichier hors de Supabase, dans un emplacement personnel protégé : le JSON n’est pas chiffré.',
+        )}
       </p>
       <p>
-        Les images Open Food Facts restent des références en ligne ; aucune copie d’image n’est
-        incluse. Les photos privées ne sont pas encore disponibles.
+        {t(
+          'Les images Open Food Facts restent des références en ligne ; aucune copie d’image n’est incluse. Les photos privées ne sont pas encore disponibles.',
+        )}
       </p>
       <button
         className="secondary-button"
         disabled={!snapshot || view.busy || !!view.pending}
         onClick={exportCurrent}
       >
-        Exporter la réserve JSON
+        {t('Exporter la réserve JSON')}
       </button>
       {view.status !== 'ready' && (
         <p className="form-note">
-          Cet export utilise la dernière copie synchronisée, qui peut être ancienne.
+          {t('Cet export utilise la dernière copie synchronisée, qui peut être ancienne.')}
         </p>
       )}
       {owner && (
         <>
           <label className="backup-file">
-            Préparer une restauration JSON
+            {t('Préparer une restauration JSON')}{' '}
             <input
               type="file"
               accept=".json,application/json"
@@ -94,89 +97,102 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
             />
           </label>
           <small>
-            En ligne, propriétaire uniquement. 2 Mo, 2 000 produits et 2 000 articles maximum.
+            {t(
+              'En ligne, propriétaire uniquement. 2 Mo, 2 000 produits et 2 000 articles maximum.',
+            )}
           </small>
         </>
       )}
-      {!owner && <p>La restauration est réservée au propriétaire de la réserve.</p>}
-      {reading && <p role="status">Lecture du fichier…</p>}
+      {!owner && <p>{t('La restauration est réservée au propriétaire de la réserve.')}</p>}
+      {reading && <p role="status">{t('Lecture du fichier…')}</p>}
       {preview && (
         <div className="restore-preview">
-          <h4>Aperçu de remplacement</h4>
+          <h4>{t('Aperçu de remplacement')}</h4>
           <p>
-            Le catalogue et toutes les courses actuels seront remplacés. Les quantités seront posées
-            exactement, sans scan ni déduction automatique. Aucun compte ou membre ne sera modifié.
+            {t(
+              'Le catalogue et toutes les courses actuels seront remplacés. Les quantités seront posées exactement, sans scan ni déduction automatique. Aucun compte ou membre ne sera modifié.',
+            )}
           </p>
-          <p>Fichier du {new Date(preview.backup.exportedAt).toLocaleString('fr-FR')}.</p>
+          <p>
+            {t('Fichier du')} {new Date(preview.backup.exportedAt).toLocaleString(locale())}.
+          </p>
           <table>
-            <caption>Avant et après restauration</caption>
+            <caption>{t('Avant et après restauration')}</caption>
             <thead>
               <tr>
-                <th>Données</th>
-                <th>Avant</th>
-                <th>Après</th>
+                <th>{t('Données')}</th>
+                <th>{t('Avant')}</th>
+                <th>{t('Après')}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th>Produits</th>
-                <td>{preview.before.products.length}</td>
-                <td>{preview.backup.products.length}</td>
+                <th>{t('Produits')}</th>
+                <td>{number(preview.before.products.length)}</td>
+                <td>{number(preview.backup.products.length)}</td>
               </tr>
               <tr>
-                <th>Emballages</th>
-                <td>{preview.before.products.reduce((n, p) => n + p.quantity, 0)}</td>
-                <td>{preview.backup.products.reduce((n, p) => n + p.quantity, 0)}</td>
+                <th>{t('Emballages')}</th>
+                <td>{number(preview.before.products.reduce((n, p) => n + p.quantity, 0))}</td>
+                <td>{number(preview.backup.products.reduce((n, p) => n + p.quantity, 0))}</td>
               </tr>
               <tr>
-                <th>Articles de courses</th>
-                <td>{preview.before.shopping.length}</td>
-                <td>{preview.backup.shopping.length}</td>
+                <th>{t('Articles de courses')}</th>
+                <td>{number(preview.before.shopping.length)}</td>
+                <td>{number(preview.backup.shopping.length)}</td>
               </tr>
             </tbody>
           </table>
           <details>
-            <summary>Produits et courses qui seront remplacés</summary>
+            <summary>{t('Produits et courses qui seront remplacés')}</summary>
             <ul>
               {preview.before.products.map((p) => (
                 <li key={p.id}>
-                  {p.name} · stock {p.quantity}
+                  {p.name} {t('· stock')} {number(p.quantity)}
                 </li>
               ))}
             </ul>
             <ul>
               {preview.before.shopping.map((s) => (
                 <li key={s.id}>
-                  {s.name} · à acheter {s.quantity} · {s.checked ? 'coché' : 'non coché'}
+                  {s.name} {t('· à acheter')} {number(s.quantity)} ·{' '}
+                  {s.checked ? t('coché') : t('non coché')}
                 </li>
               ))}
             </ul>
           </details>
           <details>
-            <summary>Détail des données à restaurer</summary>
+            <summary>{t('Détail des données à restaurer')}</summary>
             <ul>
               {preview.backup.products.map((p) => (
                 <li key={p.id}>
                   {p.name} ·{' '}
-                  {[p.brand, p.size && `${p.size} ${p.unit}`, p.barcode]
+                  {[
+                    p.brand,
+                    p.size && `${number(p.size)} ${p.unit ? label(p.unit) : ''}`,
+                    p.barcode,
+                  ]
                     .filter(Boolean)
                     .join(' · ')}{' '}
-                  · stock {p.quantity} · seuil {p.minimum ?? 'désactivé'}
+                  {t('· stock')} {number(p.quantity)} {t('· seuil')}{' '}
+                  {p.minimum === null ? t('désactivé') : number(p.minimum)}
                 </li>
               ))}
             </ul>
             <ul>
               {preview.backup.shopping.map((s) => (
                 <li key={s.id}>
-                  {s.name} · à acheter {s.quantity} · {s.checked ? 'coché' : 'non coché'} ·{' '}
-                  {s.product_id ? 'lié au catalogue' : 'libre'}
+                  {s.name} {t('· à acheter')} {number(s.quantity)} ·{' '}
+                  {s.checked ? t('coché') : t('non coché')} ·{' '}
+                  {s.product_id ? t('lié au catalogue') : t('Article libre')}
                 </li>
               ))}
             </ul>
           </details>
           <p>
-            Tous les identifiants de produits et courses seront recréés ; les liens seront
-            conservés. Un fichier répété remplace les données, il ne les additionne pas.
+            {t(
+              'Tous les identifiants de produits et courses seront recréés ; les liens seront conservés. Un fichier répété remplace les données, il ne les additionne pas.',
+            )}
           </p>
           <button
             className="secondary-button"
@@ -190,10 +206,12 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
               }
             }}
           >
-            Télécharger la sauvegarde avant remplacement
+            {t('Télécharger la sauvegarde avant remplacement')}
           </button>
           {recoverySaved && (
-            <p>Vérifiez que le fichier de récupération est bien enregistré avant de continuer.</p>
+            <p>
+              {t('Vérifiez que le fichier de récupération est bien enregistré avant de continuer.')}
+            </p>
           )}
           <label>
             <input
@@ -202,12 +220,13 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
               disabled={view.busy || !!view.pending}
               onChange={(e) => setConfirmed(e.target.checked)}
             />{' '}
-            J’ai conservé la sauvegarde et je confirme le remplacement complet des produits et
-            courses.
+            {t(
+              'J’ai conservé la sauvegarde et je confirme le remplacement complet des produits et courses.',
+            )}
           </label>
           {stale && (
             <p role="alert">
-              La réserve a changé. Fermez cet aperçu puis sélectionnez à nouveau le fichier.
+              {t('La réserve a changé. Fermez cet aperçu puis sélectionnez à nouveau le fichier.')}
             </p>
           )}
           <button
@@ -224,7 +243,7 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
                 );
             }}
           >
-            Remplacer et restaurer la réserve
+            {t('Remplacer et restaurer la réserve')}
           </button>
           <button
             className="text-button"
@@ -234,13 +253,13 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
               setError('');
             }}
           >
-            Fermer l’aperçu
+            {t('Fermer l’aperçu')}
           </button>
         </div>
       )}
       {error && (
         <p role="alert" className="form-error">
-          {error}
+          {message(error)}
         </p>
       )}
     </section>

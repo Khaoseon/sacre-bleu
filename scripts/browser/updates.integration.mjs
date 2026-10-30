@@ -133,6 +133,13 @@ try {
   await controls
     .getByText('Terminez ou effacez la saisie du compte avant d’actualiser.', { exact: true })
     .waitFor();
+  await page.getByLabel('Langue', { exact: true }).selectOption('en');
+  await controls
+    .getByText('Finish or clear the account form before updating.', { exact: true })
+    .waitFor();
+  await page.getByRole('complementary', { name: 'App update', exact: true }).waitFor();
+  assert.equal(await page.locator('input[type="email"]').inputValue(), 'exemple@example.invalid');
+  await page.getByLabel('Language', { exact: true }).selectOption('fr');
   assert.match(await page.locator('.app-version').innerText(), /aaaaaaaaaaaa/);
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
   assert.equal(await page.locator('input[type="email"]').inputValue(), 'exemple@example.invalid');

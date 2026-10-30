@@ -1,7 +1,7 @@
 # Repository conventions
 
 - Read `docs/SPEC.md` for behavior and business rules, and `docs/PLAN.md` for each phase's scope and validation.
-- Keep the interface and messages in French, mobile first, with keyboard- and touch-accessible controls.
+- Keep the interface and messages available in French (default) and English through the typed presentation catalogue in `src/i18n/`. Preserve stored identifiers and user/provider content; see `docs/I18N.md`. Keep mobile-first, keyboard- and touch-accessible controls.
 - Use strict TypeScript. Keep pure business rules in `src/model.ts`, persistence in `src/storage.ts` and components under `src/`.
 - Never show a successful mutation before the write actually completes. Quantities are integers and never negative; retain products at zero stock.
 - Test changed business rules. Before delivery run `npm test`, `npm run typecheck`, `npm run build` and `npm run format:check`.

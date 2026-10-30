@@ -41,7 +41,8 @@
     "instance:config": "node scripts/backend/instance-config.mjs",
     "instance:init": "node scripts/backend/instance-init.mjs",
     "notices:generate": "node scripts/third-party-notices.mjs",
-    "notices:check": "node scripts/third-party-notices.mjs --check"
+    "notices:check": "node scripts/third-party-notices.mjs --check",
+    "test:i18n:browser": "node scripts/browser/i18n.integration.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
