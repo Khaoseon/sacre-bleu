@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseBackup, validateBackup, type UserBackup } from './model';
-import { backupSnapshot, PrivateReserveCache } from './storage';
+import { backupSnapshot, downloadBackup, PrivateReserveCache } from './storage';
 import type { ReserveSnapshot } from './backend/contracts';
 import { SharedPantryStore } from './backend/store';
 import type { ReserveBackend } from './backend/contracts';
@@ -66,6 +66,11 @@ function storageFixture(): Storage {
   return result;
 }
 describe('portable user backup', () => {
+  it('never downloads a file too large to restore', () => {
+    const b = backupFixture();
+    b.products[0].name = 'é'.repeat(1_000_001);
+    expect(() => downloadBackup(b)).toThrow(/volumineux/);
+  });
   it('roundtrips exhausted products, leading zero barcodes, quantities and links without Auth', () => {
     const b = backupSnapshot(snapshotFixture());
     expect(parseBackup(JSON.stringify(b)).products).toEqual(backupFixture().products);

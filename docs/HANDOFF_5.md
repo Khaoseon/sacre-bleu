@@ -20,7 +20,7 @@ Le workflow GitHub ajoute un job local isolé avec reset sans seed, pgTAP, linte
 
 ## Validations locales
 
-- 291 tests applicatifs / 20 fichiers ; fichiers valides/invalides, bornes, doublons, liens, images, quotas, séparation/effacement du cache, réponse tardive, révocation avec effacement disque impossible et blocage des écritures.
+- 292 tests applicatifs / 20 fichiers ; fichiers valides/invalides, bornes, doublons, liens, images, quotas, séparation/effacement du cache, réponse tardive, révocation avec effacement disque impossible et blocage des écritures.
 - Base locale vierge et sept migrations ; 149 assertions pgTAP, dont refus anonymes/non vérifiés/extérieurs/membre ordinaire, copie des quantités/liens, rejeu, conflits et rollback après panne injectée **après** suppression/création.
 - Dix tests de concurrence multi-connexions, dont restauration face à un ancien écrivain stock et deux restaurations simultanées du propriétaire.
 - Auth/API HTTP réel : droits, replay et HTTP 409/code 40001. Parcours SDK partagé et ancien client réussi. Douze tests de sauvegarde administrative/chiffrement et inventaires (historique jusqu’à sept migrations).

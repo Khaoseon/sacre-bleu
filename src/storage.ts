@@ -2,7 +2,7 @@ import { demo } from './demo';
 import { categories, MAX_QUANTITY, StaleOperationError, units, type State } from './model';
 import { isExternalReference } from './productInfo';
 import type { ReserveSnapshot } from './backend/contracts';
-import { parseBackup, validateBackup, type UserBackup } from './model';
+import { BACKUP_MAX_BYTES, parseBackup, validateBackup, type UserBackup } from './model';
 
 export function backupSnapshot(snapshot: ReserveSnapshot): UserBackup {
   if (snapshot.products.some((p) => p.photo_path !== null))
@@ -37,9 +37,12 @@ export function backupSnapshot(snapshot: ReserveSnapshot): UserBackup {
   });
 }
 export function downloadBackup(backup: UserBackup) {
-  const url = URL.createObjectURL(
-    new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),
-  );
+  const content = JSON.stringify(backup, null, 2);
+  if (new TextEncoder().encode(content).length > BACKUP_MAX_BYTES)
+    throw new Error(
+      'Export trop volumineux pour une restauration utilisateur (2 Mo maximum). Utilisez la sauvegarde administrative.',
+    );
+  const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = `sacre-bleu-${backup.exportedAt.replace(/[:.]/g, '-')}.json`;
