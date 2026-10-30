@@ -20,7 +20,7 @@ Le workflow GitHub ajoute un job local isolé avec reset sans seed, pgTAP, linte
 
 ## Validations locales
 
-- 292 tests applicatifs / 20 fichiers ; fichiers valides/invalides, bornes, doublons, liens, images, quotas, séparation/effacement du cache, réponse tardive, révocation avec effacement disque impossible et blocage des écritures.
+- 293 tests applicatifs / 20 fichiers ; fichiers valides/invalides, bornes, doublons, liens, images, quotas, séparation/effacement du cache, réponse tardive, révocation avec effacement disque impossible et blocage des écritures.
 - Base locale vierge et sept migrations ; 149 assertions pgTAP, dont refus anonymes/non vérifiés/extérieurs/membre ordinaire, copie des quantités/liens, rejeu, conflits et rollback après panne injectée **après** suppression/création.
 - Dix tests de concurrence multi-connexions, dont restauration face à un ancien écrivain stock et deux restaurations simultanées du propriétaire.
 - Auth/API HTTP réel : droits, replay et HTTP 409/code 40001. Parcours SDK partagé et ancien client réussi. Douze tests de sauvegarde administrative/chiffrement et inventaires (historique jusqu’à sept migrations).
@@ -41,3 +41,9 @@ Cet accord n’autorise aucune restauration de la réserve réelle ni suppressio
 ## Limites et phase 6
 
 JSON/cache locaux non chiffrés par l’app, limites de taille explicites ; copies à protéger/renouveler. Images OFF référencées seulement, aucune nouvelle capacité Storage. Pas d’import Auth, de mutation différée, de pause réelle ou de recette sur téléphones physiques. La recette phase 6 pourra commencer après accord backend, publication phase 5 et vérification de cette livraison ; ne pas annoncer la V1 finale avant installation/relance et parcours réels Android/iOS.
+
+## Compléments de validation après premier push
+
+Le premier passage Linux complet sur `1af5097` valide le job applicatif, ainsi que toutes les étapes PostgreSQL/SDK/sauvegarde du nouveau job. Le navigateur échoue en fin de déconnexion hors ligne : lecture du stockage lancée pendant le rechargement volontaire de secours de `ReserveAuth` (« Execution context was destroyed »). La recette attend désormais cette navigation avant de conserver ses assertions d’effacement ; aucun contrôle retiré.
+
+Une régression locale supplémentaire garde un jeton expiré hors ligne pendant 32 secondes, jusqu’à la fin réelle des tentatives Auth. Échec reproduit avant correction : `INITIAL_SESSION/null` effaçait la copie alors que la session persistée restait connue. La copie est désormais conservée pour ce seul événement transitoire hors ligne, jamais pour `SIGNED_OUT` ni après déconnexion explicite. Les RPC vérifient une session disponible avant d’être envoyées, avec le même délai global de dix secondes, afin de ne pas confondre panne Auth et retrait d’appartenance. Le SDK verrouillé conserve une erreur de refresh pendant 60 secondes : le test spécifique attend au plus 75 secondes pour une véritable lecture authentifiée après reconnexion, sans effacer la copie ni augmenter les délais métier. La déconnexion reste possible pendant ce délai. Cette limite SDK est documentée ; les assertions de consultation, droits, effacement et reconnexion restent obligatoires.

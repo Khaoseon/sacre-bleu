@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parseBackup, validateBackup, type UserBackup } from './model';
 import { backupSnapshot, downloadBackup, PrivateReserveCache } from './storage';
 import type { ReserveSnapshot } from './backend/contracts';
 import { SharedPantryStore } from './backend/store';
 import type { ReserveBackend } from './backend/contracts';
 import { BackendError } from './backend/errors';
+import { SupabaseBackend } from './backend/adapter';
+import type { Client } from './backend/client';
 
 const id = '00000000-0000-0000-0000-000000000101';
 const item = '00000000-0000-0000-0000-000000000102';
@@ -213,6 +215,16 @@ describe('portable user backup', () => {
   });
 });
 describe('private offline copy', () => {
+  it('never sends an anonymous RPC when an expired session is temporarily unavailable', async () => {
+    const rpc = vi.fn();
+    const client = {
+      auth: { getSession: async () => ({ data: { session: null }, error: new Error('network') }) },
+      rpc,
+    } as unknown as Client;
+    const backend = new SupabaseBackend(client);
+    await expect(backend.getSnapshot('r')).rejects.toMatchObject({ kind: 'unavailable' });
+    expect(rpc).not.toHaveBeenCalled();
+  });
   it('removes private memory on revoked access even if disk cleanup fails', async () => {
     const storage = storageFixture(),
       cache = new PrivateReserveCache(() => {

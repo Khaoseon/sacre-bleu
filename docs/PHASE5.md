@@ -12,6 +12,8 @@ Le bandeau indique « Hors ligne · consultation uniquement » ou « Copie à ac
 
 La déconnexion retire la vue, les intentions de l’onglet et la copie privée, et le SDK propage le changement aux autres onglets. Les réponses tardives d’un store détruit ou d’une initialisation Auth ne doivent pas rétablir les données. Un échec d’effacement est annoncé avec la procédure d’effacement du site. Aucun cache API privé n’est ajouté au service worker ; les caches PWA ne contiennent que les ressources publiques. Thème, tri et démo gardent leurs clés historiques.
 
+Après expiration du jeton pendant une coupure prolongée, la copie connue reste consultable même lorsque les tentatives Auth se terminent. À la reconnexion, le SDK peut conserver son délai de reprise jusqu’à environ une minute ; l’application reste en lecture seule jusqu’à une authentification et une lecture réussies. Aucune RPC anonyme n’est envoyée pendant cette attente, et aucun message d’indisponibilité Auth ne vaut révocation d’appartenance.
+
 ## Export JSON utilisateur
 
 Réglages → Compte et réserve → Exporter la réserve JSON. Chaque membre peut exporter le snapshot chargé ; hors ligne, l’interface précise qu’il peut être ancien. Le fichier est téléchargé localement, sans service tiers ni upload automatique.

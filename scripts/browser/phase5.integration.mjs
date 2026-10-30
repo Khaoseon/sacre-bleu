@@ -369,8 +369,17 @@ try {
   });
   await page.reload();
   await page.getByRole('heading', { name: 'Votre stock' }).waitFor();
+  // Let Auth finish its actual network retries: an unavailable refresh is not logout.
+  await page.waitForTimeout(32_000);
+  assert.equal(
+    await page.getByRole('heading', { name: 'Votre stock' }).isVisible(),
+    true,
+    'Expired offline session remains consultable after Auth retries',
+  );
   await context.setOffline(false);
-  await page.getByText('Synchronisé', { exact: true }).waitFor();
+  // The locked SDK keeps a failed refresh in a 60s cooldown. Keep the copy
+  // visible throughout, then require a real successful authenticated refresh.
+  await page.getByText('Synchronisé', { exact: true }).waitFor({ timeout: 75_000 });
   await settings();
   await choose();
   await page.getByRole('button', { name: 'Fermer l’aperçu' }).click();
@@ -397,7 +406,13 @@ try {
   await page.getByRole('heading', { name: 'Votre stock' }).waitFor();
   assert.equal(await page.getByText('Riz fictif', { exact: true }).count(), 0);
   await settings();
+  const offlineLogoutReload = page.waitForEvent('framenavigated', {
+    predicate: (frame) => frame === page.mainFrame(),
+  });
   await page.getByRole('button', { name: 'Se déconnecter', exact: true }).click();
+  // ReserveAuth deliberately reloads after failed remote logout to clear SDK memory.
+  await offlineLogoutReload;
+  await page.waitForLoadState('domcontentloaded');
   await page.getByRole('button', { name: 'Se connecter', exact: true }).waitFor();
   assert.equal(
     await page.evaluate(

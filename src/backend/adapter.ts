@@ -29,9 +29,16 @@ export class SupabaseBackend implements ReserveBackend {
     write = true,
   ): Promise<Json> {
     try {
+      const signal = AbortSignal.timeout(10000);
+      const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
+      if (signal.aborted || sessionError || !sessionData.session)
+        throw new BackendError(
+          'Reconnexion au compte en cours. La copie reste en lecture seule.',
+          'unavailable',
+        );
       const { data, error, status } = await this.client
         .rpc(name, args as never)
-        .abortSignal(AbortSignal.timeout(10000));
+        .abortSignal(signal);
       if (error) throw backendError(error, write && (status === 0 || status >= 500));
       return data;
     } catch (error) {

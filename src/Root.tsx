@@ -27,6 +27,17 @@ const cloudPersonalAccess = import.meta.env.MODE === 'cloud';
 const initialLink = consumeLink(window.location, window.history);
 let confirmation: { token: string; promise: Promise<void> } | null = null;
 
+function cachedOfflineSession(): Session | null {
+  if (navigator.onLine) return null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) ?? 'null');
+    if (saved?.user?.id && privateCache.read(saved.user.id)) return saved as Session;
+  } catch {
+    /* No usable private copy. */
+  }
+  return null;
+}
+
 function Gate({
   title,
   children,
@@ -690,15 +701,7 @@ export default function Root() {
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null | undefined>(() => {
     if (!client) return null;
-    if (!navigator.onLine) {
-      try {
-        const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) ?? 'null');
-        if (saved?.user?.id && privateCache.read(saved.user.id)) return saved as Session;
-      } catch {
-        /* No usable private copy: wait for the SDK. */
-      }
-    }
-    return undefined;
+    return cachedOfflineSession() ?? undefined;
   });
   const [privacyError, setPrivacyError] = useState('');
   const [incoming, setIncoming] = useState<IncomingLink>(initialLink);
@@ -735,6 +738,10 @@ export default function Root() {
       if (!active) return;
       // A late init/refresh response cannot undo an explicit local logout.
       if (signedOutLocally.current && next) return;
+      // Retryable refresh errors emit INITIAL_SESSION/null without deleting the
+      // stored session. Keep the known account's read-only copy during an outage.
+      if (!next && _event === 'INITIAL_SESSION' && !signedOutLocally.current)
+        next = cachedOfflineSession();
       if (identity.current !== (next?.user.id ?? null)) {
         if (identity.current) {
           try {
@@ -761,7 +768,7 @@ export default function Root() {
       .getSession()
       .then(({ data, error }) => {
         if (active && !eventReceived && !signedOutLocally.current) {
-          const next = error ? null : data.session;
+          const next = error ? cachedOfflineSession() : (data.session ?? cachedOfflineSession());
           try {
             if (next) privateCache.activate(next.user.id);
             else privateCache.clear();
@@ -773,7 +780,7 @@ export default function Root() {
         }
       })
       .catch(() => {
-        if (active) setSession(null);
+        if (active && !signedOutLocally.current) setSession(cachedOfflineSession());
       });
     return () => {
       active = false;
