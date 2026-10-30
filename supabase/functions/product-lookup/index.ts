@@ -1,6 +1,7 @@
 import { OpenFoodFactsProvider } from '../../../src/productLookupServer.ts';
 import { createLookupHandler, LookupAuthError } from '../../../src/productLookupHandler.ts';
 import type { LookupSlot } from '../../../src/productInfo.ts';
+import { DEFAULT_OFF_USER_AGENT } from '../../../src/offIdentity.ts';
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -10,7 +11,7 @@ declare const Deno: {
 const api = Deno.env.get('SUPABASE_URL')!;
 const key = Deno.env.get('SUPABASE_ANON_KEY')!;
 const provider = new OpenFoodFactsProvider({
-  userAgent: 'App_reserve/0.1.0 (https://github.com/Khaoseon)',
+  userAgent: Deno.env.get('OFF_USER_AGENT') ?? DEFAULT_OFF_USER_AGENT,
   intervalMs: Number(Deno.env.get('OFF_MIN_INTERVAL_MS') ?? 6000),
 });
 async function budget(token: string, signal: AbortSignal, cooldown = 0): Promise<LookupSlot> {

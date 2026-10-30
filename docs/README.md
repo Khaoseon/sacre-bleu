@@ -45,4 +45,4 @@ Recommended remaining translation order: extract device acceptance/evidence when
 
 `config/cloud`, `config/cloud-email`, `config/pages-auth` and `config/private-access` are original-owner configuration evidence, not reusable instance templates. `docs/cloud-env.example` contains public placeholders. Use `instance:config` from INSTALL.md for your own exact project/origin. `supabase/config.toml` and migrations remain active local/schema sources.
 
-Existing `docs/screenshots/` files remain historical artifacts outside the README; screenshots are deferred until redesign. They require privacy/rights review before a public repository exposes them. The [branding guide](../assets/branding/README.md) documents existing source/derivatives and pending permission; no new artwork was generated.
+Existing `docs/screenshots/` files remain historical artifacts outside the README; screenshots are deferred until redesign. Their Phase 6D exposure review is recorded in [RELEASE.md](RELEASE.md). The [branding guide](../assets/branding/README.md) documents existing source/derivatives and Eloane ROURE's approved MIT credit; no new artwork was generated.

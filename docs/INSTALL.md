@@ -2,7 +2,7 @@
 
 This is the current installation guide. Historical phase reports and configurations under config/cloud, config/pages-auth and config/private-access describe the original installation: do not copy their URLs or apply them to a new project. This guide never requires access to the original instance.
 
-The interface remains French. Each instance uses its own Supabase project, users and frontend origin. Public source code does not make an instance's inventory public.
+The interface supports French (default) and English. Each instance uses its own Supabase project, users and frontend origin. Public source code does not make an instance's inventory public.
 
 ## 1. Prerequisites and local verification
 
@@ -31,10 +31,10 @@ Create a new Supabase project you control, PostgreSQL major 17 with pgcrypto in 
 
 Choose a unique Cloudflare Pages project name and its exact HTTPS origin. Use a separate frontend origin per instance: Auth, cache and service workers are origin-bound. Subpath hosting is not supported.
 
-Generate configuration locally (replace BOTH examples):
+Generate configuration locally (replace all examples, including your own public contact page):
 
 ```sh
-npm run instance:config -- --project-ref abcdefghijklmnopqrst --site-url https://your-pantry.pages.dev
+npm run instance:config -- --project-ref abcdefghijklmnopqrst --site-url https://your-pantry.pages.dev --off-user-agent "YourPantry/1.0.0 (https://your-public-contact.example/contact)"
 ```
 
 The ignored .tmp/instance directory contains Auth/API configuration, exact Edge origins, and frontend public settings. Generation makes no network calls and changes no remote settings. Re-running overwrites these generated files. Review them before use. Copy frontend.example to .env.cloud.local and replace the placeholder with YOUR project's publishable key. Only URL and publishable key belong in VITE_*; never service_role, secret keys, database passwords or account passwords.
@@ -86,7 +86,7 @@ npx --no-install supabase secrets set --env-file .tmp/instance/off.env --project
 npx --no-install supabase functions deploy product-lookup --project-ref YOUR_PROJECT_REF
 ```
 
-Keep verify_jwt=true (supabase/config.toml). OFF_ALLOWED_ORIGINS must contain only origins you intentionally allow. To use local dev:cloud, explicitly add its exact origin and callback to your own settings; the generator intentionally adds no localhost or preview origins. There is no privileged key in the function: it checks the user and membership before calling OFF. See OPEN_FOOD_FACTS.md for attribution, API usage registration, image privacy, manual fallback and third-party licensing. The current provider identification names the original project maintainer and its validator requires that exact contact pattern. Changing only the Edge User-Agent disables lookup: operators adopting their own identity must adapt the validator and its tests in src/productLookupServer.ts together with the Edge header before deploying. This is not currently an environment setting; see [the integration limitation](OPEN_FOOD_FACTS.md#budget-and-identification). Review [license scope and pending artwork permission](../THIRD_PARTY_NOTICES.md) before redistributing artwork.
+Keep verify_jwt=true (supabase/config.toml). OFF_ALLOWED_ORIGINS must contain only origins you intentionally allow. To use local dev:cloud, explicitly add its exact origin and callback to your own settings; the generator intentionally adds no localhost or preview origins. There is no privileged key in the function: it checks the user and membership before calling OFF. See OPEN_FOOD_FACTS.md for attribution, API usage registration, image privacy, manual fallback and third-party licensing. The generator requires an explicit operator identity and writes OFF_USER_AGENT into the ignored off.env alongside exact origins. It is a server-only setting, never a VITE_* variable. Use your application name/version and a public HTTPS contact or project page you control; do not include personal correspondence, credentials or tokens. No source-code edit is needed. See [identity format and fallback](OPEN_FOOD_FACTS.md#budget-and-identification). Review [license scope](../THIRD_PARTY_NOTICES.md) when redistributing artwork.
 
 ## 6. First reserve using existing authorization
 
@@ -128,4 +128,4 @@ Verify served CSP targets your own Supabase; no placeholder or original backend 
 
 User JSON export/restore is described in PHASE5.md; files and browser cache are private and unencrypted. Administrative backups are separate, optional tools (BACKUP.md and SAUVEGARDE_CHIFFREE.md contain historical operations). cloud-backup.mjs takes an explicit project reference. restore-local.mjs now also requires --project-ref matching both the archive and linked project; its container is isolated, but it reads source fingerprints remotely, so it is NOT an offline-only validation tool. phase5-preflight.mjs takes the expected reference as its positional argument and reads hosted metadata/fingerprints. Neither is required to initialize an instance. Do not use them against a project without authorization.
 
-No schema migration, public signup switch, existing production setting change or account/data operation is required by this implementation. The original deployment retains its closed UI and the same CSP backend origin when rebuilt with its existing public settings. External account creation, SMTP delivery, Edge deployment, Pages integration and physical-device acceptance still require human verification.
+No schema migration, public signup switch, existing production setting change or account/data operation is required by this implementation. The original deployment retains its closed UI and the same CSP backend origin when rebuilt with its existing public settings. End-to-end independent hosted deployment has not been tested; no second hosted installation is required for Phase 6D. External account creation, SMTP delivery, Edge deployment and Pages integration remain operator acceptance steps. The maintainer confirms the latest existing deployment works, including language switching; no new physical Android/iOS campaign was performed.

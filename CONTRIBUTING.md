@@ -30,4 +30,4 @@ Test changed business rules and relevant failures. For a migration, use a dispos
 
 No deployment, remote migration, repository setting change or merge is part of a contribution. The original `main` deploys automatically after merge; maintainers must review deployment impact even for documentation/metadata PRs.
 
-Submit only material you have permission to contribute under MIT. Third-party assets and data must retain their licenses and attribution; the [mascot permission](assets/branding/README.md) is still pending written confirmation. For a security concern, use [SECURITY.md](SECURITY.md), not a public issue or PR.
+Submit only material you have permission to contribute under MIT. Third-party assets and data must retain their licenses and attribution; the [mascot credit and MIT notice](assets/branding/README.md) must be preserved. For a security concern, use [SECURITY.md](SECURITY.md), not a public issue or PR.

@@ -4,6 +4,7 @@ import {
   type LookupResult,
   type ProductProvider,
 } from './productInfo.ts';
+import { isOffUserAgent } from './offIdentity.ts';
 
 export const OFF_FIELDS =
   'code,product_name_fr,product_name,brands,quantity,categories_tags,image_front_url';
@@ -27,13 +28,13 @@ export class OpenFoodFactsProvider implements ProductProvider {
   ) {}
   async lookup(barcode: string, signal: AbortSignal): Promise<LookupResult> {
     if (!isLookupBarcode(barcode)) return { status: 'unavailable', reason: 'invalid' };
+    if (!isOffUserAgent(this.options.userAgent))
+      return { status: 'unavailable', reason: 'disabled' };
     const now = this.options.now ?? Date.now;
     const cached = this.cache.get(barcode);
     if (cached && cached.until > now()) return cached.result;
     if (this.busy || this.next > now())
       return { status: 'unavailable', reason: this.limited ? 'rate-limit' : 'cooldown' };
-    if (!/^App_reserve\/[^\s]+ \(https:\/\/github\.com\/Khaoseon\)$/.test(this.options.userAgent))
-      return { status: 'unavailable', reason: 'disabled' };
     this.busy = true;
     this.limited = false;
     this.next =

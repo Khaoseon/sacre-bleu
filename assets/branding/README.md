@@ -1,16 +1,12 @@
 # Sacré bleu mascot and icons
 
-The established illustrated blue grocery bag was created by the application's second user and supplied for the app's branding. It is reused without redesign. The restrained navy (`#0d3161`), blue and cream palette in the artwork supplies the README's visual identity; the README references the existing 192 px icon, displayed at 112 px. No new bitmap, screenshot or font was introduced for Phase 6B2.
+Mascot by **Eloane ROURE**. The original artwork and its derivatives are redistributed under the [MIT license](LICENSE), with the creator's copyright retained. The maintainer confirms that permission has been obtained for MIT redistribution of the original and derivatives and authorizes this public credit. This records the maintainer's confirmation; no private correspondence is included or independently certified.
 
-## Permission and credit before publication
-
-The creator has agreed in principle to redistribution under MIT. **Written confirmation must be retained before public release**, and the maintainer must finalize their preferred public credit. No legal name or completed written authorization is asserted. Until resolved, the root MIT license for project code/documentation is not a claim that this separate artwork grant is already complete. Do not put private correspondence into the public repository; record completion and the approved public credit here when available.
-
-Affected artwork: `sacre-bleu-source.png`, `icon-master.png`, and all six PNG derivatives in the table below. Proposed credit for review: “Mascot by the app's second user”; replace only with the creator's agreed preference. This is a public-release prerequisite, not a request for another design.
+Affected artwork: `sacre-bleu-source.png`, `icon-master.png`, and all six PNG derivatives below. Preserve the artwork license when redistributing these files. The existing blue grocery bag is retained without redesign.
 
 ## Source and deterministic derivatives
 
-`sacre-bleu-source.png` is the original supplied 1080 × 1350 image, retained unchanged outside the published directory. The central region `(x=300, y=350, width=480, height=650)` was resized/centered on its original opaque navy background, removing outer margins without redrawing illustrated elements. Sharp 0.35.5 was available in the tooling environment; it is not a project build dependency.
+`sacre-bleu-source.png` is the supplied 1080 × 1350 image, retained outside the published directory. Phase 6D removed private Canva team/account/document metadata and normalized its author credit to Eloane ROURE; the compressed pixel stream is unchanged. Nonprivate AI-source provenance remains. The original metadata remains in Git history with the maintainer’s explicit authorization for historical disclosure: see the [exposure review](../../docs/RELEASE.md#public-exposure-audit). The central region `(x=300, y=350, width=480, height=650)` was resized/centered on its original opaque navy background, removing outer margins without redrawing illustrated elements. Sharp 0.35.5 was available in the tooling environment; it is not a project build dependency.
 
 `icon-master.png` is a 1024 × 1024 square master with the drawing centered at 880 px high. It is not published or precached. Only useful derivatives are served:
 
