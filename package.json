@@ -35,7 +35,8 @@
     "test:db:concurrency": "node --test --test-concurrency=1 scripts/backend/concurrency.integration.mjs",
     "db:types": "node scripts/backend/generate-types.mjs",
     "test:db:api": "node --test scripts/backend/auth-api.integration.mjs",
-    "db:lint": "supabase db lint --local --fail-on error"
+    "db:lint": "supabase db lint --local --fail-on error",
+    "backup:restore:local": "node scripts/backend/restore-local.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",

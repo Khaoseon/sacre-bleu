@@ -55,6 +55,8 @@ Chaque étape distante ci-dessous demande l'accord correspondant. Un accord de p
 
 ### A. Sauvegarder et vérifier avant migration
 
+**Préparation effectivement réalisée :** archive privée originale du 29 octobre vérifiée puis restaurée intégralement, correction du singleton et régressions validées avec la commande `npm run backup:restore:local -- CHEMIN_EXTRACTION_PRIVEE`. Les onze empreintes Cloud restent identiques à l'archive lors du dernier contrôle en lecture seule. Aucun nouvel export n'est nécessaire dans cet état ; refaire les empreintes avant exécution finale et arrêter si une écriture intervient. Les étapes d'export/restauration ci-dessous sont conservées comme procédure de renouvellement si nécessaire, pas comme demande d'export supplémentaire déjà autorisée. La restauration des comptes SQL ne vaut pas validation d'une nouvelle connexion HTTP Auth sur un projet restauré.
+
 1. Prévoir une courte fenêtre sans écritures sur les deux téléphones ; terminer toute demande incertaine avec la même clé avant fermeture. Ne pas vider les sessions ou journaux pour simplifier la recette.
 2. Après accord d'export des données/Auth, choisir avec l'utilisateur une destination privée **hors dépôt**, un mot de passe saisi uniquement dans son terminal interactif. Utiliser la procédure [SAUVEGARDE_CHIFFREE.md](SAUVEGARDE_CHIFFREE.md), avec l'exception explicitement contrôlée :
 
