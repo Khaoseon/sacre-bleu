@@ -83,7 +83,7 @@ const headers = Object.fromEntries(
         l
           .slice(i + 1)
           .trim()
-          .replace('https://uznbnihmdzxdnlxanjcl.supabase.co', api.origin),
+          .replace('__SUPABASE_ORIGIN__', api.origin),
       ];
     }),
 );

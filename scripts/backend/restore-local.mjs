@@ -1,13 +1,22 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { parseArgs } from 'node:util';
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: { 'project-ref': { type: 'string' } },
+});
+const expectedProject = values['project-ref'];
+if (!/^[a-z]{20}$/.test(expectedProject ?? '')) throw new Error('Explicit --project-ref required');
 
 const container = 'sacre-bleu-v1-archive-restore';
 import { outsideGit } from './backup-archive.mjs';
 import { validateRestoreHistory } from './restore-import.mjs';
-if (process.argv.length !== 3)
-  throw new Error('Usage: npm run backup:restore:local -- ABSOLUTE_PRIVATE_EXTRACTION_FOLDER');
-const folder = outsideGit(process.argv[2], process.cwd());
+if (positionals.length !== 1)
+  throw new Error(
+    'Usage: npm run backup:restore:local -- ABSOLUTE_PRIVATE_EXTRACTION_FOLDER --project-ref EXPECTED_SOURCE_REF',
+  );
+const folder = outsideGit(positionals[0], process.cwd());
 const manifest = JSON.parse(readFileSync(folder + '/manifest.json', 'utf8'));
 const metadata = manifest.metadata;
 const { createHash } = await import('node:crypto');
@@ -25,7 +34,7 @@ for (const entry of manifest.files) {
   )
     throw new Error('Extracted file integrity mismatch');
 }
-if (metadata.projectRef !== 'uznbnihmdzxdnlxanjcl') throw new Error('Unexpected archive source');
+if (metadata.projectRef !== expectedProject) throw new Error('Unexpected archive source');
 const migrationFiles = readdirSync(folder + '/migrations').sort();
 validateRestoreHistory(metadata.appliedMigrations, migrationFiles);
 if (
@@ -39,7 +48,7 @@ if (
 )
   throw new Error('Unverified migration file');
 const project = readFileSync('supabase/.temp/project-ref', 'utf8').trim();
-if (project !== 'uznbnihmdzxdnlxanjcl') throw new Error('Projet lié inattendu.');
+if (project !== expectedProject) throw new Error('Projet lié inattendu.');
 function run(command, args, input) {
   const result = spawnSync(command, args, {
     input,

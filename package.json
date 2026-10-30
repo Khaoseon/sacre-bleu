@@ -20,7 +20,7 @@
     "test:scanners:browser": "node scripts/browser/two-scanners.integration.mjs",
     "test:off:edge": "node --test scripts/backend/off-edge.integration.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src",
+    "test": "vitest run src && node --test scripts/backend/instance-config.test.mjs",
     "test:shared": "vitest run --config vitest.shared.config.ts",
     "env:local": "node scripts/backend/local-env.mjs",
     "backup:cloud": "node scripts/backend/cloud-backup.mjs create",
@@ -37,7 +37,9 @@
     "db:types": "node scripts/backend/generate-types.mjs",
     "test:db:api": "node --test scripts/backend/auth-api.integration.mjs",
     "db:lint": "supabase db lint --local --fail-on error",
-    "backup:restore:local": "node scripts/backend/restore-local.mjs"
+    "backup:restore:local": "node scripts/backend/restore-local.mjs",
+    "instance:config": "node scripts/backend/instance-config.mjs",
+    "instance:init": "node scripts/backend/instance-init.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",

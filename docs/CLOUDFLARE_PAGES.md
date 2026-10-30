@@ -1,3 +1,5 @@
+> Current independent installation instructions: [INSTALL.md](INSTALL.md). Owner-specific phase procedures below are historical, not a fresh installation guide.
+
 # Phase 4B — préparation et suivi de publication
 
 **Publication corrective V1 du 30 octobre 2026 :** PR #1 fusionnée après CI exacte verte et contrôles backend, déploiement production `de611bc3-412c-4277-b13a-c8418f5a0241` réussi sur `62f7f92bcb01`. Node 24.22.1 et commande/sortie vérifiés dans le journal distant ; référence confirmée dans l'interface et le module servi. Production automatique conservée, aucun réglage Pages modifié. [Bilan V1](HANDOFF_V1_STABILISATION.md). Les constats 4B ci-dessous conservent leur date.

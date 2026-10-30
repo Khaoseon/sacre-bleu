@@ -1,3 +1,5 @@
+> Phase 6B1: independent installation/configuration prepared on a review branch; no hosted settings or data changed. Current setup: [INSTALL.md](INSTALL.md).
+
 # Spécification produit — App_reserve
 
 **État courant — phase 5 livrée et clôturée le 30 octobre 2026 après autorisation globale :** consultation privée hors ligne, export JSON et restauration utilisateur guidée publiés via PR #3 et frontend applicatif `6fc72c965482`, seule septième migration additive appliquée. Aucune restauration réelle. [Contrat détaillé](PHASE5.md) et [bilan de livraison, données et limites](HANDOFF_5.md). Cet état remplace les anciennes mentions « phase 5 non commencée », « non publiée » et « cache uniquement en mémoire » ; les paragraphes suivants gardent leur contexte historique. Aucune phase 6/V1.1 commencée.

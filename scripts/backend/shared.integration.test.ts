@@ -11,6 +11,7 @@ import { parseLink, invitationLink } from '../../src/backend/links';
 import { SharedPantryStore } from '../../src/backend/store';
 import type { ReserveBackend } from '../../src/backend/contracts';
 import { publishedClient } from './legacy-client.mjs';
+import { initializeReserve } from './instance-init.mjs';
 
 const manifest = JSON.parse(readFileSync('node_modules/supabase/package.json', 'utf8'));
 const status = JSON.parse(
@@ -118,7 +119,11 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
     const owner = await account(),
       member = await account();
     console.log('PASS signup → Mailpit email → confirmation → sign in (two accounts).');
-    const reserve = await owner.backend.createReserve(crypto.randomUUID(), 'Integration 2B');
+    const bootstrapId = crypto.randomUUID();
+    expect(await initializeReserve(owner.client, bootstrapId)).toMatch(/initialized/);
+    expect(await initializeReserve(owner.client, bootstrapId)).toMatch(/nothing created/);
+    // Replay the same authorized request to obtain its receipt without a second reserve.
+    const reserve = await owner.backend.createReserve(bootstrapId, 'Ma réserve');
     const reserveId = reserve.reserve_id;
     expect((await owner.backend.getSnapshot(reserveId))?.products.length).toBe(0);
     expect(await member.backend.getSnapshot(reserveId)).toBeNull();
