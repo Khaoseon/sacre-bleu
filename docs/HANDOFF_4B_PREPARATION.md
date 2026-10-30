@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Transmission — préparation de la phase 4B
 
 **Document historique. Phase 4B désormais clôturée le 29 octobre 2026 : état actuel et transmission dans [HANDOFF_4B.md](HANDOFF_4B.md).**

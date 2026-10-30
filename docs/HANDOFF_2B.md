@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Transmission — clôture de la phase 2B
 
 État au 27 octobre 2026. Lire d’abord `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md` et `VALIDATION.md`. **2B finalisée localement ; ne pas commencer 2C/3 ni créer de ressource distante sans nouvelle demande.** Conserver le design validé.

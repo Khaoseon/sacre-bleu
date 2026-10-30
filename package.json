@@ -39,7 +39,9 @@
     "db:lint": "supabase db lint --local --fail-on error",
     "backup:restore:local": "node scripts/backend/restore-local.mjs",
     "instance:config": "node scripts/backend/instance-config.mjs",
-    "instance:init": "node scripts/backend/instance-init.mjs"
+    "instance:init": "node scripts/backend/instance-init.mjs",
+    "notices:generate": "node scripts/third-party-notices.mjs",
+    "notices:check": "node scripts/third-party-notices.mjs --check"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
@@ -65,5 +67,11 @@
   },
   "engines": {
     "node": ">=24"
+  },
+  "description": "A private shared household pantry PWA with transactional stock, barcode scanning and read-only offline access.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Khaoseon/App_reserve.git"
   }
 }

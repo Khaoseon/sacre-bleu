@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Sacré bleu — essais HTTPS et installation téléphone
 
 **Recette 4B clôturée le 29 octobre 2026 après confirmation globale de l’utilisateur pour Samsung. iPhone non testé, limite acceptée.** Adresse canonique : **https://sacre-bleu.pages.dev**. Cloudflare Pages Free, interface publique et réserve privée par Supabase Auth/RLS. Deux comptes existants ; aucune nouvelle inscription, invitation ou donnée de test nécessaire. Ne pas commencer la phase 5.

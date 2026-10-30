@@ -27,6 +27,7 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run format:check
+      - run: npm run notices:check
       - run: npm run build
       - run: npm run build:cloud
         env:

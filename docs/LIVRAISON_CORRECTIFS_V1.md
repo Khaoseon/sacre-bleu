@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Livraison contrôlée des correctifs V1
 
 **Livraison exécutée et lot clôturé le 30 octobre 2026 après autorisation globale explicite.** CI verte sur `455c047`, deux migrations autorisées appliquées, Edge v3 ACTIVE/JWT conservé, PR #1 fusionnée et Cloudflare publié sur `62f7f92bcb01`. Données métier/Auth identiques à la sauvegarde ; inscriptions toujours fermées. Bilan faisant foi : [HANDOFF_V1_STABILISATION.md](HANDOFF_V1_STABILISATION.md). Les états et interdictions de préparation ci-dessous sont conservés comme historique ; ils ne décrivent plus l'état de production. Aucun accord de retour arrière ni de phase 5/V1.1 n'en découle.

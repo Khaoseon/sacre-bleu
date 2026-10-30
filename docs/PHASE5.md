@@ -1,85 +1,49 @@
-# Phase 5 — consultation privée et sauvegarde utilisateur
+# Offline access, user backup and restore
 
-État au 30 octobre 2026 : **phase 5 publiée et clôturée après autorisation globale**, PR #3 fusionnée, seule migration `20261030000100_user_restore.sql` appliquée, frontend applicatif `6fc72c965482` contrôlé sur HTTPS. Aucun import sur la réserve réelle. La phase 6 et la V1.1 ne sont pas commencées. Voir [le bilan de livraison](HANDOFF_5.md).
+Current user-facing recovery contract. The [French phase-5 record](history/PHASE5_FR.md) retains the full original example and delivery context. Administrative backups including Auth are separate: [BACKUP.md](BACKUP.md).
 
-## Consultation hors ligne
+## Private read-only copy
 
-Après une connexion et une lecture réussies, le dernier snapshot cohérent du stock et des courses est conservé dans `localStorage`, sous `app-reserve.private.v1:<clé Auth du projet>:<compte>`. Un marqueur de compte actif interdit à une ancienne instance de réécrire la copie après déconnexion/changement de compte. Une révision inférieure ne remplace pas une copie plus récente provenant d’un autre onglet. Le journal de reprise reste séparé en `sessionStorage` ; il ne devient pas une file d’édition hors ligne.
+After authentication and a successful consistent read, store the last stock/shopping snapshot in `localStorage` under `app-reserve.private.v1:<project Auth key>:<account>`. An active-account marker prevents an old instance rewriting it after signout/account change; an older revision cannot overwrite a newer tab's copy. Pending write intentions remain separately in `sessionStorage`, scoped by account/reserve.
 
-La PWA doit avoir été chargée et son worker installé au moins une fois. Une relance sans réseau utilise la session locale connue et sa seule copie privée, même si le jeton d’accès a expiré ; cela n’autorise aucune requête ou écriture serveur. Aucun catalogue n’est proposé avant la première synchronisation, après déconnexion ou depuis un autre compte/projet. Le cache est une aide à la consultation, pas un coffre chiffré ni une sauvegarde durable : suppression/éviction du stockage navigateur = perte de la copie. La limite du format (2 Mo, 2 000 lignes de chaque type) s’applique aussi à la validation de la copie ; une copie non conservable est signalée, sans faux succès de stockage.
+Offline reopening requires a previously loaded PWA shell and known local session/copy. An expired access token does not erase this local consultation permission, and grants no server access. No cache appears before first synchronization, after signout, or for another project/account. Display the last successful synchronization time and disable all writes until authentication and a fresh read succeed. Reconnect/focus/visibility, manual refresh and visible-page polling try to reread. SDK retry backoff after expiry can delay recovery by about a minute.
 
-Le bandeau indique « Hors ligne · consultation uniquement » ou « Copie à actualiser », avec la date locale du dernier succès. Toutes les mutations passent par `store.writable` et sont bloquées sans connexion ou avant une nouvelle lecture réussie. Retour réseau/visibilité/focus, actualisation manuelle et polling visible existants relisent le serveur. Un navigateur qui se croit en ligne pendant une panne affiche une copie à actualiser, sans autoriser de nouvelles mutations après échec. Un refus d’appartenance efface la copie. Une révocation distante ne peut être découverte sans réseau ; la déconnexion locale reste disponible hors ligne.
+This copy is **unencrypted, evictable browser storage**, not a durable backup. A remote revocation is unknowable while offline. Membership refusal online clears the copy. Signout clears private views, pending intentions and cache, propagates through the SDK to other tabs and guards against late responses restoring them. A removal failure is reported with site-storage cleanup instructions. The service worker caches public shell assets, never private API responses. Browser storage/format limits can prevent caching; failures are shown without pretending it succeeded.
 
-La déconnexion retire la vue, les intentions de l’onglet et la copie privée, et le SDK propage le changement aux autres onglets. Les réponses tardives d’un store détruit ou d’une initialisation Auth ne doivent pas rétablir les données. Un échec d’effacement est annoncé avec la procédure d’effacement du site. Aucun cache API privé n’est ajouté au service worker ; les caches PWA ne contiennent que les ressources publiques. Thème, tri et démo gardent leurs clés historiques.
+## User export format
 
-Après expiration du jeton pendant une coupure prolongée, la copie connue reste consultable même lorsque les tentatives Auth se terminent. À la reconnexion, le SDK peut conserver son délai de reprise jusqu’à environ une minute ; l’application reste en lecture seule jusqu’à une authentification et une lecture réussies. Aucune RPC anonyme n’est envoyée pendant cette attente, et aucun message d’indisponibilité Auth ne vaut révocation d’appartenance.
+In Compte et réserve, either member can export the loaded snapshot as JSON. Offline export warns that it may be old. Download is local; there is no automatic third-party upload. The file is **confidential and unencrypted**: store it outside Git/hosting in protected personal storage.
 
-## Export JSON utilisateur
+The authoritative validator is [model.ts](../src/model.ts), mirrored by the seventh SQL migration. Format `sacre-bleu`, version 1, has exactly `format`, `version`, `exportedAt`, `products` and `shopping`. All object fields are required; optional values use null. No unknown fields, coercions or future versions are accepted.
 
-Réglages → Compte et réserve → Exporter la réserve JSON. Chaque membre peut exporter le snapshot chargé ; hors ligne, l’interface précise qu’il peut être ancien. Le fichier est téléchargé localement, sans service tiers ni upload automatique.
+| Object   | Fields                                                                                                                           |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Product  | `id`, `name`, `barcode`, `brand`, `size`, `unit`, `category`, `quantity`, `minimum`, `off_barcode`, `off_image_url`, `updatedAt` |
+| Shopping | `id`, `product_id`, `name`, `quantity`, `checked`                                                                                |
 
-Le JSON est **confidentiel et non chiffré**. Le conserver dans un dossier/support personnel protégé hors Supabase, jamais dans Git, un répertoire publié ou un partage public. L’application rappelle cette propriété avant export et import. Pour le périmètre administratif chiffré incluant Auth et journaux, conserver [BACKUP.md](BACKUP.md).
+Lowercase UUIDs link rows within the file only. Names: 1–120 characters; brands: 1–80 or null; codes: 4–32 digit strings. Quantities/minimum: integers 0–9999. Package size: positive and at most 99999, paired with a supported unit or both null. Categories/units match the model. Timestamps are UTC ISO with milliseconds. Zero shopping quantity requires checked status. Reject duplicate IDs/barcodes, orphan links or a second unchecked linked entry for the same product. Maximum 2,000 products, 2,000 shopping rows and 2,000,000 bytes, enforced for the file/server representation.
 
-Schéma strict, version 1 :
+OFF references/provenance survive; images remain external URLs, not embedded files or guaranteed future downloads. Non-null private `photo_path` prevents export/restore rather than claiming an incomplete image backup. Demo photos and its older raw export are not this shared format.
 
-```json
-{
-  "format": "sacre-bleu",
-  "version": 1,
-  "exportedAt": "2026-10-30T10:00:00.000Z",
-  "products": [
-    {
-      "id": "00000000-0000-0000-0000-000000000101",
-      "name": "Riz fictif",
-      "barcode": "00123456",
-      "brand": null,
-      "size": 500,
-      "unit": "g",
-      "category": "Féculents",
-      "quantity": 0,
-      "minimum": 2,
-      "off_barcode": null,
-      "off_image_url": null,
-      "updatedAt": "2026-10-30T09:00:00.000Z"
-    }
-  ],
-  "shopping": [
-    {
-      "id": "00000000-0000-0000-0000-000000000102",
-      "product_id": "00000000-0000-0000-0000-000000000101",
-      "name": "Riz fictif",
-      "quantity": 3,
-      "checked": false
-    }
-  ]
-}
-```
+Excluded: accounts, emails, password hashes, sessions/tokens, memberships/rights, invitations, reserve name/UUID, secrets, server versions, receipts and scan history. A user JSON export cannot recreate Auth.
 
-Les champs sont tous requis ; `null` désigne un champ facultatif absent. UUID en minuscules, noms 1–120 caractères, marques 1–80 ou null, codes 4–32 chiffres conservés comme chaînes, quantités/seuils entiers 0–9999. Taille >0 et ≤99999 avec une unité autorisée ; taille et unité nulles ensemble. Dates UTC ISO avec millisecondes. Catégories/unités identiques au modèle. Une quantité nulle de courses exige un cochage. Aucun identifiant dupliqué, code dupliqué, lien orphelin ou second article lié non coché pour un même produit. Les champs inconnus et versions futures sont refusés ; aucune coercition de chaîne en quantité/cochage. Maximum 2 000 produits, 2 000 articles, 2 000 000 octets côté fichier et représentation serveur.
+## Guided replacement
 
-Les références OFF et leur provenance sont conservées, avec les licences/attributions existantes. Les images OFF restent consultables via leur URL en ligne ; elles ne sont ni téléchargées ni embarquées, et leur disponibilité future n’est pas garantie. Aucun Storage/photo privée n’est actuellement disponible dans le produit partagé. Une référence `photo_path` non nulle interrompt l’export et la restauration plutôt que d’annoncer une sauvegarde d’image incomplète. Les photos locales de démonstration et son ancien export brut ne font pas partie de ce format partagé.
+Online, owner only, on an existing accessible reserve, with no pending uncertain request:
 
-Exclusions explicites : comptes, emails, mots de passe/empreintes, tokens, membres/droits, invitations, nom/UUID de réserve, secrets, versions serveur, reçus et historiques de scans. Les UUID produits/articles ne sont que des clés de liaison dans le fichier.
+1. Choose a file; strict local validation occurs before writes.
+2. Review current/replacement products, shopping, links, quantities and totals. This replaces the entire catalogue/stock/shopping, with no implicit merge by name or barcode.
+3. Download the before-replacement backup and retain it, then explicitly confirm replacement. Both actions gate the restore button.
+4. `restore_reserve` independently revalidates rights/payload, acquires the same reserve lock as older writers, and checks the preview revision. If changed, HTTP 409/code `40001` requires a new preview.
+5. One transaction replaces catalogue, stock and shopping, generates fresh UUIDs/remaps links, preserves exact quantities and zero-stock products, and advances the reserve revision once. It does not perform scan deductions. Existing reserve, accounts, members, rights and technical journals survive. Earlier scan compensations become stale.
+6. Effects and idempotent receipt commit together. The UI also requires a current snapshot before success. SQL failure rolls everything back without a successful receipt. A lost response requires recovery of the **same intention UUID**, including after reload; do not start a new import to resolve an uncertain one.
 
-## Restauration guidée
+The pending payload is private material in the tab recovery journal and protected server request journal. It never goes into the worker. Replay of the same UUID returns the original receipt without changing IDs again; reusing it with a different payload is refused. A genuinely new restore intention replaces again with fresh IDs rather than adding stock. There is no scan undo for restore: recover by preparing another reviewed replacement from the saved before-file, after resolving any uncertain request.
 
-En ligne, propriétaire uniquement, sur une réserve existante accessible et sans demande en attente :
+## Unavailable or lost hosting
 
-1. Choisir le JSON. Validation locale stricte avant tout appel d’écriture.
-2. Examiner l’aperçu : nombre de produits/articles et total d’emballages avant/après ; listes détaillées actuelles et à restaurer, quantités, cochages, liens et métadonnées principales. Toute la réserve produit/courses sera remplacée ; aucune fusion implicite par nom ou code.
-3. Télécharger la sauvegarde avant remplacement et vérifier qu’elle est conservée. Cocher la confirmation explicite. Sans ces deux actions, le bouton de restauration reste désactivé.
-4. La RPC `restore_reserve` valide de nouveau le fichier et les droits, prend le même verrou de réserve que les anciennes commandes, puis compare la révision de l’aperçu. Si elle a changé, HTTP 409/code 40001 et nouvel aperçu obligatoire.
-5. Une seule transaction remplace produits, stocks et courses ; les identifiants sont tous régénérés et les liens sont remappés. Quantités exactes, produits à zéro conservés, aucune commande de scan ni déduction de courses. Comptes, membres, réserve, droits et journaux existants sont conservés. La révision avance une fois, invalidant les anciennes compensations.
-6. Le reçu idempotent et les données sont validés ensemble ; l’interface attend aussi un snapshot courant avant d’annoncer le succès. En cas d’échec SQL, tout l’état antérieur revient, sans reçu de réussite. En cas de résultat réseau incertain, utiliser « Reprendre la demande » avec la clé initiale, même après rechargement ; ne pas relancer un nouvel import. Le payload est temporairement privé dans le journal de reprise de l’onglet et dans le journal serveur protégé, jamais dans le worker.
+Consult your provider's current Dashboard/notifications and [pause guidance](https://supabase.com/docs/guides/platform/free-project-pausing); historical free-tier deadlines are not guarantees. Keep exports outside Supabase. There is no keepalive automation.
 
-Une nouvelle intention avec le même fichier remplace les données : elle ne cumule ni stocks ni courses, et recrée ses identifiants. Le rejeu de la même clé retourne le reçu initial sans recréer les identifiants. Une ancienne clé avec un autre fichier est refusée. Une restauration est volontairement une opération de remplacement et n’a pas d’annulation de scan ; pour récupérer, préparer un nouvel aperçu depuis le fichier « avant remplacement » conservé. Une demande incertaine doit d’abord être résolue.
+During an outage, consult/export the dated copy if needed. If the provider offers Resume, reactivate, wait for Auth/API, sign in and refresh. Do not overwrite an intact resumed project with an older file. If the project is lost, use [INSTALL.md](INSTALL.md) for a new owned project, migrations, exact origins, new confirmed accounts and an empty reserve. Then restore through the owner's normal preview/confirmation flow and invite the second member. Do not reuse old Auth UUIDs or browser sessions blindly.
 
-## Pause et perte d’un projet Free
-
-Les notifications Supabase et l’export externe restent nécessaires. La [documentation officielle de pause](https://supabase.com/docs/guides/platform/free-project-pausing), consultée le 30 octobre 2026, décrit une pause après faible activité sur sept jours et une fenêtre de reprise d’un an ; suivre l’échéance du Dashboard. Aucune tâche de maintien artificiel et aucun forfait payant ne sont ajoutés.
-
-Pendant l’indisponibilité : consulter la copie privée, exporter si nécessaire en tenant compte de sa date, ne pas recréer une réserve par réflexe. Si le Dashboard propose **Resume project**, réactiver puis attendre le retour d’Auth/API, se reconnecter si nécessaire et actualiser. Ne pas importer un fichier ancien sur un projet revenu intact.
-
-Si le projet est perdu : préparer une cible neuve après accord, appliquer les migrations versionnées, reconfigurer séparément les secrets/Auth/SMTP/origines exactes, établir de nouveaux comptes confirmés et une réserve vide avec invitation du second membre. Se connecter normalement, contrôler les droits, puis importer le JSON via le propriétaire avec aperçu et confirmation. Aucune ancienne session/UUID Auth ne doit être recopiée. La récupération complète de l’ancien Auth suit la procédure administrative distincte, jamais l’import utilisateur.
-
-La récupération du domaine métier sur réserve vierge et les erreurs/interruptions sont testées localement avec des comptes fictifs. Aucune pause/reprise réelle, restauration Cloud ou création de projet de remplacement n’est exécutée pendant cette phase. L’installation et la relance sur les deux téléphones réels restent la recette de phase 6.
+Local automated recovery validates synthetic replacement and rollback, not a real hosted disaster recovery or complete physical-device acceptance. Historical delivery evidence: [HANDOFF_5.md](HANDOFF_5.md).

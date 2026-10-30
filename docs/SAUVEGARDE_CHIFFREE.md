@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Sauvegarde chiffrée de la réserve
 
 **Phase 5 appliquée et clôturée après accord le 30 octobre 2026 :** les sept versions sont alignées, utiliser la commande ordinaire ci-dessous pour une nouvelle sauvegarde administrative. `--before-phase5` reste disponible uniquement pour l’ancien état de six migrations appliquées et la septième en attente ; il refuse l’état Cloud actuel et n’applique rien. La procédure utilisateur JSON publiée est séparée, sans Auth ni secret : [PHASE5.md](PHASE5.md). Aucun nouvel export administratif ni import réel réalisé pendant cette publication ; archive antérieure conservée.

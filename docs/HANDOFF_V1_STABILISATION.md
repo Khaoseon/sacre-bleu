@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Clôture du lot de stabilisation V1 — 30 octobre 2026
 
 **Lot livré et clôturé après autorisation globale explicite de l'utilisateur.** Sacré bleu reste accessible sur [sacre-bleu.pages.dev](https://sacre-bleu.pages.dev). Phase 5 et V1.1 non commencées. Ce bilan décrit l'état courant ; les rapports de préparation conservent leur historique daté.

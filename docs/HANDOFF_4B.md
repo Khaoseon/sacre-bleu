@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Clôture et transmission — phase 4B
 
 **Livraison corrective ultérieure clôturée le 30 octobre 2026 :** [HANDOFF_V1_STABILISATION.md](HANDOFF_V1_STABILISATION.md), frontend `62f7f92bcb01`, Edge v3, six migrations Cloud. Ce rapport 4B reste daté du 29 octobre ; les correctifs ne sont plus seulement locaux. Limite physique du bug de substitution conservée, phases 5/V1.1 non commencées.

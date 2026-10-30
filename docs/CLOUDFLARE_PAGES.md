@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 > Current independent installation instructions: [INSTALL.md](INSTALL.md). Owner-specific phase procedures below are historical, not a fresh installation guide.
 
 # Phase 4B — préparation et suivi de publication

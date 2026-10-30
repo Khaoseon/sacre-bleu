@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Rapport de clôture — phase 2C
 
 **27 octobre 2026 — phase 2C terminée.** Supabase Cloud est connecté et validé pour les deux comptes, en conservant le fonctionnement local. La PWA reste consultée depuis cet ordinateur : aucun hébergement public n’a été déployé.
