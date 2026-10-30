@@ -1,5 +1,6 @@
 // Domain port shared by the typed Supabase adapter and isolated tests.
 import type { Database, Tables } from './database.generated';
+import type { UserBackup } from '../model';
 export type UUID = string;
 export type RequestId = UUID; // Generate once per user intent; reuse for network retries.
 export type ReserveRow = Tables<'reserves'>;
@@ -31,6 +32,7 @@ export type ProductFields = Pick<
   | 'off_image_url'
 > & { minimum: number | null };
 export type ReserveCommand =
+  | { action: 'restore'; payload: { backup: UserBackup; expected_revision: number } }
   | {
       action: 'create_product';
       payload: { id?: UUID; name: string; initial_quantity?: number } & Partial<

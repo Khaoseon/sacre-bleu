@@ -224,6 +224,15 @@ export type Database = {
         Args: { p_action: string; p_payload: Json; p_request_id: string; p_reserve_id: string };
         Returns: Json;
       };
+      restore_reserve: {
+        Args: {
+          p_backup: Json;
+          p_expected_revision: number;
+          p_request_id: string;
+          p_reserve_id: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       [_ in never]: never;

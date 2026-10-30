@@ -168,6 +168,42 @@ test('local Auth sessions, RLS and invitations work through the real Data API', 
       },
     );
     assert.equal(direct.status, 403, 'Direct table write rejected by grants');
+    const restorePayload = {
+      p_request_id: randomUUID(),
+      p_reserve_id: reserve.reserve_id,
+      p_expected_revision: snapshot.reserve.revision,
+      p_backup: {
+        format: 'sacre-bleu',
+        version: 1,
+        exportedAt: '2026-10-30T10:00:00.000Z',
+        products: [],
+        shopping: [],
+      },
+    };
+    assert.equal(
+      (await request('/rest/v1/rpc/restore_reserve', restorePayload)).response.status,
+      401,
+      'Anonymous restore denied',
+    );
+    assert.equal(
+      (await request('/rest/v1/rpc/restore_reserve', restorePayload, receiver.token)).response
+        .status,
+      403,
+      'Member restore denied',
+    );
+    const restored = await success('/rest/v1/rpc/restore_reserve', restorePayload, owner.token);
+    assert.deepEqual(
+      await success('/rest/v1/rpc/restore_reserve', restorePayload, owner.token),
+      restored,
+      'HTTP replay idempotent',
+    );
+    const conflict = await request(
+      '/rest/v1/rpc/restore_reserve',
+      { ...restorePayload, p_request_id: randomUUID() },
+      owner.token,
+    );
+    assert.equal(conflict.response.status, 409, 'Stale restore returns bounded HTTP conflict');
+    assert.equal(conflict.data.code, '40001', 'Installed legacy clients recognize conflict code');
   } finally {
     if (users.length) {
       await admin.query('delete from public.reserves where owner_id=any($1::uuid[])', [users]);

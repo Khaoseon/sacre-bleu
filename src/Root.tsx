@@ -7,7 +7,9 @@ import { AppearanceSettings, type ThemeController } from './AppearanceSettings';
 import { AppInformation } from './AppInformation';
 import { useUpdateBlocker } from './AppUpdates';
 import { useThemePreference } from './theme';
-import { client } from './backend/client';
+import { AUTH_STORAGE_KEY, client } from './backend/client';
+import { PrivateReserveCache } from './storage';
+import { BackupSettings } from './BackupSettings';
 import { SupabaseBackend } from './backend/adapter';
 import { ReserveAuth } from './backend/auth';
 import { backendError } from './backend/errors';
@@ -18,11 +20,23 @@ import { EdgeProductProvider } from './productLookupClient';
 
 const backend = client ? new SupabaseBackend(client) : null;
 const auth = client ? new ReserveAuth(client) : null;
+const privateCache = new PrivateReserveCache(() => localStorage, AUTH_STORAGE_KEY);
 // UI policy only: public signup must also be disabled in Supabase Auth.
 const cloudPersonalAccess = import.meta.env.MODE === 'cloud';
 // Read and clean BEFORE React's first render; StrictMode must not consume a link twice.
 const initialLink = consumeLink(window.location, window.history);
 let confirmation: { token: string; promise: Promise<void> } | null = null;
+
+function cachedOfflineSession(): Session | null {
+  if (navigator.onLine) return null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) ?? 'null');
+    if (saved?.user?.id && privateCache.read(saved.user.id)) return saved as Session;
+  } catch {
+    /* No usable private copy. */
+  }
+  return null;
+}
 
 function Gate({
   title,
@@ -75,11 +89,13 @@ function AuthForm({
   onDemo,
   theme,
   linkError,
+  onConnected,
 }: {
   invitation?: Invitation;
   onDemo: () => void;
   theme: ThemeController;
   linkError?: string;
+  onConnected: () => Promise<void>;
 }) {
   const [signup, setSignup] = useState(false);
   const [email, setEmail] = useState('');
@@ -127,7 +143,10 @@ function AuthForm({
             if (signup && !cloudPersonalAccess) {
               await auth.signUp(email.trim(), password, location.origin);
               setSent(true);
-            } else await auth.signIn(email.trim(), password);
+            } else {
+              await auth.signIn(email.trim(), password);
+              await onConnected();
+            }
           } catch (e) {
             setError((e as Error).message);
           } finally {
@@ -247,6 +266,13 @@ function Membership({
     let active = true;
     setError('');
     setReserves(null);
+    if (!navigator.onLine && !invitation && !creation) {
+      const cached = privateCache.read(session.user.id);
+      if (cached) {
+        onSelect(cached.snapshot.reserve.id);
+        return;
+      }
+    }
     backend!
       .listReserves()
       .then((rows) => {
@@ -255,7 +281,11 @@ function Membership({
         if (!invitation && rows.length === 1 && !creation) onSelect(rows[0].id);
       })
       .catch((e) => {
-        if (active) setError(backendError(e).message);
+        if (active) {
+          const cached = privateCache.read(session.user.id);
+          if (!invitation && !creation && cached) onSelect(cached.snapshot.reserve.id);
+          else setError(backendError(e).message);
+        }
       });
     return () => {
       active = false;
@@ -567,9 +597,11 @@ function SharingSettings({
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
+      <BackupSettings store={store} />
       <p className="form-note">
-        Photos partagées et consultation après fermeture hors ligne à venir. Les quantités sont
-        actualisées toutes les cinq secondes lorsque l’application est visible.
+        Le dernier stock et les courses sont conservés dans ce navigateur pour consultation hors
+        ligne, sans modification possible. Sur un appareil partagé, déconnectez-vous pour effacer
+        cette copie privée. Les données locales ne sont pas chiffrées par l’application.
       </p>
       <button className="danger-button" onClick={logout}>
         Se déconnecter
@@ -648,7 +680,15 @@ function SharedScope({
 }) {
   const [store, setStore] = useState<SharedPantryStore | null>(null);
   useEffect(() => {
-    const next = new SharedPantryStore(backend!, session.user.id, reserveId, sessionStorage);
+    const next = new SharedPantryStore(
+      backend!,
+      session.user.id,
+      reserveId,
+      sessionStorage,
+      () => navigator.onLine,
+      12000,
+      privateCache,
+    );
     setStore(next);
     return () => next.dispose();
   }, [session.user.id, reserveId]);
@@ -659,12 +699,17 @@ function SharedScope({
 export default function Root() {
   const theme = useThemePreference();
   const [demo, setDemo] = useState(false);
-  const [session, setSession] = useState<Session | null | undefined>(client ? undefined : null);
+  const [session, setSession] = useState<Session | null | undefined>(() => {
+    if (!client) return null;
+    return cachedOfflineSession() ?? undefined;
+  });
+  const [privacyError, setPrivacyError] = useState('');
   const [incoming, setIncoming] = useState<IncomingLink>(initialLink);
   const [reserveId, setReserveId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(!!initialLink.confirmation);
   const [confirmationError, setConfirmationError] = useState('');
   const identity = useRef<string | null>(null);
+  const signedOutLocally = useRef(false);
   useUpdateBlocker(() =>
     confirming || session === undefined
       ? 'Attendez la vérification du compte avant d’actualiser.'
@@ -691,26 +736,51 @@ export default function Root() {
     const { data } = client.auth.onAuthStateChange((_event, next) => {
       eventReceived = true;
       if (!active) return;
+      // A late init/refresh response cannot undo an explicit local logout.
+      if (signedOutLocally.current && next) return;
+      // Retryable refresh errors emit INITIAL_SESSION/null without deleting the
+      // stored session. Keep the known account's read-only copy during an outage.
+      if (!next && _event === 'INITIAL_SESSION' && !signedOutLocally.current)
+        next = cachedOfflineSession();
       if (identity.current !== (next?.user.id ?? null)) {
         if (identity.current) {
           try {
             clearPrivateIntents(sessionStorage);
+            privateCache.clear();
           } catch {
-            /* No private snapshot cache. */
+            setPrivacyError(
+              'L’effacement local a échoué. Effacez les données de ce site dans le navigateur avant de partager cet appareil.',
+            );
           }
         }
         identity.current = next?.user.id ?? null;
         setReserveId(null);
+      }
+      try {
+        if (next) privateCache.activate(next.user.id);
+        else privateCache.clear();
+      } catch {
+        setPrivacyError('Le stockage privé est indisponible sur cet appareil.');
       }
       setSession(next);
     });
     client.auth
       .getSession()
       .then(({ data, error }) => {
-        if (active && !eventReceived) setSession(error ? null : data.session);
+        if (active && !eventReceived && !signedOutLocally.current) {
+          const next = error ? cachedOfflineSession() : (data.session ?? cachedOfflineSession());
+          try {
+            if (next) privateCache.activate(next.user.id);
+            else privateCache.clear();
+          } catch {
+            /* Store reports cache writes. */
+          }
+          identity.current = next?.user.id ?? null;
+          setSession(next);
+        }
       })
       .catch(() => {
-        if (active) setSession(null);
+        if (active && !signedOutLocally.current) setSession(cachedOfflineSession());
       });
     return () => {
       active = false;
@@ -744,13 +814,23 @@ export default function Root() {
     };
   }, [incoming.confirmation]);
   function logout() {
+    signedOutLocally.current = true;
     setSession(null);
     setReserveId(null);
     setIncoming({});
     try {
       clearPrivateIntents(sessionStorage);
     } catch {
-      /* Private snapshots exist in memory only. */
+      setPrivacyError(
+        'L’effacement local a échoué. Effacez les données de ce site dans le navigateur avant de partager cet appareil.',
+      );
+    }
+    try {
+      privateCache.clear();
+    } catch {
+      setPrivacyError(
+        'L’effacement local a échoué. Effacez les données de ce site dans le navigateur avant de partager cet appareil.',
+      );
     }
     void auth?.signOut();
   }
@@ -784,9 +864,23 @@ export default function Root() {
     return (
       <AuthForm
         invitation={incoming.invitation}
-        linkError={incoming.error ?? confirmationError}
+        linkError={privacyError || incoming.error || confirmationError}
         theme={theme}
         onDemo={() => setDemo(true)}
+        onConnected={async () => {
+          if (!signedOutLocally.current) return;
+          const { data, error } = await client!.auth.getSession();
+          if (error || !data.session) throw new Error('Connexion à vérifier. Réessayez.');
+          signedOutLocally.current = false;
+          try {
+            privateCache.activate(data.session.user.id);
+          } catch {
+            /* Store reports persistence failure. */
+          }
+          identity.current = data.session.user.id;
+          setReserveId(null);
+          setSession(data.session);
+        }}
       />
     );
   if (!reserveId || incoming.invitation)

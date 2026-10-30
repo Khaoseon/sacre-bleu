@@ -2,6 +2,7 @@ const baselineVersions = ['20261026000100', '20261026000200', '20261026000300'];
 const phase4Version = '20261028000100';
 const lookupBudgetVersion = '20261029000100';
 const scanConflictVersion = '20261029000200';
+const userRestoreVersion = '20261030000100';
 const baselineTables = [
   'auth.users',
   'auth.identities',
@@ -22,8 +23,11 @@ export function backupPlan(
   beforePhase4 = false,
   beforeLookupBudget = false,
   beforeV1Conflicts = false,
+  beforePhase5 = false,
 ) {
-  if ([beforePhase4, beforeLookupBudget, beforeV1Conflicts].filter(Boolean).length > 1)
+  if (
+    [beforePhase4, beforeLookupBudget, beforeV1Conflicts, beforePhase5].filter(Boolean).length > 1
+  )
     throw new Error('Choisir un seul précontrôle de migration.');
   if (
     !Array.isArray(rows) ||
@@ -43,7 +47,8 @@ export function backupPlan(
     ...baselineVersions,
     ...(rows.length >= 4 ? [phase4Version] : []),
     ...(rows.length >= 5 ? [lookupBudgetVersion] : []),
-    ...(rows.length === 6 ? [scanConflictVersion] : []),
+    ...(rows.length >= 6 ? [scanConflictVersion] : []),
+    ...(rows.length === 7 ? [userRestoreVersion] : []),
   ];
   if (
     local.length !== supported.length ||
@@ -85,6 +90,16 @@ export function backupPlan(
       throw new Error(
         'Le précontrôle V1 exige les quatre ou cinq migrations historiques appliquées, puis uniquement les migrations V1 approuvées en attente.',
       );
+  } else if (beforePhase5) {
+    if (
+      rows.length !== 7 ||
+      applied.length !== 6 ||
+      rows.slice(0, 6).some((row) => row.local !== row.remote) ||
+      rows[6].remote
+    )
+      throw new Error(
+        'Le précontrôle phase 5 exige exactement six migrations appliquées et la seule restauration utilisateur en attente.',
+      );
   } else if (applied.length !== rows.length) {
     throw new Error(
       'Migration en attente : utiliser un mode de précontrôle explicite après examen.',
@@ -98,7 +113,9 @@ export function backupPlan(
         ? lookupBudgetVersion
         : beforeV1Conflicts
           ? scanConflictVersion
-          : null,
+          : beforePhase5
+            ? userRestoreVersion
+            : null,
     pendingVersions: rows.filter((row) => !row.remote).map((row) => row.local),
     files: names.filter((name) => applied.some((row) => name.startsWith(row.remote + '_'))),
     tables: [

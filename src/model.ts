@@ -53,6 +53,163 @@ export const categories: Category[] = [
 ];
 export const units: Unit[] = ['g', 'kg', 'ml', 'L', 'pièce'];
 export const MAX_QUANTITY = 9999;
+// Portable user backup. No membership, session, secret, receipt or server version.
+export interface UserBackup {
+  format: 'sacre-bleu';
+  version: 1;
+  exportedAt: string;
+  products: {
+    id: string;
+    name: string;
+    barcode: string | null;
+    brand: string | null;
+    size: number | null;
+    unit: Unit | null;
+    category: Category | null;
+    quantity: number;
+    minimum: number | null;
+    off_barcode: string | null;
+    off_image_url: string | null;
+    updatedAt: string;
+  }[];
+  shopping: {
+    id: string;
+    product_id: string | null;
+    name: string;
+    quantity: number;
+    checked: boolean;
+  }[];
+}
+export const BACKUP_MAX_BYTES = 2_000_000;
+export const BACKUP_MAX_ROWS = 2000;
+export function validateBackup(value: unknown): UserBackup {
+  const fail = (): never => {
+    throw new Error(
+      'Sauvegarde invalide ou version non prise en charge. Aucun changement appliqué.',
+    );
+  };
+  const object = (v: unknown, keys: string[]): Record<string, unknown> => {
+    if (
+      !v ||
+      typeof v !== 'object' ||
+      Array.isArray(v) ||
+      Object.keys(v).length !== keys.length ||
+      Object.keys(v).some((k) => !keys.includes(k))
+    )
+      return fail();
+    return v as Record<string, unknown>;
+  };
+  const uuid = (v: unknown): v is string =>
+    typeof v === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v);
+  const text = (v: unknown, max: number) =>
+    typeof v === 'string' && v.trim().length > 0 && v.length <= max;
+  const count = (v: unknown) =>
+    typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= MAX_QUANTITY;
+  const date = (v: unknown) =>
+    typeof v === 'string' &&
+    /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(v) &&
+    Number.isFinite(Date.parse(v)) &&
+    new Date(v).toISOString() === v;
+  const root = object(value, ['format', 'version', 'exportedAt', 'products', 'shopping']);
+  if (
+    root.format !== 'sacre-bleu' ||
+    root.version !== 1 ||
+    !date(root.exportedAt) ||
+    !Array.isArray(root.products) ||
+    !Array.isArray(root.shopping) ||
+    root.products.length > BACKUP_MAX_ROWS ||
+    root.shopping.length > BACKUP_MAX_ROWS
+  )
+    return fail();
+  const ids = new Set<string>(),
+    codes = new Set<string>(),
+    shoppingIds = new Set<string>(),
+    links = new Set<string>();
+  for (const value of root.products) {
+    const p = object(value, [
+      'id',
+      'name',
+      'barcode',
+      'brand',
+      'size',
+      'unit',
+      'category',
+      'quantity',
+      'minimum',
+      'off_barcode',
+      'off_image_url',
+      'updatedAt',
+    ]);
+    if (
+      !uuid(p.id) ||
+      ids.has(p.id) ||
+      !text(p.name, 120) ||
+      !count(p.quantity) ||
+      !(p.minimum === null || count(p.minimum)) ||
+      !(p.brand === null || text(p.brand, 80)) ||
+      !(
+        p.barcode === null ||
+        (typeof p.barcode === 'string' && /^\d{4,32}$/.test(p.barcode) && !codes.has(p.barcode))
+      ) ||
+      !(
+        (p.size === null && p.unit === null) ||
+        (typeof p.size === 'number' &&
+          Number.isFinite(p.size) &&
+          p.size > 0 &&
+          p.size <= 99999 &&
+          units.includes(p.unit as Unit))
+      ) ||
+      !(p.category === null || categories.includes(p.category as Category)) ||
+      !(
+        p.off_barcode === null ||
+        (typeof p.off_barcode === 'string' && /^\d{4,32}$/.test(p.off_barcode))
+      ) ||
+      !(
+        p.off_image_url === null ||
+        (typeof p.off_image_url === 'string' &&
+          p.off_image_url.length <= 512 &&
+          /^https:\/\/images\.openfoodfacts\.org\/images\/products\/[a-zA-Z0-9/_.-]+\.(jpg|jpeg|png|webp)$/.test(
+            p.off_image_url,
+          ) &&
+          !p.off_image_url.includes('..') &&
+          p.off_barcode !== null)
+      ) ||
+      !date(p.updatedAt)
+    )
+      return fail();
+    ids.add(p.id);
+    if (p.barcode) codes.add(p.barcode as string);
+  }
+  for (const value of root.shopping) {
+    const s = object(value, ['id', 'product_id', 'name', 'quantity', 'checked']);
+    if (
+      !uuid(s.id) ||
+      shoppingIds.has(s.id) ||
+      !text(s.name, 120) ||
+      !count(s.quantity) ||
+      typeof s.checked !== 'boolean' ||
+      (!s.checked && s.quantity === 0) ||
+      !(s.product_id === null || (typeof s.product_id === 'string' && ids.has(s.product_id))) ||
+      (!s.checked && s.product_id !== null && links.has(s.product_id as string))
+    )
+      return fail();
+    shoppingIds.add(s.id);
+    if (!s.checked && s.product_id) links.add(s.product_id as string);
+  }
+  return value as UserBackup;
+}
+export function parseBackup(raw: string): UserBackup {
+  if (new TextEncoder().encode(raw).length > BACKUP_MAX_BYTES)
+    throw new Error('Fichier trop volumineux (2 Mo maximum).');
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw new Error('Fichier JSON illisible. Aucun changement appliqué.');
+  }
+  return validateBackup(value);
+}
 export const id = () => crypto.randomUUID();
 export const normalize = (s: string) =>
   s

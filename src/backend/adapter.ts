@@ -29,9 +29,16 @@ export class SupabaseBackend implements ReserveBackend {
     write = true,
   ): Promise<Json> {
     try {
+      const signal = AbortSignal.timeout(10000);
+      const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
+      if (signal.aborted || sessionError || !sessionData.session)
+        throw new BackendError(
+          'Reconnexion au compte en cours. La copie reste en lecture seule.',
+          'unavailable',
+        );
       const { data, error, status } = await this.client
         .rpc(name, args as never)
-        .abortSignal(AbortSignal.timeout(10000));
+        .abortSignal(signal);
       if (error) throw backendError(error, write && (status === 0 || status >= 500));
       return data;
     } catch (error) {
@@ -140,12 +147,19 @@ export class SupabaseBackend implements ReserveBackend {
     command: Parameters<ReserveBackend['execute']>[2],
   ): Promise<MutationReceipt> {
     const row = object(
-      await this.rpc('mutate_reserve', {
-        p_request_id: requestId,
-        p_reserve_id: reserveId,
-        p_action: command.action,
-        p_payload: command.payload,
-      }),
+      command.action === 'restore'
+        ? await this.rpc('restore_reserve', {
+            p_request_id: requestId,
+            p_reserve_id: reserveId,
+            p_expected_revision: command.payload.expected_revision,
+            p_backup: JSON.parse(JSON.stringify(command.payload.backup)) as Json,
+          })
+        : await this.rpc('mutate_reserve', {
+            p_request_id: requestId,
+            p_reserve_id: reserveId,
+            p_action: command.action,
+            p_payload: command.payload,
+          }),
     );
     if (typeof row.revision !== 'number')
       throw new BackendError('Résultat à vérifier par une reprise.', 'uncertain');

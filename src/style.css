@@ -2324,6 +2324,13 @@ input::file-selector-button {
   align-content: center;
   color: var(--muted);
 }
+.settings-more {
+  min-width: 0;
+}
+.settings-more button {
+  white-space: normal;
+  max-width: 100%;
+}
 .settings-more[open] > :not(summary) {
   margin-block: 12px;
 }
@@ -2532,4 +2539,54 @@ input::file-selector-button {
     padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
       max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   }
+}
+.sync-information {
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+.backup-settings p,
+.restore-preview li {
+  overflow-wrap: anywhere;
+}
+.backup-file {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.backup-file input {
+  width: 100%;
+  min-width: 0;
+}
+.restore-preview {
+  margin-top: 1rem;
+}
+.restore-preview table {
+  table-layout: fixed;
+  overflow-wrap: anywhere;
+  width: 100%;
+  margin-block: 1rem;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.restore-preview th,
+.restore-preview td {
+  text-align: left;
+  padding: 0.4rem;
+}
+.restore-preview details {
+  margin-block: 1rem;
+}
+.restore-preview summary {
+  min-height: var(--touch-target);
+  align-content: center;
+  cursor: pointer;
+}
+.restore-preview label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-block: 1rem;
+}
+.restore-preview input[type='checkbox'] {
+  flex-shrink: 0;
 }
