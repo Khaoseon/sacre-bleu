@@ -186,6 +186,25 @@ try {
   }
   await page.goto(origin);
   await login(owner);
+  // Phase 6C: switching a live authenticated scope preserves Auth and server data.
+  const authBeforeLanguage = await page.evaluate(() => localStorage.getItem('app-reserve.auth.v1'));
+  const pantryBeforeLanguage = await snapshot();
+  await page.getByRole('button', { name: 'Réglages', exact: true }).click();
+  await page.getByLabel('Langue', { exact: true }).selectOption('en');
+  await page.getByText('Account and pantry', { exact: true }).click();
+  await page.getByRole('heading', { name: 'Pantry backup' }).waitFor();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('heading', { name: 'Your stock' }).waitFor();
+  await page.reload();
+  await page.getByRole('heading', { name: 'Your stock' }).waitFor();
+  assert.equal(
+    await page.evaluate(() => localStorage.getItem('app-reserve.auth.v1')),
+    authBeforeLanguage,
+  );
+  assert.deepEqual(await snapshot(), pantryBeforeLanguage);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByLabel('Language', { exact: true }).selectOption('fr');
+  await closeSettings();
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
@@ -233,6 +252,22 @@ try {
   const before = await snapshot();
   await choose();
   assert.deepEqual(await snapshot(), before);
+  // The parsed backup, checkbox state and file selection survive a live language change.
+  await page.getByLabel('Langue', { exact: true }).selectOption('en');
+  await page.getByRole('heading', { name: 'Replacement preview' }).waitFor();
+  await page.getByRole('button', { name: 'Replace and restore pantry' }).waitFor();
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      true,
+    );
+    assert.equal(
+      await page.locator('dialog[open]').evaluate((d) => d.scrollWidth <= d.clientWidth + 1),
+      true,
+    );
+  }
+  await page.getByLabel('Language', { exact: true }).selectOption('fr');
   await mkdir('.tmp/phase5', { recursive: true });
   for (const width of [320, 390, 1024]) {
     await page.setViewportSize({ width, height: 844 });
@@ -269,6 +304,30 @@ try {
       { exact: true },
     )
     .waitFor();
+  const pendingBeforeLanguage = await page.evaluate(() =>
+    Object.fromEntries(
+      Object.entries(sessionStorage).filter(([k]) => k.startsWith('app-reserve.pending')),
+    ),
+  );
+  assert.ok(
+    Object.keys(pendingBeforeLanguage).length > 0,
+    'A real uncertain intention is retained',
+  );
+  await page.getByLabel('Langue', { exact: true }).selectOption('en');
+  await page
+    .getByText('Result to check: use Resume request without starting another import.', {
+      exact: true,
+    })
+    .waitFor();
+  assert.deepEqual(
+    await page.evaluate(() =>
+      Object.fromEntries(
+        Object.entries(sessionStorage).filter(([k]) => k.startsWith('app-reserve.pending')),
+      ),
+    ),
+    pendingBeforeLanguage,
+  );
+  await page.getByLabel('Language', { exact: true }).selectOption('fr');
   const afterLost = await snapshot();
   assert.equal(afterLost.products[0].quantity, 4);
   assert.equal(afterLost.shopping[0].quantity, 2);
@@ -389,8 +448,9 @@ try {
   await second.goto(origin);
   await second.getByRole('heading', { name: 'Votre stock' }).waitFor();
   await settings();
-  await page.getByRole('button', { name: 'Se déconnecter', exact: true }).click();
-  await page.getByRole('button', { name: 'Se connecter', exact: true }).waitFor();
+  await page.getByLabel('Langue', { exact: true }).selectOption('en');
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).waitFor();
   await second.getByRole('button', { name: 'Se connecter', exact: true }).waitFor();
   assert.equal(
     await page.evaluate(
@@ -398,7 +458,16 @@ try {
     ),
     0,
   );
+  assert.equal(
+    await page.evaluate(() => localStorage.getItem('app-reserve.language.v1')),
+    'en',
+    'Signout retains the display preference',
+  );
   await second.close();
+  await page.reload();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByLabel('Language', { exact: true }).selectOption('fr');
+  await closeSettings();
   await login(other);
   assert.equal(await page.getByText('Riz fictif', { exact: true }).count(), 0);
   await context.setOffline(true);

@@ -1,6 +1,6 @@
 # Contributing
 
-Issues and focused pull requests are welcome. Sacré bleu is a small personal project maintained voluntarily: there is no support deadline, roadmap commitment or obligation to accept a contribution. Discuss substantial changes in an issue first. English is preferred for repository documentation and discussion; application labels and user-facing errors remain French.
+Issues and focused pull requests are welcome. Sacré bleu is a small personal project maintained voluntarily: there is no support deadline, roadmap commitment or obligation to accept a contribution. Discuss substantial changes in an issue first. English is preferred for repository documentation and discussion; application labels and user-facing errors support French (default) and English. See [localization conventions](docs/I18N.md) before adding interface text.
 
 ## Work locally
 

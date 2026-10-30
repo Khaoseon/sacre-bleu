@@ -1,3 +1,17 @@
+import { deferred, type DisplayMessage } from './i18n';
+import {
+  t,
+  message,
+  label,
+  locale,
+  number,
+  plural,
+  restock,
+  shoppingCount,
+  scanSummary,
+  useLanguage,
+} from './i18n';
+
 import {
   Modal,
   ProductForm,
@@ -87,6 +101,7 @@ export default function App({
   onExitDemo?: () => void;
   productProvider?: ProductProvider;
 }) {
+  useLanguage();
   const [boot] = useState(() =>
     shared ? { state: snapshotState(shared.view.snapshot!, 'name'), error: '' } : initial(),
   );
@@ -136,7 +151,7 @@ export default function App({
   const [settings, setSettings] = useState(false);
   const [cameraSettingsTarget, setCameraSettingsTarget] = useState<HTMLDivElement | null>(null);
   const [resetting, setResetting] = useState(false);
-  const [feedback, setFeedback] = useState<{ text: string; error?: boolean } | null>(null);
+  const [feedback, setFeedback] = useState<{ text: DisplayMessage; error?: boolean } | null>(null);
   const lastError = useRef('');
   const [undo, setUndo] = useState<{ before: State; revision: number } | null>(null);
   const [localScan, setLastScan] = useState<ScanOperation | null>(null);
@@ -261,7 +276,7 @@ export default function App({
   }
   function commit(
     transform: (s: State) => State,
-    message?: string,
+    message?: DisplayMessage,
     undoable: boolean | State = false,
   ) {
     try {
@@ -304,7 +319,10 @@ export default function App({
       void shared.store.changeStock(p, delta);
       return;
     }
-    commit((s) => changeStock(s, p.id, delta), `${p.name} · quantité mise à jour`);
+    commit(
+      (s) => changeStock(s, p.id, delta),
+      deferred('{0} · quantité mise à jour', { 0: p.name }),
+    );
   }
   async function scan(raw: string, repeat = false, fromCamera = false) {
     if (
@@ -372,7 +390,7 @@ export default function App({
             operation = result.operation;
             return result.state;
           },
-          `${mode === 1 ? '+1' : '−1'} ${p.name}`,
+          deferred('{0} {1}', { 0: mode === 1 ? '+1' : '−1', 1: p.name }),
           true,
         )
       ) {
@@ -404,7 +422,16 @@ export default function App({
           adjusted = result.operation;
           return result.state;
         },
-        `${operation.quantity + delta} ${operation.quantity + delta === 1 ? 'exemplaire' : 'exemplaires'} ${operation.mode === 1 ? 'ajouté' : 'retiré'}${operation.quantity + delta === 1 ? '' : 's'}`,
+        deferred(
+          operation.mode === 1
+            ? operation.quantity + delta === 1
+              ? '{0} exemplaire ajouté'
+              : '{0} exemplaires ajoutés'
+            : operation.quantity + delta === 1
+              ? '{0} exemplaire retiré'
+              : '{0} exemplaires retirés',
+          { 0: operation.quantity + delta },
+        ),
         operation.before,
       )
     ) {
@@ -455,14 +482,15 @@ export default function App({
     >
       <span>
         {shared.view.busy
-          ? 'Enregistrement en cours…'
-          : shared.view.error ||
+          ? t('Enregistrement en cours…')
+          : message(shared.view.error) ||
             (shared.view.status === 'ready'
-              ? 'Réserve synchronisée.'
-              : 'Dernier stock connu · actualisation nécessaire.')}
+              ? t('Réserve synchronisée.')
+              : t('Dernier stock connu · actualisation nécessaire.'))}
         {shared.view.syncedAt && shared.view.status !== 'ready' && (
           <small>
-            Dernière lecture réussie à {new Date(shared.view.syncedAt).toLocaleTimeString('fr-FR')}.
+            {t('Dernière lecture réussie à')}{' '}
+            {new Date(shared.view.syncedAt).toLocaleTimeString(locale())}.
           </small>
         )}
       </span>
@@ -471,7 +499,7 @@ export default function App({
         disabled={shared.view.busy || (!online && !navigator.onLine)}
         onClick={() => void (shared.view.pending ? shared.store.resume() : shared.store.refresh())}
       >
-        {shared.view.pending ? 'Reprendre la demande' : 'Actualiser'}
+        {shared.view.pending ? t('Reprendre la demande') : t('Actualiser')}
       </button>
     </div>
   );
@@ -486,18 +514,20 @@ export default function App({
         <button
           className="product-edit"
           onClick={() => setEditor({ product: p })}
-          aria-label={`Modifier ${p.name}`}
+          aria-label={t('Modifier {0}', { 0: p.name })}
         >
           <ProductImage product={p} />
           <span className="product-details">
             <strong>{p.name}</strong>
             <span>
               {[p.brand, packageLabel(p)].filter(Boolean).join(' · ') ||
-                p.category ||
-                'Sans conditionnement'}
+                (p.category && label(p.category)) ||
+                t('Sans conditionnement')}
             </span>
             {p.minimum !== undefined && p.quantity < p.minimum && p.quantity > 0 && (
-              <small>Stock bas · minimum {p.minimum}</small>
+              <small>
+                {t('Stock bas · minimum')} {number(p.minimum ?? 0)}
+              </small>
             )}
           </span>
         </button>
@@ -530,8 +560,8 @@ export default function App({
             .
           </span>
         </a>
-        <div className="sidebar-label">MON GARDE-MANGER</div>
-        <nav aria-label="Navigation principale">
+        <div className="sidebar-label">{t('MON GARDE-MANGER')}</div>
+        <nav aria-label={t('Navigation principale')}>
           {nav.map((n) => (
             <button
               key={n.page}
@@ -543,26 +573,26 @@ export default function App({
               }}
             >
               <n.icon size={21} />
-              <span>{n.label}</span>
+              <span>{label(n.label)}</span>
               {n.page === 'shopping' && remaining.length > 0 && (
-                <span className="nav-count">{remaining.length}</span>
+                <span className="nav-count">{number(remaining.length)}</span>
               )}
             </button>
           ))}
         </nav>
         <div className="sidebar-bottom">
           <div className="local-tag">
-            <span /> {shared ? 'Réserve partagée' : 'Démonstration locale'}
+            <span /> {shared ? t('Réserve partagée') : t('Démonstration locale')}
           </div>
-          <p>{shared ? 'Votre réserve, à deux.' : 'Votre réserve, sur cet appareil.'}</p>
+          <p>{shared ? t('Votre réserve, à deux.') : t('Votre réserve, sur cet appareil.')}</p>
           <button className="settings-link" onClick={() => setSettings(true)}>
-            <Settings2 size={17} /> Données et réglages
+            <Settings2 size={17} /> {t('Données et réglages')}
           </button>
           <div className="sidebar-footer">
             <span className="avatar">R</span>
             <div>
-              {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
-              <small>{shared ? 'Espace partagé privé' : 'Démonstration'}</small>
+              {shared?.view.snapshot?.reserve.name ?? t('Ma réserve')}
+              <small>{shared ? t('Espace partagé privé') : t('Démonstration')}</small>
             </div>
             <Leaf size={18} />
           </div>
@@ -576,7 +606,8 @@ export default function App({
               <span>Sacré bleu</span>
             </span>
             <span className="topbar-reserve">
-              <span className="topbar-dot" /> {shared?.view.snapshot?.reserve.name ?? 'Ma réserve'}
+              <span className="topbar-dot" />{' '}
+              {shared?.view.snapshot?.reserve.name ?? t('Ma réserve')}
             </span>
           </div>
           <div className="topbar-actions">
@@ -585,20 +616,24 @@ export default function App({
               <span role="status">
                 {shared
                   ? shared.view.busy
-                    ? 'Enregistrement…'
+                    ? t('Enregistrement…')
                     : shared.view.pending
-                      ? 'Demande à vérifier'
+                      ? t('Demande à vérifier')
                       : shared.view.status === 'ready'
-                        ? 'Synchronisé'
+                        ? t('Synchronisé')
                         : shared.view.status === 'offline'
-                          ? 'Hors ligne · lecture seule'
-                          : 'Actualisation nécessaire'
+                          ? t('Hors ligne · lecture seule')
+                          : t('Actualisation nécessaire')
                   : online
-                    ? 'Enregistré sur cet appareil'
-                    : 'Hors ligne · données locales'}
+                    ? t('Enregistré sur cet appareil')
+                    : t('Hors ligne · données locales')}
               </span>
             </span>
-            <button className="icon-button" aria-label="Réglages" onClick={() => setSettings(true)}>
+            <button
+              className="icon-button"
+              aria-label={t('Réglages')}
+              onClick={() => setSettings(true)}
+            >
               <Settings size={21} aria-hidden="true" />
             </button>
           </div>
@@ -607,15 +642,18 @@ export default function App({
           {shared && (
             <p className="sync-information" role="status">
               {shared.view.status === 'offline'
-                ? 'Hors ligne · consultation uniquement. '
+                ? t('Hors ligne · consultation uniquement. ')
                 : shared.view.status !== 'ready'
-                  ? 'Copie à actualiser · consultation uniquement. '
-                  : ''}
-              Dernière synchronisation :{' '}
+                  ? t('Copie à actualiser · consultation uniquement. ')
+                  : ''}{' '}
+              {t('Dernière synchronisation :')}{' '}
               {shared.view.syncedAt
-                ? new Date(shared.view.syncedAt).toLocaleString('fr-FR')
-                : 'jamais'}
-              .{shared.view.cacheError && <span role="alert"> {shared.view.cacheError}</span>}
+                ? new Date(shared.view.syncedAt).toLocaleString(locale())
+                : t('jamais')}
+              .
+              {shared.view.cacheError && (
+                <span role="alert"> {message(shared.view.cacheError)}</span>
+              )}
             </p>
           )}
           {shared &&
@@ -624,7 +662,8 @@ export default function App({
             recovery}
           {bootError && (
             <div role="alert" className="storage-error">
-              {bootError} <button onClick={() => setSettings(true)}>Gérer les données</button>
+              {message(bootError)}{' '}
+              <button onClick={() => setSettings(true)}>{t('Gérer les données')}</button>
             </div>
           )}
           {page === 'stock' && (
@@ -632,12 +671,13 @@ export default function App({
               <div className="page-heading">
                 <div>
                   <h1>
-                    Votre stock<span>.</span>
+                    {t('Votre stock')}
+                    <span>.</span>
                   </h1>
                 </div>
                 <button className="primary-button" disabled={locked} onClick={() => setEditor({})}>
                   <Plus size={19} />
-                  <span>Ajouter un produit</span>
+                  <span>{t('Ajouter un produit')}</span>
                 </button>
               </div>
               <div className="stock-summary">
@@ -645,19 +685,24 @@ export default function App({
                   <span className="summary-icon">
                     <Package size={21} />
                   </span>
-                  <strong>{state.products.length}</strong>
-                  <span>produits</span>
+                  <strong>{number(state.products.length)}</strong>
+                  <span>{plural('productLabel', state.products.length)}</span>
                 </div>
                 <i />
                 <div>
-                  <strong>{state.products.reduce((sum, p) => sum + p.quantity, 0)}</strong>
-                  <span>emballages en stock</span>
+                  <strong>{number(state.products.reduce((sum, p) => sum + p.quantity, 0))}</strong>
+                  <span>
+                    {plural(
+                      'stockLabel',
+                      state.products.reduce((sum, p) => sum + p.quantity, 0),
+                    )}
+                  </span>
                 </div>
                 <i />
                 <div>
                   <span className="empty-dot" />
-                  <strong>{state.products.filter((p) => p.quantity === 0).length}</strong>
-                  <span>épuisés</span>
+                  <strong>{number(state.products.filter((p) => p.quantity === 0).length)}</strong>
+                  <span>{t('épuisés')}</span>
                 </div>
               </div>
               {low.length > 0 && (
@@ -666,13 +711,11 @@ export default function App({
                     <ShoppingCart size={19} />
                   </span>
                   <div>
-                    <strong>
-                      {low.length} produit{low.length > 1 ? 's' : ''} à réapprovisionner
-                    </strong>
-                    <span>Un petit tour dans la liste de courses ?</span>
+                    <strong>{restock(low.length)} </strong>
+                    <span>{t('Un petit tour dans la liste de courses ?')}</span>
                   </div>
                   <button onClick={() => setPage('shopping')}>
-                    Voir <ArrowRight size={17} />
+                    {t('Voir')} <ArrowRight size={17} />
                   </button>
                 </div>
               )}
@@ -680,15 +723,15 @@ export default function App({
                 <div className="search-input">
                   <Search size={19} />
                   <input
-                    aria-label="Rechercher un produit"
+                    aria-label={t('Rechercher un produit')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Rechercher dans votre réserve…"
+                    placeholder={t('Rechercher dans votre réserve…')}
                   />
                   {query && (
                     <button
                       className="clear-search"
-                      aria-label="Effacer la recherche"
+                      aria-label={t('Effacer la recherche')}
                       onClick={() => setQuery('')}
                     >
                       <X size={17} />
@@ -697,7 +740,7 @@ export default function App({
                 </div>
                 <label className="sort-control">
                   <ArrowDownUp size={17} />
-                  <span className="sr-only">Trier les produits</span>
+                  <span className="sr-only">{t('Trier les produits')}</span>
                   <select
                     value={state.sort}
                     onChange={(e) => {
@@ -712,34 +755,34 @@ export default function App({
                       } else commit((s) => ({ ...s, sort }));
                     }}
                   >
-                    <option value="name">Nom A → Z</option>
-                    <option value="recent">Modifiés récemment</option>
+                    <option value="name">{t('Nom A → Z')}</option>
+                    <option value="recent">{t('Modifiés récemment')}</option>
                   </select>
                 </label>
               </div>
-              <div className="category-tabs" aria-label="Filtrer par catégorie">
-                {['Tout', ...categories].map((c) => (
+              <div className="category-tabs" aria-label={t('Filtrer par catégorie')}>
+                {[t('Tout'), ...categories].map((c) => (
                   <button
                     key={c}
                     aria-pressed={category === c}
                     className={category === c ? 'active' : ''}
                     onClick={() => setCategory(c)}
                   >
-                    {c}
+                    {label(c)}
                   </button>
                 ))}
               </div>
-              <section className="stock-list" aria-label="Produits en stock">
+              <section className="stock-list" aria-label={t('Produits en stock')}>
                 <div className="list-heading">
                   <span>
-                    PRODUIT <small>{visible.length}</small>
+                    {t('PRODUIT')} <small>{number(visible.length)}</small>
                   </span>
-                  <span>EN STOCK</span>
+                  <span>{t('EN STOCK')}</span>
                 </div>
                 {active.map(productRow)}
                 {empty.length > 0 && (
                   <div className="empty-heading">
-                    <span /> Épuisés <small>{empty.length}</small>
+                    <span /> {t('Épuisés')} <small>{number(empty.length)}</small>
                   </div>
                 )}
                 {empty.map(productRow)}
@@ -748,13 +791,13 @@ export default function App({
                     <Search size={30} />
                     <h2>
                       {query || category !== 'Tout'
-                        ? 'Aucun produit trouvé'
-                        : 'Votre réserve commence ici'}
+                        ? t('Aucun produit trouvé')
+                        : t('Votre réserve commence ici')}
                     </h2>
                     <p>
                       {query || category !== 'Tout'
-                        ? 'Essayez un autre nom ou une autre catégorie.'
-                        : 'Ajoutez votre premier produit pour commencer.'}
+                        ? t('Essayez un autre nom ou une autre catégorie.')
+                        : t('Ajoutez votre premier produit pour commencer.')}
                     </p>
                     <button
                       className="secondary-button"
@@ -766,18 +809,18 @@ export default function App({
                       }}
                     >
                       {query || category !== 'Tout'
-                        ? 'Voir tous les produits'
-                        : 'Ajouter un produit'}
+                        ? t('Voir tous les produits')
+                        : t('Ajouter un produit')}
                     </button>
                   </div>
                 )}
               </section>
               <div className="stock-footnote">
                 <span>
-                  <CheckCheck size={15} /> Les quantités sont sauvegardées automatiquement.
+                  <CheckCheck size={15} /> {t('Les quantités sont sauvegardées automatiquement.')}
                 </span>
                 <button onClick={() => setPage('scanner')}>
-                  <ScanLine size={16} /> Ajouter avec un code-barres <ArrowRight size={14} />
+                  <ScanLine size={16} /> {t('Ajouter avec un code-barres')} <ArrowRight size={14} />
                 </button>
               </div>
             </>
@@ -787,7 +830,7 @@ export default function App({
               <div className="scanner-layout">
                 <section
                   className={`scanner-card ${mode === -1 ? 'removing' : ''}`}
-                  aria-label="Scanner de codes-barres"
+                  aria-label={t('Scanner de codes-barres')}
                 >
                   <div className="mode-toggle">
                     <button
@@ -798,7 +841,7 @@ export default function App({
                         setMode(1);
                       }}
                     >
-                      <Plus size={19} /> Ajouter
+                      <Plus size={19} /> {t('Ajouter')}
                     </button>
                     <button
                       className={mode === -1 ? 'active danger' : ''}
@@ -808,28 +851,30 @@ export default function App({
                         setMode(-1);
                       }}
                     >
-                      <Minus size={19} /> Retirer
+                      <Minus size={19} /> {t('Retirer')}
                     </button>
                   </div>
                   <LookupIndicator provider={productProvider} />
                   {shared && (
                     <details className="scanner-diagnostics">
-                      <summary>Diagnostic du scanner</summary>
+                      <summary>{t('Diagnostic du scanner')}</summary>
                       <p>
-                        Version {__APP_BUILD_INFO__.revision} · révision synchronisée{' '}
+                        {t('Version')} {__APP_BUILD_INFO__.revision} {t('· révision synchronisée')}{' '}
                         {state.revision}.
                       </p>
                       <p>
-                        Actions locales confirmées : {shared.view.completed}. Dernière lecture
-                        locale : {shared.view.lastProductId ? 'présente' : 'aucune'}.
+                        {t('Actions locales confirmées :')} {shared.view.completed}
+                        {t('. Dernière lecture locale :')}{' '}
+                        {shared.view.lastProductId ? t('présente') : t('aucune')}.
                       </p>
                       <p>
-                        Ajustement : {lastScan ? 'possible' : 'désactivé'}. Demande locale :{' '}
+                        {t('Ajustement :')} {lastScan ? t('possible') : t('désactivé')}
+                        {t('. Demande locale :')}{' '}
                         {shared.view.busy
-                          ? 'en cours'
+                          ? t('en cours')
                           : shared.view.pending
-                            ? 'à vérifier'
-                            : 'aucune'}
+                            ? t('à vérifier')
+                            : t('aucune')}
                         .
                       </p>
                     </details>
@@ -841,7 +886,7 @@ export default function App({
                     onCode={(barcode) => void scan(barcode, false, true)}
                   />
                   <details className="manual-code">
-                    <summary>Saisir un code-barres</summary>
+                    <summary>{t('Saisir un code-barres')}</summary>
                     <form
                       className="scan-form"
                       onSubmit={(e) => {
@@ -849,7 +894,7 @@ export default function App({
                         scan(code);
                       }}
                     >
-                      <label htmlFor="barcode">Code-barres</label>
+                      <label htmlFor="barcode">{t('Code-barres')}</label>
                       <div>
                         <input
                           id="barcode"
@@ -858,7 +903,7 @@ export default function App({
                           autoComplete="off"
                           value={code}
                           onChange={(e) => setCode(e.target.value)}
-                          placeholder="Ex. 8076802085738"
+                          placeholder={t('Ex. 8076802085738')}
                           maxLength={32}
                           required
                         />
@@ -867,7 +912,7 @@ export default function App({
                           type="submit"
                           disabled={locked || scanning}
                         >
-                          <ScanLine size={19} /> Valider
+                          <ScanLine size={19} /> {t('Valider')}
                         </button>
                       </div>
                     </form>
@@ -876,7 +921,7 @@ export default function App({
                 <aside className="scanner-aside">
                   {lastProduct ? (
                     <section className="last-product">
-                      <div className="section-eyebrow">DERNIER PRODUIT</div>
+                      <div className="section-eyebrow">{t('DERNIER PRODUIT')}</div>
                       <ProductImage product={lastProduct} />
                       {lastProduct.external && (
                         <ProductAttribution
@@ -901,19 +946,21 @@ export default function App({
                         }
                         disabled={!lastScan}
                         locked={locked}
-                        increaseLabel="Augmenter la quantité du dernier scan"
-                        decreaseLabel="Réduire la quantité du dernier scan"
+                        increaseLabel={t('Augmenter la quantité du dernier scan')}
+                        decreaseLabel={t('Réduire la quantité du dernier scan')}
                         onChange={adjustLastScan}
                       />
                       <span className="muted">
                         {lastScan
-                          ? `${lastScan.quantity === 1 ? 'emballage' : 'emballages'} ${lastScan.mode === 1 ? 'ajouté' : 'retiré'}${lastScan.quantity === 1 ? '' : 's'} · ${lastProduct.quantity} en stock`
-                          : `${lastProduct.quantity} en stock`}
+                          ? scanSummary(lastScan.quantity, lastScan.mode, lastProduct.quantity)
+                          : t('{0} en stock', { 0: number(lastProduct.quantity) })}
                       </span>
                       {!lastScan && (
                         <p role="status">
-                          {scanInvalidation ||
-                            'Produit créé sans mouvement. Scannez à nouveau pour ajuster une quantité traitée.'}
+                          {message(scanInvalidation) ||
+                            t(
+                              'Produit créé sans mouvement. Scannez à nouveau pour ajuster une quantité traitée.',
+                            )}
                         </p>
                       )}
                       <button
@@ -921,28 +968,28 @@ export default function App({
                         disabled={locked || scanning}
                         onClick={() => scan(lastProduct.barcode ?? lastCode, true)}
                       >
-                        <ScanLine size={17} /> Scanner à nouveau
+                        <ScanLine size={17} /> {t('Scanner à nouveau')}
                       </button>
                       {canUndo && (
                         <button className="text-button" disabled={locked} onClick={undoScan}>
-                          <Undo2 size={16} /> Annuler la dernière opération
+                          <Undo2 size={16} /> {t('Annuler la dernière opération')}
                         </button>
                       )}
                     </section>
                   ) : (
                     <section className="last-product no-product">
                       <Package size={30} strokeWidth={1.3} />
-                      <h2>Prêt pour le premier article</h2>
-                      <p>Son stock actualisé apparaîtra ici après validation.</p>
+                      <h2>{t('Prêt pour le premier article')}</h2>
+                      <p>{t('Son stock actualisé apparaîtra ici après validation.')}</p>
                     </section>
                   )}
                   {!shared && (
                     <section className="demo-codes">
-                      <div className="section-eyebrow">ESSAYER AVEC LA DÉMO</div>
+                      <div className="section-eyebrow">{t('ESSAYER AVEC LA DÉMO')}</div>
                       {[
                         { name: 'Penne rigate', code: '8076802085738' },
                         { name: 'Thon au naturel', code: '3019081234567' },
-                        { name: 'Produit inconnu', code: '1234567890128' },
+                        { name: t('Produit inconnu'), code: '1234567890128' },
                       ].map((c) => (
                         <button
                           key={c.code}
@@ -969,12 +1016,13 @@ export default function App({
               <div className="page-heading">
                 <div>
                   <h1>
-                    À acheter<span>.</span>
+                    {t('À acheter')}
+                    <span>.</span>
                   </h1>
                   <p>
                     {remaining.length
-                      ? `${remaining.length} article${remaining.length > 1 ? 's' : ''} pour remplir les étagères.`
-                      : 'Tout est prêt pour les prochaines courses.'}
+                      ? shoppingCount(remaining.length)
+                      : t('Tout est prêt pour les prochaines courses.')}
                   </p>
                 </div>
                 <span className="heading-icon">
@@ -1005,13 +1053,13 @@ export default function App({
                 }}
               >
                 <label>
-                  Ajouter un article
+                  {t('Ajouter un article')}{' '}
                   <select
-                    aria-label="Choisir un produit du catalogue ou un article libre"
+                    aria-label={t('Choisir un produit du catalogue ou un article libre')}
                     value={shoppingProduct}
                     onChange={(e) => setShoppingProduct(e.target.value)}
                   >
-                    <option value="">Article libre</option>
+                    <option value="">{t('Article libre')}</option>
                     {state.products.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name} {[p.brand, packageLabel(p)].filter(Boolean).join(' · ')}
@@ -1021,21 +1069,21 @@ export default function App({
                 </label>
                 {!shoppingProduct && (
                   <label className="shopping-name">
-                    Nom
+                    {t('Nom')}{' '}
                     <input
-                      aria-label="Nom de l’article libre"
+                      aria-label={t('Nom de l’article libre')}
                       required
                       maxLength={120}
-                      placeholder="Ex. Éponges, sacs congélation…"
+                      placeholder={t('Ex. Éponges, sacs congélation…')}
                       value={shoppingName}
                       onChange={(e) => setShoppingName(e.target.value)}
                     />
                   </label>
                 )}
                 <label className="shopping-qty">
-                  Quantité
+                  {t('Quantité')}{' '}
                   <input
-                    aria-label="Quantité à acheter"
+                    aria-label={t('Quantité à acheter')}
                     type="number"
                     required
                     min="1"
@@ -1045,10 +1093,10 @@ export default function App({
                   />
                 </label>
                 <button type="submit" className="primary-button" disabled={locked}>
-                  <Plus size={18} /> Ajouter
+                  <Plus size={18} /> {t('Ajouter')}
                 </button>
               </form>
-              <section className="shopping-list" aria-label="Liste de courses">
+              <section className="shopping-list" aria-label={t('Liste de courses')}>
                 {[...remaining, ...checked].map((item) => {
                   const product = state.products.find((p) => p.id === item.productId);
                   return (
@@ -1058,7 +1106,7 @@ export default function App({
                     >
                       <button
                         className="check-item"
-                        aria-label={`${item.checked ? 'Décocher' : 'Cocher'} ${item.name}`}
+                        aria-label={`${item.checked ? t('Décocher') : t('Cocher')} ${item.name}`}
                         aria-pressed={item.checked}
                         disabled={locked}
                         onClick={() =>
@@ -1085,8 +1133,8 @@ export default function App({
                         <span>
                           {product
                             ? [product.brand, packageLabel(product)].filter(Boolean).join(' · ') ||
-                              'Produit du catalogue'
-                            : 'Article libre'}
+                              t('Produit du catalogue')
+                            : t('Article libre')}
                         </span>
                       </div>
                       <Quantity
@@ -1116,7 +1164,7 @@ export default function App({
                       />
                       <button
                         className="icon-button remove-item"
-                        aria-label={`Supprimer ${item.name} des courses`}
+                        aria-label={t('Supprimer {0} des courses', { 0: item.name })}
                         disabled={locked}
                         onClick={() =>
                           shared
@@ -1135,8 +1183,8 @@ export default function App({
                 {state.shopping.length === 0 && (
                   <div className="empty-state">
                     <ShoppingBasket size={32} />
-                    <h2>Une liste toute légère</h2>
-                    <p>Ajoutez un article ou choisissez une suggestion.</p>
+                    <h2>{t('Une liste toute légère')}</h2>
+                    <p>{t('Ajoutez un article ou choisissez une suggestion.')}</p>
                   </div>
                 )}
               </section>
@@ -1153,7 +1201,8 @@ export default function App({
                         )
                   }
                 >
-                  <CheckCheck size={17} /> Effacer les articles cochés ({checked.length})
+                  <CheckCheck size={17} /> {t('Effacer les articles cochés (')}
+                  {number(checked.length)})
                 </button>
               )}
               {low.length > 0 && (
@@ -1163,8 +1212,8 @@ export default function App({
                       <ShoppingCart size={20} />
                     </span>
                     <div>
-                      <h2>À réapprovisionner</h2>
-                      <p>D’après les seuils que vous avez choisis.</p>
+                      <h2>{t('À réapprovisionner')}</h2>
+                      <p>{t('D’après les seuils que vous avez choisis.')}</p>
                     </div>
                   </div>
                   {low.map(({ product: p, quantity }) => (
@@ -1173,7 +1222,7 @@ export default function App({
                       <div>
                         <strong>{p.name}</strong>
                         <span>
-                          {p.quantity} en stock · minimum {p.minimum}
+                          {number(p.quantity)} {t('en stock · minimum')} {number(p.minimum ?? 0)}
                         </span>
                       </div>
                       <button
@@ -1184,27 +1233,27 @@ export default function App({
                             ? void shared.store.addShopping(p.name, quantity, p.id)
                             : commit(
                                 (s) => addShopping(s, p.name, quantity, p.id),
-                                `${p.name} ajouté aux courses.`,
+                                deferred('{0} ajouté aux courses.', { 0: p.name }),
                               )
                         }
                       >
-                        <Plus size={16} /> Ajouter {quantity}
+                        <Plus size={16} /> {t('Ajouter')} {number(quantity)}
                       </button>
                     </article>
                   ))}
                 </section>
               )}
               <p className="shopping-hint">
-                <ScanLine size={17} /> Un scan en mode Ajouter réduit les quantités à acheter des
-                produits associés.
+                <ScanLine size={17} />{' '}
+                {t('Un scan en mode Ajouter réduit les quantités à acheter des produits associés.')}
               </p>
             </>
           )}
           {state.products.some((p) => p.external) && (
             <p className="source-credit">
-              Données :{' '}
+              {t('Données :')}{' '}
               <a href="https://world.openfoodfacts.org" target="_blank" rel="noreferrer">
-                Open Food Facts et ses contributeurs
+                {t('Open Food Facts et ses contributeurs')}
               </a>
               {' · '}
               <a
@@ -1214,7 +1263,7 @@ export default function App({
               >
                 ODbL
               </a>
-              {' · Photos '}
+              {t(' · Photos ')}
               <a
                 href="https://creativecommons.org/licenses/by-sa/3.0/"
                 target="_blank"
@@ -1228,13 +1277,13 @@ export default function App({
         <footer className="main-footer">
           <span>
             {shared
-              ? 'Réserve privée · actualisation toutes les 5 s.'
-              : 'Données de démonstration sur cet appareil.'}
+              ? t('Réserve privée · actualisation toutes les 5 s.')
+              : t('Données de démonstration sur cet appareil.')}
           </span>
-          <span>Sacré bleu · {shared ? 'partagée' : 'démo'}</span>
+          <span>Sacré bleu · {shared ? t('partagée') : t('démo')}</span>
         </footer>
       </div>
-      <nav className="mobile-nav" aria-label="Navigation mobile">
+      <nav className="mobile-nav" aria-label={t('Navigation mobile')}>
         {nav.map((n) => (
           <button
             key={n.page}
@@ -1246,8 +1295,10 @@ export default function App({
             }}
           >
             <n.icon size={22} />
-            <span>{n.label}</span>
-            {n.page === 'shopping' && remaining.length > 0 && <small>{remaining.length}</small>}
+            <span>{label(n.label)}</span>
+            {n.page === 'shopping' && remaining.length > 0 && (
+              <small>{number(remaining.length)}</small>
+            )}
           </button>
         ))}
       </nav>
@@ -1257,27 +1308,27 @@ export default function App({
           role={feedback.error ? 'alert' : 'status'}
         >
           {feedback.error ? <CircleHelp size={18} /> : <Check size={18} />}
-          <span>{feedback.text}</span>
+          <span>{message(feedback.text)}</span>
           {canUndo && !feedback.error && (
             <button disabled={locked} onClick={undoScan}>
-              Annuler
+              {t('Annuler')}
             </button>
           )}
-          <button aria-label="Fermer le message" onClick={() => setFeedback(null)}>
+          <button aria-label={t('Fermer le message')} onClick={() => setFeedback(null)}>
             <X size={17} />
           </button>
         </div>
       )}
       {editor?.lookup === 'loading' && (
         <Modal
-          title="Nouveau code-barres"
+          title={t('Nouveau code-barres')}
           close={() => {
             cancelLookup();
             setEditor(null);
           }}
         >
           <p role="status" className="form-note">
-            Recherche du produit…
+            {t('Recherche du produit…')}
           </p>
           <button
             className="secondary-button"
@@ -1286,7 +1337,7 @@ export default function App({
               setEditor({ ...editor, lookup: 'unavailable' });
             }}
           >
-            Saisir manuellement
+            {t('Saisir manuellement')}
           </button>
         </Modal>
       )}
@@ -1334,7 +1385,10 @@ export default function App({
                   }
                   return saveProduct(s, product);
                 },
-                `${product.name} ${editor.product ? 'enregistré' : 'créé'} · ${product.quantity} en stock`,
+                deferred(
+                  editor.product ? '{0} enregistré · {1} en stock' : '{0} créé · {1} en stock',
+                  { 0: product.name, 1: product.quantity },
+                ),
                 fromScan,
               )
             ) {
@@ -1363,14 +1417,16 @@ export default function App({
       )}
       {deleting && (
         <Modal
-          title="Supprimer ce produit ?"
+          title={t('Supprimer ce produit ?')}
           close={() => setDeleting(null)}
           error={feedback?.error ? feedback.text : undefined}
         >
           {shared && recovery}
           <p className="form-note">
-            La fiche « {deleting.name} » et son stock seront supprimés. Les éventuels articles de
-            courses resteront comme articles libres.
+            {t('La fiche «')} {deleting.name}{' '}
+            {t(
+              '» et son stock seront supprimés. Les éventuels articles de courses resteront comme articles libres.',
+            )}
           </p>
           <div className="confirm-actions">
             <button
@@ -1380,7 +1436,7 @@ export default function App({
                 setDeleting(null);
               }}
             >
-              Conserver
+              {t('Conserver')}
             </button>
             <button
               className="danger-button filled"
@@ -1394,14 +1450,14 @@ export default function App({
                   setDeleting(null);
               }}
             >
-              <Trash2 size={17} /> Supprimer
+              <Trash2 size={17} /> {t('Supprimer')}
             </button>
           </div>
         </Modal>
       )}
       {settings && (
         <Modal
-          title="Préférences"
+          title={t('Préférences')}
           close={() => setSettings(false)}
           error={feedback?.error ? feedback.text : undefined}
         >
@@ -1410,27 +1466,29 @@ export default function App({
             {page === 'scanner' && <div ref={setCameraSettingsTarget} />}
             {shared ? (
               <details className="settings-more">
-                <summary>Compte et réserve</summary>
+                <summary>{t('Compte et réserve')}</summary>
                 {accountSettings}
               </details>
             ) : (
               <details className="settings-more">
-                <summary>Données de démonstration</summary>
+                <summary>{t('Données de démonstration')}</summary>
                 <p>
-                  Vos produits et votre liste sont sauvegardés dans ce navigateur. Les modifications
-                  sont disponibles hors ligne après le premier chargement de la version compilée.
+                  {t(
+                    'Vos produits et votre liste sont sauvegardés dans ce navigateur. Les modifications sont disponibles hors ligne après le premier chargement de la version compilée.',
+                  )}
                 </p>
                 <p>
-                  Cette démonstration reste sur cet appareil, sans synchronisation. La caméra est
-                  disponible en contexte sécurisé. La recherche Open Food Facts est désactivée dans
-                  cette démonstration ; elle est disponible dans la réserve connectée.
+                  {t(
+                    'Cette démonstration reste sur cet appareil, sans synchronisation. La caméra est disponible en contexte sécurisé. La recherche Open Food Facts est désactivée dans cette démonstration ; elle est disponible dans la réserve connectée.',
+                  )}
                 </p>
                 <button className="secondary-button" onClick={exportData}>
-                  <Download size={17} /> Exporter les données JSON
+                  <Download size={17} /> {t('Exporter les données JSON')}
                 </button>
                 <small>
-                  L’export est une sauvegarde brute. La restauration guidée sera ajoutée à une
-                  prochaine étape.
+                  {t(
+                    'L’export est une sauvegarde brute. La restauration guidée sera ajoutée à une prochaine étape.',
+                  )}
                 </small>
                 <hr />
                 <button
@@ -1440,11 +1498,11 @@ export default function App({
                     setResetting(true);
                   }}
                 >
-                  Réinitialiser la démonstration
+                  {t('Réinitialiser la démonstration')}
                 </button>
                 {onExitDemo && (
                   <button className="secondary-button" onClick={onExitDemo}>
-                    Quitter la démonstration
+                    {t('Quitter la démonstration')}
                   </button>
                 )}
               </details>
@@ -1455,17 +1513,18 @@ export default function App({
       )}
       {resetting && (
         <Modal
-          title="Repartir avec la démonstration ?"
+          title={t('Repartir avec la démonstration ?')}
           close={() => setResetting(false)}
           error={feedback?.error ? feedback.text : undefined}
         >
           <p className="form-note">
-            Les données de ce navigateur seront remplacées par les produits d’exemple. Exportez vos
-            données si vous souhaitez les conserver.
+            {t(
+              'Les données de ce navigateur seront remplacées par les produits d’exemple. Exportez vos données si vous souhaitez les conserver.',
+            )}
           </p>
           <div className="confirm-actions">
             <button className="secondary-button" onClick={() => setResetting(false)}>
-              Conserver
+              {t('Conserver')}
             </button>
             <button
               className="danger-button filled"
@@ -1492,7 +1551,7 @@ export default function App({
                 }
               }}
             >
-              Réinitialiser
+              {t('Réinitialiser')}
             </button>
           </div>
         </Modal>

@@ -61,11 +61,18 @@ describe('shared saving feedback without moving the page content', () => {
 
   it('still exposes recovery after an uncertain write without showing success', async () => {
     const f = await setup();
-    f.execute.mockRejectedValueOnce(new BackendError('Connexion interrompue.', 'uncertain'));
+    f.execute.mockRejectedValueOnce(
+      new BackendError(
+        'Réponse interrompue. Reprenez la demande pour vérifier son résultat sans la doubler.',
+        'uncertain',
+      ),
+    );
     await f.store.scanProduct('p', 1);
     const html = f.render();
     expect(html).toContain('sync-message sync-error');
-    expect(html).toContain('Connexion interrompue.');
+    expect(html).toContain(
+      'Réponse interrompue. Reprenez la demande pour vérifier son résultat sans la doubler.',
+    );
     expect(html).toContain('Reprendre la demande');
     expect(f.store.writable).toBe(false);
     expect(f.store.getSnapshot().completed).toBe(0);

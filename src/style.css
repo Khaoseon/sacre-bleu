@@ -837,6 +837,7 @@ h1 > span {
   display: grid;
   gap: 5px;
 }
+.language-settings select,
 .camera-choice select {
   width: 100%;
   min-width: 0;

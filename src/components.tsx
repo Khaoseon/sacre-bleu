@@ -1,3 +1,6 @@
+import type { DisplayMessage } from './i18n';
+import { t, message, label, locale, number, packages } from './i18n';
+
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Bean,
@@ -33,7 +36,7 @@ export type Editor = {
   lookupReason?: Extract<LookupResult, { status: 'unavailable' }>['reason'];
 };
 export const packageLabel = (p: Product) =>
-  p.size ? `${p.size.toLocaleString('fr-FR')} ${p.unit ?? ''}` : '';
+  p.size ? `${p.size.toLocaleString(locale())} ${p.unit ? label(p.unit) : ''}` : '';
 const productIcons = {
   Féculents: Wheat,
   Conserves: Soup,
@@ -71,7 +74,7 @@ export function ProductAttribution({
   return (
     <small className="product-attribution">
       <a href={sourceUrl(barcode)} target="_blank" rel="noreferrer">
-        Open Food Facts et ses contributeurs
+        {t('Open Food Facts et ses contributeurs')}
       </a>
       {' · '}
       <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noreferrer">
@@ -79,7 +82,7 @@ export function ProductAttribution({
       </a>
       {image && (
         <>
-          {' · Photo '}
+          {t(' · Photo ')}
           <a
             href="https://creativecommons.org/licenses/by-sa/3.0/"
             target="_blank"
@@ -117,18 +120,18 @@ export function Quantity({
     <div className="quantity">
       <button
         className="quantity-button"
-        aria-label={decreaseLabel ?? `Retirer un ${name}`}
+        aria-label={decreaseLabel ?? t('Retirer un {0}', { 0: name })}
         disabled={disabled || locked || value <= (zeroAllowed ? 0 : 1)}
         onClick={() => onChange(-1)}
       >
         <Minus size={17} />
       </button>
-      <span aria-label={disabled ? 'Quantité indisponible' : `${value} emballages`}>
-        {disabled ? '—' : value}
+      <span aria-label={disabled ? t('Quantité indisponible') : packages(value)}>
+        {disabled ? '—' : number(value)}
       </span>
       <button
         className="quantity-button"
-        aria-label={increaseLabel ?? `Ajouter un ${name}`}
+        aria-label={increaseLabel ?? t('Ajouter un {0}', { 0: name })}
         disabled={disabled || locked || value >= max}
         onClick={() => onChange(1)}
       >
@@ -146,7 +149,7 @@ export function Modal({
   title: string;
   children: ReactNode;
   close: () => void;
-  error?: string;
+  error?: DisplayMessage;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -157,14 +160,14 @@ export function Modal({
     <dialog ref={ref} className="modal" onCancel={close} aria-labelledby="dialog-title">
       <header>
         <h2 id="dialog-title">{title}</h2>
-        <button className="icon-button" aria-label="Fermer" onClick={close}>
+        <button className="icon-button" aria-label={t('Fermer')} onClick={close}>
           <X size={21} />
         </button>
       </header>
       {children}
       {error && (
         <p role="alert" className="form-error">
-          {error}
+          {message(error)}
         </p>
       )}
     </dialog>
@@ -229,75 +232,83 @@ export function ProductForm({
   return (
     <Modal
       title={
-        p ? 'Modifier le produit' : editor.fromScan ? 'Nouveau code-barres' : 'Ajouter un produit'
+        p
+          ? t('Modifier le produit')
+          : editor.fromScan
+            ? t('Nouveau code-barres')
+            : t('Ajouter un produit')
       }
       close={close}
     >
       {recovery}
       {editor.fromScan && (
         <p className="form-note">
-          Ce produit n’est pas encore dans votre réserve.
+          {t('Ce produit n’est pas encore dans votre réserve.')}{' '}
           {editor.mode === -1
-            ? ' Il sera créé avec la quantité indiquée, sans retrait automatique.'
-            : ' Indiquez sa quantité après cet ajout.'}
+            ? t(' Il sera créé avec la quantité indiquée, sans retrait automatique.')
+            : t(' Indiquez sa quantité après cet ajout.')}
         </p>
       )}
       {editor.lookup === 'missing' && (
-        <p className="form-note">Produit absent d’Open Food Facts. Complétez la fiche.</p>
+        <p className="form-note">{t('Produit absent d’Open Food Facts. Complétez la fiche.')}</p>
       )}
       {editor.lookup === 'unavailable' && (
         <p className="form-note">
           {editor.lookupReason === 'cooldown'
-            ? 'Le créneau partagé OFF est occupé. Consultez le délai dans le scanner ou saisissez le produit.'
+            ? t(
+                'Le créneau partagé OFF est occupé. Consultez le délai dans le scanner ou saisissez le produit.',
+              )
             : editor.lookupReason === 'rate-limit'
-              ? 'Open Food Facts est temporairement limité. Vous pouvez saisir le produit.'
+              ? t('Open Food Facts est temporairement limité. Vous pouvez saisir le produit.')
               : editor.lookupReason === 'auth'
-                ? 'L’accès à la recherche OFF doit être vérifié. Vous pouvez saisir le produit.'
-                : 'Recherche indisponible. Vous pouvez saisir le produit.'}
+                ? t('L’accès à la recherche OFF doit être vérifié. Vous pouvez saisir le produit.')
+                : t('Recherche indisponible. Vous pouvez saisir le produit.')}
         </p>
       )}
       {proposed?.packageText && (
         <small>
-          Conditionnement indiqué : {proposed.packageText}
-          {!proposed.size && ' · à vérifier'}
+          {t('Conditionnement indiqué :')} {proposed.packageText}
+          {!proposed.size && t(' · à vérifier')}
         </small>
       )}
       {external && <ProductAttribution barcode={external.barcode} image={!!external.imageUrl} />}
       <form onSubmit={submit} className="product-form">
         <fieldset className="form-fields" disabled={blocked || saving}>
           <label>
-            Nom du produit{' '}
+            {t('Nom du produit')}{' '}
             <input
               name="name"
               autoFocus
               required
               maxLength={120}
               defaultValue={defaults?.name}
-              placeholder="Ex. Pois chiches"
+              placeholder={t('Ex. Pois chiches')}
             />
           </label>
           <div className="field-row">
             <label>
-              Marque <span>facultatif</span>
+              {t('Marque')} <span>{t('facultatif')}</span>
               <input
                 name="brand"
                 maxLength={80}
                 defaultValue={defaults?.brand}
-                placeholder="Ex. Bonduelle"
+                placeholder={t('Ex. Bonduelle')}
               />
             </label>
             <label>
-              Catégorie
+              {t('Catégorie')}{' '}
               <select name="category" defaultValue={defaults?.category ?? 'Autres'}>
                 {categories.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {label(c)}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
           <div className="field-row">
             <label>
-              Conditionnement <span>facultatif</span>
+              {t('Conditionnement')} <span>{t('facultatif')}</span>
               <input
                 name="size"
                 type="number"
@@ -309,17 +320,19 @@ export function ProductForm({
               />
             </label>
             <label>
-              Unité
+              {t('Unité')}{' '}
               <select name="unit" defaultValue={defaults?.unit ?? 'g'}>
                 {units.map((u) => (
-                  <option key={u}>{u}</option>
+                  <option key={u} value={u}>
+                    {label(u)}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
           <div className={editor.fromScan ? '' : 'field-row'}>
             <label>
-              Quantité en stock
+              {t('Quantité en stock')}{' '}
               <input
                 name="quantity"
                 type="number"
@@ -335,20 +348,20 @@ export function ProductForm({
               <input type="hidden" name="barcode" value={editor.barcode} />
             ) : (
               <label>
-                Code-barres <span>facultatif</span>
+                {t('Code-barres')} <span>{t('facultatif')}</span>
                 <input
                   name="barcode"
                   inputMode="numeric"
                   pattern="[0-9]{4,32}"
                   maxLength={32}
                   defaultValue={p?.barcode ?? editor.barcode}
-                  placeholder="13 chiffres…"
+                  placeholder={t('13 chiffres…')}
                 />
               </label>
             )}
           </div>
           {shared && p && (
-            <small>Modifiez le stock avec les boutons + et − de l’écran Stock.</small>
+            <small>{t('Modifiez le stock avec les boutons + et − de l’écran Stock.')}</small>
           )}
           {!editor.fromScan && (
             <label className="checkbox-label">
@@ -357,12 +370,12 @@ export function ProductForm({
                 checked={minimum}
                 onChange={(e) => setMinimum(e.target.checked)}
               />{' '}
-              Me signaler un stock bas
+              {t('Me signaler un stock bas')}
             </label>
           )}
           {minimum && (
             <label>
-              Seuil minimum (emballages)
+              {t('Seuil minimum (emballages)')}{' '}
               <input
                 name="minimum"
                 type="number"
@@ -375,7 +388,7 @@ export function ProductForm({
             </label>
           )}
           <label>
-            Photo <span>facultatif · JPG, PNG ou WebP, 500 Ko max.</span>
+            {t('Photo')} <span>{t('facultatif · JPG, PNG ou WebP, 500 Ko max.')}</span>
             <input
               type="file"
               disabled={shared}
@@ -407,7 +420,9 @@ export function ProductForm({
             />
           </label>
           {shared && (
-            <small>Ajout de photos personnelles indisponible en mode partagé pour le moment.</small>
+            <small>
+              {t('Ajout de photos personnelles indisponible en mode partagé pour le moment.')}
+            </small>
           )}
           {(photo || external?.imageUrl) && (
             <div className="photo-preview">
@@ -429,19 +444,19 @@ export function ProductForm({
                   setExternal((r) => (r ? { ...r, imageUrl: undefined } : undefined));
                 }}
               >
-                Retirer la photo
+                {t('Retirer la photo')}
               </button>
             </div>
           )}
           {(photoError || error) && (
             <p role="alert" className="form-error">
-              {photoError || error}
+              {message(photoError || error)}
             </p>
           )}
           <footer className="form-actions">
             {p && (
               <button type="button" className="danger-button" onClick={() => onDelete(p)}>
-                <Trash2 size={17} /> Supprimer
+                <Trash2 size={17} /> {t('Supprimer')}
               </button>
             )}
             <button
@@ -449,7 +464,7 @@ export function ProductForm({
               disabled={reading || saving || blocked}
               type="submit"
             >
-              <Check size={18} /> Enregistrer
+              <Check size={18} /> {t('Enregistrer')}
             </button>
           </footer>
         </fieldset>

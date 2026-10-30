@@ -10,7 +10,7 @@
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
-I built Sacré bleu for two people keeping track of the same household pantry: what is left, what was just scanned, and what to buy next. It is an installable web app with a French interface, designed for a phone beside the cupboard.
+I built Sacré bleu for two people keeping track of the same household pantry: what is left, what was just scanned, and what to buy next. It is an installable web app with French and English interfaces, designed for a phone beside the cupboard.
 
 The scope is deliberately small. The interesting work is making shared changes behave predictably when two phones act at once, a response goes missing, or a backup replaces the inventory.
 
@@ -22,7 +22,7 @@ The scope is deliberately small. The interesting work is making shared changes b
 - Prefill unknown products from Open Food Facts, with editable suggestions and a manual fallback.
 - Read the last synchronized pantry offline, export JSON, and restore through an owner-only preview and confirmation flow.
 
-No offline writes. Shopping suggestions require an explicit action. Private photo uploads, password recovery screens and localization are not implemented. The local demo is separate from the shared pantry.
+No offline writes. Shopping suggestions require an explicit action. Private photo uploads and password recovery screens are not implemented. Choose Français or English in settings; this display preference stays on your device. The local demo is separate from the shared pantry.
 
 ## Where the engineering is
 

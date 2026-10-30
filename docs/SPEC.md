@@ -4,7 +4,7 @@ This is the current English specification, consolidated from the [French develop
 
 ## Purpose and boundaries
 
-Sacré bleu is a personal, mobile-first pantry PWA for two confirmed accounts sharing one reserve. The French interface has Stock, Scanner and À acheter views, keyboard/touch controls, themes and device-local sort preferences. Products count whole packages, not opened-package contents. Expiry dates and storage locations are out of scope.
+Sacré bleu is a personal, mobile-first pantry PWA for two confirmed accounts sharing one reserve. The French (default) and English interface has Stock, Scanner and À acheter/Shopping views, keyboard/touch controls, themes and device-local sort preferences. Products count whole packages, not opened-package contents. Expiry dates and storage locations are out of scope.
 
 Production Cloud mode has no public signup or reserve-creation UI. Independent administrators privately provision accounts and initialize the first reserve through the authorized helper in INSTALL.md. Local development permits signup with Mailpit confirmation. The isolated demo uses local examples and never becomes a fallback for a failed shared write.
 
@@ -41,3 +41,7 @@ The last confirmed private snapshot is cached separately by backend project/acco
 App-shell resources are cached by the service worker; private API responses are not. Camera decoding is a separate lazy-loaded same-origin chunk. Updates offer Actualiser/Plus tard and activate/reload only after the user's action and checks for forms, pending/uncertain work, scanner activity and other windows. No automatic clearing of Auth/demo/private storage to force an update.
 
 Mobile edge swipes navigate Stock → Scanner → À acheter without wrapping; buttons remain available. Interactive fields, vertical/multi-touch gestures and busy/modal states are protected. Android requests fullscreen; actual behavior and icon refresh depend on the browser/OS. Installed-device acceptance is separate from responsive/browser testing.
+
+## Interface language
+
+The existing settings include Français/English before sign-in, in the demo and in the shared pantry. Switching is immediate and preserves forms, Auth and confirmed/pending operations. Only a separate device-local display preference is written; signout retains it. Missing, invalid or inaccessible storage defaults to French on startup. Storage-write failure keeps the selection in memory and announces the failure. Categories/units are translated only for display; user/provider text, backups and RPC contracts stay unchanged. See [I18N.md](I18N.md).

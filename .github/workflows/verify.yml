@@ -35,6 +35,7 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_fixture
       - run: npx playwright install --with-deps chrome
       - run: npm run test:ui:browser
+      - run: npm run test:i18n:browser
       - run: npm run test:pwa:browser
         env:
           VITE_SUPABASE_URL: https://aaaaaaaaaaaaaaaaaaaa.supabase.co

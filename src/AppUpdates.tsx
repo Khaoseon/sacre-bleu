@@ -1,3 +1,5 @@
+import { t, message, useLanguage } from './i18n';
+
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { appUpdates, registerUpdateBlocker } from './pwaUpdateController';
 
@@ -7,6 +9,7 @@ export function useUpdateBlocker(check: () => string | null) {
   useEffect(() => registerUpdateBlocker(() => latest.current()), []);
 }
 export function UpdateControls() {
+  useLanguage();
   const state = useSyncExternalStore(appUpdates.subscribe, appUpdates.getSnapshot);
   return (
     <div className="update-controls">
@@ -15,7 +18,7 @@ export function UpdateControls() {
         disabled={state.checking || state.applying}
         onClick={() => void appUpdates.check()}
       >
-        {state.checking ? 'Vérification…' : 'Vérifier les mises à jour'}
+        {state.checking ? t('Vérification…') : t('Vérifier les mises à jour')}
       </button>
       {state.available && (
         <button
@@ -23,14 +26,15 @@ export function UpdateControls() {
           disabled={state.checking || state.applying}
           onClick={() => void appUpdates.apply()}
         >
-          Actualiser
+          {t('Actualiser')}
         </button>
       )}
-      {state.message && <p role="status">{state.message}</p>}
+      {state.message && <p role="status">{message(state.message)}</p>}
     </div>
   );
 }
 export function AppUpdateHost() {
+  useLanguage();
   const state = useSyncExternalStore(appUpdates.subscribe, appUpdates.getSnapshot);
   const progress = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -43,18 +47,18 @@ export function AppUpdateHost() {
   return (
     <>
       {state.available && !state.deferred && !state.applying && (
-        <aside className="app-update-banner" aria-label="Mise à jour de l’application">
-          <p role="status">{state.message || 'Nouvelle version disponible.'}</p>
+        <aside className="app-update-banner" aria-label={t('Mise à jour de l’application')}>
+          <p role="status">{message(state.message) || t('Nouvelle version disponible.')}</p>
           <div>
             <button
               className="primary-button"
               disabled={state.checking}
               onClick={() => void appUpdates.apply()}
             >
-              Actualiser
+              {t('Actualiser')}
             </button>
             <button className="text-button" onClick={appUpdates.defer}>
-              Plus tard
+              {t('Plus tard')}
             </button>
           </div>
         </aside>
@@ -62,10 +66,10 @@ export function AppUpdateHost() {
       <dialog
         ref={progress}
         className="modal update-progress"
-        aria-label="Actualisation de l’application"
+        aria-label={t('Actualisation de l’application')}
         onCancel={(event) => event.preventDefault()}
       >
-        <p role="status">Actualisation en cours…</p>
+        <p role="status">{t('Actualisation en cours…')}</p>
       </dialog>
     </>
   );
