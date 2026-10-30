@@ -590,7 +590,9 @@ export default function App({
                       ? 'Demande à vérifier'
                       : shared.view.status === 'ready'
                         ? 'Synchronisé'
-                        : 'Actualisation nécessaire'
+                        : shared.view.status === 'offline'
+                          ? 'Hors ligne · lecture seule'
+                          : 'Actualisation nécessaire'
                   : online
                     ? 'Enregistré sur cet appareil'
                     : 'Hors ligne · données locales'}
@@ -602,6 +604,20 @@ export default function App({
           </div>
         </header>
         <main id="main-content">
+          {shared && (
+            <p className="sync-information" role="status">
+              {shared.view.status === 'offline'
+                ? 'Hors ligne · consultation uniquement. '
+                : shared.view.status !== 'ready'
+                  ? 'Copie à actualiser · consultation uniquement. '
+                  : ''}
+              Dernière synchronisation :{' '}
+              {shared.view.syncedAt
+                ? new Date(shared.view.syncedAt).toLocaleString('fr-FR')
+                : 'jamais'}
+              .{shared.view.cacheError && <span role="alert"> {shared.view.cacheError}</span>}
+            </p>
+          )}
           {shared &&
             !shared.view.busy &&
             (shared.view.error || shared.view.status !== 'ready' || shared.view.pending) &&

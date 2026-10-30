@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 
 const container = 'sacre-bleu-v1-archive-restore';
 import { outsideGit } from './backup-archive.mjs';
+import { validateRestoreHistory } from './restore-import.mjs';
 if (process.argv.length !== 3)
   throw new Error('Usage: npm run backup:restore:local -- ABSOLUTE_PRIVATE_EXTRACTION_FOLDER');
 const folder = outsideGit(process.argv[2], process.cwd());
@@ -24,12 +25,19 @@ for (const entry of manifest.files) {
   )
     throw new Error('Extracted file integrity mismatch');
 }
+if (metadata.projectRef !== 'uznbnihmdzxdnlxanjcl') throw new Error('Unexpected archive source');
+const migrationFiles = readdirSync(folder + '/migrations').sort();
+validateRestoreHistory(metadata.appliedMigrations, migrationFiles);
 if (
-  metadata.projectRef !== 'uznbnihmdzxdnlxanjcl' ||
-  JSON.stringify(metadata.appliedMigrations) !==
-    JSON.stringify(['20261026000100', '20261026000200', '20261026000300', '20261028000100'])
+  JSON.stringify(migrationFiles) !==
+  JSON.stringify(
+    manifest.files
+      .filter((f) => f.name.startsWith('migrations/'))
+      .map((f) => f.name.slice('migrations/'.length))
+      .sort(),
+  )
 )
-  throw new Error('Unexpected archive history');
+  throw new Error('Unverified migration file');
 const project = readFileSync('supabase/.temp/project-ref', 'utf8').trim();
 if (project !== 'uznbnihmdzxdnlxanjcl') throw new Error('Projet lié inattendu.');
 function run(command, args, input) {

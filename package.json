@@ -16,6 +16,7 @@
     "test:off:browser": "node scripts/browser/off.integration.mjs",
     "test:ui:browser": "node scripts/browser/navigation.integration.mjs",
     "test:pwa:browser": "node scripts/browser/updates.integration.mjs",
+    "test:phase5:browser": "node scripts/browser/phase5.integration.mjs",
     "test:scanners:browser": "node scripts/browser/two-scanners.integration.mjs",
     "test:off:edge": "node --test scripts/backend/off-edge.integration.mjs",
     "typecheck": "tsc --noEmit",

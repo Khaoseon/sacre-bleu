@@ -1,6 +1,8 @@
 import type { MutationReceipt, ReserveBackend, ReserveCommand, ReserveSnapshot } from './contracts';
 import { backendError, BackendError } from './errors';
 import { MAX_QUANTITY, type Product, type Sort, type State } from '../model';
+import type { PrivateReserveCache } from '../storage';
+import { validateBackup, type UserBackup } from '../model';
 
 export const PENDING_PREFIX = 'app-reserve.pending.v1:';
 export interface PendingIntent {
@@ -28,6 +30,7 @@ export interface SharedView {
   error: string;
   notice: string;
   syncedAt: number | null;
+  cacheError: string;
   scan: SharedScan | null;
   scanInvalidation: string;
   lastProductId: string | null;
@@ -86,6 +89,7 @@ export class SharedPantryStore {
     private journal: Journal,
     private connected: () => boolean = () => navigator.onLine,
     private requestTimeoutMs = 12000,
+    private cache?: PrivateReserveCache,
   ) {
     this.key = `${PENDING_PREFIX}${userId}:${reserveId}`;
     let pending: PendingIntent | null = null;
@@ -112,14 +116,16 @@ export class SharedPantryStore {
       error =
         'La demande en attente est illisible. Déconnectez-vous puis reconnectez-vous pour consulter le stock confirmé.';
     }
+    const cached = cache?.read(userId, reserveId);
     this.view = {
-      snapshot: null,
-      status: 'loading',
+      snapshot: cached?.snapshot ?? null,
+      status: cached ? (this.connected() ? 'stale' : 'offline') : 'loading',
       busy: false,
       pending,
       error,
       notice: '',
-      syncedAt: null,
+      syncedAt: cached?.syncedAt ?? null,
+      cacheError: '',
       scan: null,
       scanInvalidation: '',
       lastProductId: pending?.localScan || pending?.scanMode ? (pending.productId ?? null) : null,
@@ -164,6 +170,17 @@ export class SharedPantryStore {
       throw new BackendError('Vous n’avez plus accès à cette réserve.', 'rejected', '42501');
     return snapshot;
   }
+  private cacheConfirmed(snapshot: ReserveSnapshot, syncedAt: number) {
+    if (this.disposed || !this.cache) return;
+    try {
+      this.cache.write(this.userId, snapshot, syncedAt);
+      this.publish({ cacheError: '' });
+    } catch {
+      this.publish({
+        cacheError: 'La copie hors ligne n’a pas pu être conservée sur cet appareil.',
+      });
+    }
+  }
   private bounded<T>(request: Promise<T>, write: boolean): Promise<T> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
@@ -200,21 +217,33 @@ export class SharedPantryStore {
     this.reading = (async () => {
       try {
         const snapshot = await this.readConfirmed();
-        if (this.view.busy) return;
+        if (this.disposed || this.view.busy) return;
         if (this.view.snapshot && snapshot.reserve.revision < this.view.snapshot.reserve.revision)
           return;
+        const syncedAt = Date.now();
+        this.cacheConfirmed(snapshot, syncedAt);
         this.publish({
           snapshot,
-          status: 'ready',
-          syncedAt: Date.now(),
+          status: this.connected() ? 'ready' : 'offline',
+          syncedAt,
           ...this.invalidate(snapshot),
           error: this.view.pending || this.journalBroken ? this.view.error : '',
         });
       } catch (error) {
-        if (this.view.busy) return;
+        if (this.disposed || this.view.busy) return;
         const failure = backendError(error);
+        if (failure.code === '42501') {
+          try {
+            this.cache?.clear();
+          } catch {
+            this.publish({
+              cacheError:
+                'L’effacement de la copie privée a échoué. Effacez les données de ce site dans le navigateur.',
+            });
+          }
+        }
         this.publish({
-          status: this.view.snapshot ? 'stale' : 'error',
+          status: this.connected() ? (this.view.snapshot ? 'stale' : 'error') : 'offline',
           error: failure.message,
           ...(failure.code === '42501' ? { snapshot: null, scan: null } : {}),
         });
@@ -305,10 +334,12 @@ export class SharedPantryStore {
           );
         }
         if (this.disposed) return false;
+        const syncedAt = Date.now();
+        this.cacheConfirmed(snapshot, syncedAt);
         this.publish({
           snapshot,
-          status: 'ready',
-          syncedAt: Date.now(),
+          status: this.connected() ? 'ready' : 'offline',
+          syncedAt,
           ...this.invalidate(snapshot),
         });
         if (index + 1 < pending.steps.length) this.savePending({ ...pending, index: index + 1 });
@@ -386,6 +417,13 @@ export class SharedPantryStore {
     return this.mutate(
       [{ action: 'stock', payload: { product_id: p.id, delta } }],
       'Quantité mise à jour.',
+    );
+  }
+  restore(backup: UserBackup, revision: number) {
+    validateBackup(backup);
+    return this.mutate(
+      [{ action: 'restore', payload: { backup, expected_revision: revision } }],
+      'Restauration terminée.',
     );
   }
   scanProduct(productId: string, mode: 1 | -1) {

@@ -1,5 +1,7 @@
 # Plan de réalisation
 
+**Avancement phase 5 au 30 octobre 2026 : préparée et testée localement, publication en attente de l’accord unique de migration.** [Périmètre exact et contrats](PHASE5.md), [preuves et séquence de publication](HANDOFF_5.md). Les anciens états de stabilisation ci-dessous restent l’historique ; aucune phase 6/V1.1 commencée.
+
 **État courant au 30 octobre 2026 : lot de stabilisation V1 livré et clôturé**, après CI exacte verte, restauration isolée validée, deux migrations autorisées, Edge v3 et publication de la PR #1 sur `62f7f92bcb01`. [Bilan complet](HANDOFF_V1_STABILISATION.md). Les paragraphes de préparation ci-dessous conservent l'historique des accords ; les correctifs ne sont plus en attente. Aucune phase 5 ni V1.1 commencée, aucune nouvelle recette physique revendiquée.
 
 Chaque étape nécessite une validation avant d’élargir le périmètre. Aucun service distant n’est créé à l’étape 1.
@@ -74,7 +76,7 @@ Priorité complémentaire avant phase 5 : [scans simultanés et limiteur OFF](SC
 
 **Blocage de livraison V1 résolu localement :** sixième migration PGRST/HTTP 409/code JSON 40001, clients publié/actuel et suites techniques validés. L'utilisateur accepte de publier sans nouvelle recette physique Samsung/iPhone préalable et de surveiller le bug de substitution non reproduit. Commit/push de la branche corrective et PR brouillon autorisés après tests verts ; aucune autorisation SQL/Edge Cloud, fusion ou publication implicite. Pas de phase 5/V1.1.
 
-**Non commencée.** La gestion des mises à jour déjà livrée en 4B sera conservée ; les autres travaux ci-dessous restent soumis à une nouvelle demande.
+**Implémentée localement à la demande autonome du 30 octobre 2026.** La gestion des mises à jour 4B est conservée. Cache privé en lecture seule et import/export guidés validés ; seule la migration additive de restauration exige encore l’accord de production, avant fusion/publication. Les critères et limites sont détaillés dans [HANDOFF_5.md](HANDOFF_5.md).
 
 Conserver le dernier état synchronisé privé pour consultation hors ligne. Afficher la date du dernier succès et désactiver les mutations sans connexion dans cette V1 ; une file d’écritures hors ligne n’est pas requise. Gérer les mises à jour du service worker sans interruption de saisie.
 

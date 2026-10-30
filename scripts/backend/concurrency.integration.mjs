@@ -5,6 +5,69 @@ import { setTimeout as delay } from 'node:timers/promises';
 import pg from 'pg';
 import { readFileSync } from 'node:fs';
 
+const restoreBackup = () => ({
+  format: 'sacre-bleu',
+  version: 1,
+  exportedAt: '2026-10-30T10:00:00.000Z',
+  products: [],
+  shopping: [],
+});
+async function restore(client, reserve, revision, backup = restoreBackup(), key = randomUUID()) {
+  return (
+    await client.query('select public.restore_reserve($1,$2,$3,$4::jsonb) as result', [
+      key,
+      reserve,
+      revision,
+      JSON.stringify(backup),
+    ])
+  ).rows[0].result;
+}
+test('restore serializes with a legacy stock writer and refuses to overwrite its newer revision', async () => {
+  await fixture(async ({ a, b, admin, reserve, accept }) => {
+    await accept(b);
+    const product = (
+      await rpc(a, reserve, 'create_product', { name: 'Concurrent', initial_quantity: 2 })
+    ).product_id;
+    const revision = (await a.query('select revision from public.reserves where id=$1', [reserve]))
+      .rows[0].revision;
+    await b.query('begin');
+    await rpc(b, reserve, 'stock', { product_id: product, delta: 1 });
+    const attempt = restore(a, reserve, revision).then(
+      () => ({ ok: true }),
+      (e) => ({ code: e.code }),
+    );
+    await waitForLock(admin, a);
+    await b.query('commit');
+    assert.equal((await attempt).code, 'PGRST');
+    assert.equal(
+      (await a.query('select quantity from public.product_stock where product_id=$1', [product]))
+        .rows[0].quantity,
+      3,
+    );
+  });
+});
+test('simultaneous owner restores from the same preview commit at most once', async () => {
+  await fixture(async ({ a, owner, reserve, clients }) => {
+    const second = await connect(owner);
+    clients.push(second);
+    const revision = (await a.query('select revision from public.reserves where id=$1', [reserve]))
+      .rows[0].revision;
+    const results = await Promise.allSettled([
+      restore(a, reserve, revision),
+      restore(second, reserve, revision),
+    ]);
+    assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+    assert.equal(results.find((r) => r.status === 'rejected').reason.code, 'PGRST');
+    assert.equal(
+      Number(
+        (await a.query('select revision from public.reserves where id=$1', [reserve])).rows[0]
+          .revision,
+      ),
+      Number(revision) + 1,
+    );
+  });
+});
+
 // Deliberately local-only; no environment URL can redirect these destructive
 // test fixtures toward a hosted project. This is the CLI's local test password.
 const configPort = readFileSync('supabase/config.toml', 'utf8').match(

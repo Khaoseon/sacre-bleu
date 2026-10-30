@@ -140,12 +140,19 @@ export class SupabaseBackend implements ReserveBackend {
     command: Parameters<ReserveBackend['execute']>[2],
   ): Promise<MutationReceipt> {
     const row = object(
-      await this.rpc('mutate_reserve', {
-        p_request_id: requestId,
-        p_reserve_id: reserveId,
-        p_action: command.action,
-        p_payload: command.payload,
-      }),
+      command.action === 'restore'
+        ? await this.rpc('restore_reserve', {
+            p_request_id: requestId,
+            p_reserve_id: reserveId,
+            p_expected_revision: command.payload.expected_revision,
+            p_backup: JSON.parse(JSON.stringify(command.payload.backup)) as Json,
+          })
+        : await this.rpc('mutate_reserve', {
+            p_request_id: requestId,
+            p_reserve_id: reserveId,
+            p_action: command.action,
+            p_payload: command.payload,
+          }),
     );
     if (typeof row.revision !== 'number')
       throw new BackendError('Résultat à vérifier par une reprise.', 'uncertain');

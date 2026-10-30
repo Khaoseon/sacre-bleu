@@ -1,10 +1,81 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { backupPlan, fingerprintSQL, sameFingerprint } from './backup-plan.mjs';
+import { validateRestoreHistory } from './restore-import.mjs';
+test('isolated administrative restore accepts only the verified historical prefix through phase 5', () => {
+  const all = [
+    '20261026000100',
+    '20261026000200',
+    '20261026000300',
+    '20261028000100',
+    '20261029000100',
+    '20261029000200',
+    '20261030000100',
+  ];
+  for (const count of [4, 5, 6, 7])
+    assert.doesNotThrow(() =>
+      validateRestoreHistory(
+        all.slice(0, count),
+        all.slice(0, count).map((v) => v + '_example.sql'),
+      ),
+    );
+  assert.throws(() =>
+    validateRestoreHistory(all, [...all.map((v) => v + '_example.sql'), 'extra.sql']),
+  );
+  assert.throws(() =>
+    validateRestoreHistory(
+      all.slice(1),
+      all.slice(1).map((v) => v + '_example.sql'),
+    ),
+  );
+  assert.throws(() =>
+    validateRestoreHistory(
+      [...all, '20261031000100'],
+      [...all, '20261031000100'].map((v) => v + '_example.sql'),
+    ),
+  );
+});
 const versions = ['20261026000100', '20261026000200', '20261026000300', '20261028000100'];
 const files = versions.map((version) => `${version}_example.sql`);
 const applied = versions.map((version) => ({ local: version, remote: version }));
 const pending = applied.map((row, i) => ({ ...row, remote: i === 3 ? '' : row.remote }));
+
+test('phase 5 backup permits only its seventh reviewed migration pending or the complete applied history', () => {
+  const versions5 = [...versions, '20261029000100', '20261029000200', '20261030000100'];
+  const names = versions5.map((v) => `${v}_example.sql`);
+  const rows = versions5.map((local, i) => ({ local, remote: i === 6 ? '' : local }));
+  assert.throws(() => backupPlan(rows, names), /en attente/);
+  assert.equal(backupPlan(rows, names, false, false, false, true).files.length, 6);
+  assert.equal(backupPlan(rows, names, false, false, false, true).pendingVersion, '20261030000100');
+  assert.throws(() =>
+    backupPlan(
+      rows.map((r, i) => (i === 5 ? { ...r, remote: '' } : r)),
+      names,
+      false,
+      false,
+      false,
+      true,
+    ),
+  );
+  assert.throws(() => backupPlan(rows, names, false, false, true, true));
+  assert.equal(
+    backupPlan(
+      versions5.map((local) => ({ local, remote: local })),
+      names,
+    ).files.length,
+    7,
+  );
+  assert.throws(() =>
+    backupPlan(
+      [...rows, { local: '20261031000100', remote: '' }],
+      [...names, '20261031000100_example.sql'],
+      false,
+      false,
+      false,
+      true,
+    ),
+  );
+});
 
 test('V1 preflight accepts exactly four or five applied versions and the reviewed pending suffix, never a hole', () => {
   const all = [...versions, '20261029000100', '20261029000200'];

@@ -38,3 +38,33 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://aaaaaaaaaaaaaaaaaaaa.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_fixture
+
+  backend:
+    name: Restauration, sécurité et hors ligne
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0 # Exercise the actual historical installed client sources.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.22.1
+          cache: npm
+      - run: npm ci
+      - run: npx supabase start > /dev/null
+      - run: npm run db:reset
+      - run: npm run test:db
+      - run: npm run db:lint
+      - run: npm run db:types
+      - run: git diff --exit-code -- src/backend/database.generated.ts
+      - run: npm run test:db:concurrency
+      - run: npm run test:db:api
+      - run: npm run test:shared
+      - run: npm run test:backup
+      - run: npm run env:local
+      - run: npm run build
+      - run: npx playwright install --with-deps chrome
+      - run: npm run test:phase5:browser
+      - if: always()
+        run: npx supabase stop --no-backup
