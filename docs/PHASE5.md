@@ -1,6 +1,6 @@
 # Phase 5 — consultation privée et sauvegarde utilisateur
 
-État au 30 octobre 2026 : implémentation et validation locales, publication en attente de l’accord unique pour la migration. Aucun import sur la réserve réelle. La phase 6 et la V1.1 ne sont pas commencées. Voir [la transmission](HANDOFF_5.md).
+État au 30 octobre 2026 : **phase 5 publiée et clôturée après autorisation globale**, PR #3 fusionnée, seule migration `20261030000100_user_restore.sql` appliquée, frontend applicatif `6fc72c965482` contrôlé sur HTTPS. Aucun import sur la réserve réelle. La phase 6 et la V1.1 ne sont pas commencées. Voir [le bilan de livraison](HANDOFF_5.md).
 
 ## Consultation hors ligne
 
