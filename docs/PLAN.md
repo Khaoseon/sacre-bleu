@@ -1,5 +1,7 @@
 # Plan de réalisation
 
+**État courant au 30 octobre 2026 : lot de stabilisation V1 livré et clôturé**, après CI exacte verte, restauration isolée validée, deux migrations autorisées, Edge v3 et publication de la PR #1 sur `62f7f92bcb01`. [Bilan complet](HANDOFF_V1_STABILISATION.md). Les paragraphes de préparation ci-dessous conservent l'historique des accords ; les correctifs ne sont plus en attente. Aucune phase 5 ni V1.1 commencée, aucune nouvelle recette physique revendiquée.
+
 Chaque étape nécessite une validation avant d’élargir le périmètre. Aucun service distant n’est créé à l’étape 1.
 
 ## Étape 1 — Fondations et prototype local

@@ -1,5 +1,7 @@
 # Revue corrective après 4B — préparation du 29 octobre 2026
 
+**Suite livrée le 30 octobre 2026 après autorisation globale :** correctifs frontend/CI fusionnés via PR #1 et publiés, deux migrations V1 appliquées, Edge v3 actif. Inscriptions fermées et données conservées. [Clôture V1](HANDOFF_V1_STABILISATION.md). Le présent audit conserve ses constats et autorisations historiques ; ses mentions « en attente/non publié » ne constituent plus l'état courant. Aucun gel SQL global de création de réserves ajouté.
+
 **Code/CI préparés localement sur `codex/revue-corrective-4b`.** Après cet audit initial, l'utilisateur autorise uniquement `auth.enable_signup=false` : réglage appliqué et `disable_signup=true` confirmé. Comptes, réserve, appartenances, identités de sessions et empreintes métier/migrations préservés, autres paramètres Auth inchangés. Le contrôle public immédiat a échoué puis la lecture diagnostique a confirmé l'état attendu ; cause de propagation probable, non prouvée. L'utilisateur confirme ensuite l'accès des deux comptes sur Samsung/iPhone. La préparation ultérieure autorise les commits locaux seulement ; [procédure V1](LIVRAISON_CORRECTIFS_V1.md). Aucun push, changement Cloudflare, CI ou SQL distant. Phase 5 non commencée.
 
 Les autres propositions ci-dessous restent en attente. Une investigation supplémentaire prépare une migration de budget OFF, sans l'appliquer : [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md).

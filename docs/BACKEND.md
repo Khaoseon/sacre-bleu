@@ -1,5 +1,7 @@
 # Backend Supabase — phases 2A, 2B et passage Cloud 2C
 
+**État courant au 30 octobre 2026 :** les six migrations sont appliquées sur le projet Free Paris existant ; seules `20261029000100` et `20261029000200` ont été ajoutées pendant la livraison V1 autorisée. Edge v3, données métier/Auth et protections conservées. [Bilan de clôture V1](HANDOFF_V1_STABILISATION.md). Les états « préparé/local/non autorisé » ci-dessous restent l'historique avant cette livraison.
+
 **Préparation corrective du 29 octobre 2026 :** [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md). La cinquième migration précise le motif/délai du singleton OFF et conserve la RPC booléenne pour les anciens Edge. Aucune modification des RPC stock/scan ou de leurs refus périmés. Migration validée uniquement sur base locale vierge, types régénérés automatiquement ; Cloud encore sur les quatre migrations précédentes tant qu'aucun accord séparé n'est donné.
 
 **Complément V1 :** la sixième migration `20261029000200_scan_conflict_http.sql` change uniquement les deux levées d'erreur métier de mutate_reserve : SQLSTATE PGRST, HTTP 409 et code JSON 40001 pour rester compatible avec les clients publiés. Toutes les conditions, écritures transactionnelles et privilèges sont identiques ; refus rapides et reprise de scan testés via anciens/nouveaux SDK locaux. Six migrations appliquées sur base locale vierge, types régénérés sans différence. Aucune migration Cloud autorisée ; plan de sauvegarde et déploiement : [LIVRAISON_CORRECTIFS_V1.md](LIVRAISON_CORRECTIFS_V1.md).

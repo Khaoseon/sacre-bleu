@@ -1,5 +1,11 @@
 # Validation — phases 1, 2A, 2B, 2C et 3
 
+## Livraison technique et clôture V1 — 30 octobre 2026
+
+Après autorisation globale : CI réussie sur le commit exact `455c047` ([run 41038008117](https://github.com/Khaoseon/App_reserve/actions/runs/41038008117)), restauration isolée complète déjà validée et empreintes Cloud comparées à l'archive originale. Deux migrations autorisées appliquées, définitions SQL/grants/search_path vérifiés, Edge v3 ACTIVE/JWT conservé, douze contrôles HTTP anonymes/CORS réussis sans appel OFF ni écriture métier. Audit RLS sans violation et aucune transaction longue détectée. Comptes/réserve/appartenances/catalogue/stocks/courses/journaux identiques ; Auth, secrets et origines inchangés, disable_signup=true.
+
+PR #1 fusionnée en `62f7f92bcb01f3e5a38545fc091f776c5f17ceed` ; Cloudflare a publié ce commit avec succès. HTTPS, protections, manifeste/icônes/workers et version `0.1.0 · 62f7f92bcb01` dans l'interface publique vérifiés. Un contrôle temporaire choisissait le script de thème au lieu du module applicatif ; corrigé dans l'audit, sans changement de production. Aucun nouveau test physique Samsung/iPhone : dispense explicite et non-reproduction du bug exact conservées. [Rapport consolidé et limites](HANDOFF_V1_STABILISATION.md). Les recettes et anciens états ci-dessous gardent leur chronologie ; phase 5/V1.1 non commencées.
+
 ## Clôture de la recette principale phase 3 — 28 octobre 2026
 
 **Dernier retour utilisateur : « Super tout fonctionne ! »**, incluant les préférences minimalistes, les thèmes et la mémorisation caméra après réouverture. Caméra réelle EAN-13, protection dix secondes, ajustements/annulation avec courses positives, interruptions/reprise et synchronisation des deux comptes confirmés sur iPhone/Samsung. Sauts de page Safari corrigés et retestés. État initial observé de cette reprise et état final restauré : **stock 2 / courses 0**, confirmation utilisateur sur les deux téléphones ; aucune écriture Cloud à la clôture ni audit direct de la base.
