@@ -6,7 +6,7 @@ Affected artwork: `sacre-bleu-source.png`, `icon-master.png`, and all six PNG de
 
 ## Source and deterministic derivatives
 
-`sacre-bleu-source.png` is the supplied 1080 × 1350 image, retained outside the published directory. Phase 6D removed private Canva team/account/document metadata and normalized its author credit to Eloane ROURE; the compressed pixel stream is unchanged. Nonprivate AI-source provenance remains. The original metadata is still in Git history: see the [release blocker](../../docs/RELEASE.md#public-exposure-audit). The central region `(x=300, y=350, width=480, height=650)` was resized/centered on its original opaque navy background, removing outer margins without redrawing illustrated elements. Sharp 0.35.5 was available in the tooling environment; it is not a project build dependency.
+`sacre-bleu-source.png` is the supplied 1080 × 1350 image, retained outside the published directory. Phase 6D removed private Canva team/account/document metadata and normalized its author credit to Eloane ROURE; the compressed pixel stream is unchanged. Nonprivate AI-source provenance remains. The original metadata remains in Git history with the maintainer’s explicit authorization for historical disclosure: see the [exposure review](../../docs/RELEASE.md#public-exposure-audit). The central region `(x=300, y=350, width=480, height=650)` was resized/centered on its original opaque navy background, removing outer margins without redrawing illustrated elements. Sharp 0.35.5 was available in the tooling environment; it is not a project build dependency.
 
 `icon-master.png` is a 1024 × 1024 square master with the drawing centered at 880 px high. It is not published or precached. Only useful derivatives are served:
 
