@@ -1,6 +1,6 @@
 # Tests and evidence
 
-The repository contains reproducible tests and dated historical reports. A script's existence or past success is not proof that it ran for the current commit. The exact Phase 6B2 local outcomes are recorded in [RELEASE.md](RELEASE.md); PR checks remain the source for hosted CI results.
+The repository contains reproducible tests and dated historical reports. A script's existence or past success is not proof that it ran for the current commit. The current release-preparation local outcomes are recorded in [RELEASE.md](RELEASE.md); PR checks remain the source for hosted CI results.
 
 ## Application checks
 
@@ -55,6 +55,6 @@ For the local Edge authorization boundary, serve `product-lookup` in a separate 
 
 ## CI and evidence limits
 
-[verify.yml](../.github/workflows/verify.yml) runs on PRs targeting `main` or manual dispatch. The application job checks unit/types/format/build, a Cloud build with fictitious public configuration, navigation and PWA updates. The backend job starts/resets a disposable local stack, runs SQL/lint/type-regeneration/contention/Auth/shared/archive checks and the phase-5 browser journey. Extra OFF/Edge/two-scanner scripts exist but are not all wired into CI. CI never deploys production or restores hosted data.
+[verify.yml](../.github/workflows/verify.yml) runs on PRs targeting `main` or manual dispatch. The application job checks unit/types/format/build, a Cloud build with fictitious public configuration, navigation and PWA updates. The backend job starts/resets a disposable local stack, runs SQL/lint/type-regeneration/contention/Auth/shared/archive checks and the phase-5 browser journey. OFF fallback and two-scanner journeys also run in CI; the real local Edge-runtime boundary suite remains a separate local command. CI never deploys production or restores hosted data.
 
 Historical [VALIDATION.md](VALIDATION.md) and handoffs retain dated test counts, failures and remediation; counts are not evergreen README badges. Phase-3 core camera checks were physically performed on iPhone/Samsung. Later hosting acceptance was confirmed on Samsung, with iPhone 4B untested and explicitly accepted as a limitation. Full phase-5 offline/restore/update behavior on both physical phones, EAN-8/UPC-A and other matrix cases, a fresh independently hosted installation and real pause/restore remain separate manual acceptance. A historical scanner substitution incident was not physically reproduced; regression simulations do not certify its hardware resolution.

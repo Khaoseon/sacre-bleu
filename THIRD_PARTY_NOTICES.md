@@ -4,7 +4,7 @@
 
 [LICENSE](LICENSE) applies to project code and documentation under the maintainers' control. Copyright attribution uses the maintainer's public GitHub handle, not an inferred legal name. Dependency licenses, external data/images and contributed artwork rights remain separate. Private instance data is not made public or licensed by publishing source code.
 
-The mascot/source and derived PNGs were created by the app's second user. MIT redistribution has been agreed in principle, but **written confirmation must be retained before public release**, with their preferred credit. The root license does not assert a completed grant for this artwork. [Branding provenance and exact affected files](assets/branding/README.md) document that pending scope. No creator legal name or completed written permission is claimed.
+The mascot, original source and derived PNGs are by **Eloane ROURE**, redistributed under their separate [MIT artwork notice](assets/branding/LICENSE). The maintainer confirms permission for MIT redistribution of the original and derivatives and approves this public credit. Copyright remains with the creator; the project's code notice does not replace it. [Branding provenance and exact affected files](assets/branding/README.md) record this confirmation without publishing private correspondence.
 
 ## Software actually redistributed
 

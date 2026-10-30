@@ -63,6 +63,6 @@ PR CI also exercises a fresh local database, pgTAP authorization/rollback assert
 
 Issues and focused pull requests are welcome. This is a personal project maintained in spare time, with no guaranteed support or acceptance of changes. Start with [CONTRIBUTING.md](CONTRIBUTING.md); report vulnerabilities through the private route described in [SECURITY.md](SECURITY.md).
 
-The mascot was drawn by the app's second user. Its existing blue-and-cream artwork is retained; preferred public credit and written MIT redistribution confirmation are pending before public release. [Artwork provenance](assets/branding/README.md).
+Mascot by **Eloane ROURE**, redistributed with permission under MIT. The existing blue-and-cream artwork is retained. [Artwork provenance](assets/branding/README.md).
 
-Project code and documentation are [MIT licensed](LICENSE). Bundled libraries retain their own [notices](THIRD_PARTY_NOTICES.md); Open Food Facts data and images retain their separate licenses. The mascot's permission status is described above and in the [release checklist](docs/RELEASE.md).
+Project code and documentation are [MIT licensed](LICENSE). Bundled libraries retain their own [notices](THIRD_PARTY_NOTICES.md); Open Food Facts data and images retain their separate licenses. The creator's separate MIT notice is preserved with the [artwork](assets/branding/LICENSE). See the [release checklist](docs/RELEASE.md) for publication steps and verification limits.

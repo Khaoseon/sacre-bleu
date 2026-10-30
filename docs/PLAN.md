@@ -15,16 +15,20 @@ This is the current scope summary. The [French phase plan](history/PLAN_FR.md) p
 | Phase 6B1                 | Independent configuration and private first-reserve bootstrap                                         | Merged PR #5, `8c27db838c9e`; [INSTALL.md](INSTALL.md)           |
 | Phase 6B2                 | English reader journey, contribution/security policy, license scope and redistribution notices        | [Release preparation](RELEASE.md)                                |
 
-Phases 1–5 are implemented. Historical reports record the original authorized delivery and its limits; they are not new permissions to repeat remote operations. V1.0 public presentation is being prepared, not declared released. Package version remains `0.1.0`; a release/tag/version decision is separate from this documentation work.
+Phases 1–5 are implemented. Historical reports record the original authorized delivery and its limits; they are not new permissions to repeat remote operations. V1.0 public presentation is being prepared, not declared released. Phase 6D prepares package `1.0.0` with `private: true`; no tag or release is published.
 
 ## Acceptance and remaining work
 
 Preserve the invariants in [SPEC.md](SPEC.md) and [BACKEND.md](BACKEND.md). Before delivery run `npm test`, `npm run typecheck`, `npm run build`, `npm run format:check`, plus relevant changed-domain checks. A migration requires a fresh disposable local database, pgTAP, contention and Auth/API, then regenerated types. See [TESTING.md](TESTING.md).
 
-Public release still requires written mascot permission/preferred credit, private security reporting, privacy review of tracked assets/history and independent hosted/device acceptance. Physical iPhone/Samsung camera testing from phase 3 does not validate every later PWA/offline/recovery change. Historical reports explicitly retain those gaps and a scanner substitution incident that was not physically reproduced.
+Phase 6D records the approved Eloane ROURE MIT credit and the exposure audit. Public release still requires the manual protection/security/publication sequence in [RELEASE.md](RELEASE.md). Independent hosted deployment remains untested and is an explicitly accepted limitation; no new physical device campaign is required. Physical iPhone/Samsung camera testing from phase 3 does not validate every later PWA/offline/recovery change. Historical reports explicitly retain those gaps and a scanner substitution incident that was not physically reproduced.
 
 Screenshots and UI redesign are deferred. Offline mutations, private photo Storage, password recovery UI and broader collaboration are not part of Phase 6B2. No remote provisioning, production mutation, visibility change, repository rename, merge or intentional deployment is authorized by this plan. The original `main` triggers Pages automatically; review that constraint before any later merge.
 
 ## Phase 6C: interface localization
 
-French/English presentation, local language selection, locale-aware formatting and bilingual regression coverage are implemented on a dedicated branch. No migration, Auth/Edge change, deployment or merge is included. See [localization architecture, audit and evidence](I18N.md); public V1.0 and physical device acceptance remain separate.
+French/English presentation, local language selection, locale-aware formatting and bilingual regression coverage are merged in the verified Phase 6D baseline. No migration, Auth/Edge change, deployment or merge is included. See [localization architecture, audit and evidence](I18N.md); public V1.0 and physical device acceptance remain separate.
+
+## Phase 6D: final release preparation
+
+Prepare public identity `Khaoseon/sacre-bleu`, version 1.0.0, completed mascot attribution, configurable OFF operator identity, exposure audit and a practical publication runbook. No history rewrite, merge, tag, rename, visibility/security-setting change or hosted operation is authorized. [RELEASE.md](RELEASE.md) records evidence, accepted limitations and manual actions.

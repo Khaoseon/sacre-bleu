@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OpenFoodFactsProvider, OFF_FIELDS } from './productLookupServer';
+import { DEFAULT_OFF_USER_AGENT } from './offIdentity';
 import { EdgeProductProvider } from './productLookupClient';
 import { createLookupHandler } from './productLookupHandler';
 
@@ -13,6 +14,37 @@ const signal = () => new AbortController().signal;
 afterEach(() => vi.useRealTimers());
 
 describe('OFF HTTP, cache and request budget', () => {
+  it.each([
+    DEFAULT_OFF_USER_AGENT,
+    'Pantry/1.0.0 (https://operator.example/contact)',
+    'sacre-bleu/1.0.0 (https://github.com/Khaoseon/sacre-bleu)',
+  ])('sends the configured operator identity unchanged: %s', async (identity) => {
+    const http = vi.fn<typeof fetch>().mockResolvedValue(Response.json(response));
+    const provider = new OpenFoodFactsProvider({ userAgent: identity, fetch: http });
+    expect((await provider.lookup(code, signal())).status).toBe('found');
+    expect(http.mock.calls[0][1]?.headers).toMatchObject({ 'User-Agent': identity });
+    expect(DEFAULT_OFF_USER_AGENT).toBe(userAgent);
+  });
+  it.each([
+    '',
+    'curl',
+    'Pantry/1.0',
+    'Pantry/1.0 (http://operator.example)',
+    'Pantry/1.0 (https://user:password@operator.example)',
+    'Pantry/1.0 (https://operator.example?token=private)',
+    'Pantry/1.0 (https://localhost)',
+    'Pantry/1.0 (https://operator.example)\r\nInjected: yes',
+    'Pantry/1.0 (https://operator.example)\n',
+    'a'.repeat(257),
+  ])('disables malformed identity without an upstream request: %j', async (identity) => {
+    const http = vi.fn();
+    const provider = new OpenFoodFactsProvider({ userAgent: identity, fetch: http });
+    expect(await provider.lookup(code, signal())).toEqual({
+      status: 'unavailable',
+      reason: 'disabled',
+    });
+    expect(http).not.toHaveBeenCalled();
+  });
   it('uses only the fixed API v3.6 endpoint, requested fields, French and Swiss hints and custom UA', async () => {
     const http = vi.fn<typeof fetch>().mockResolvedValue(Response.json(response));
     const provider = new OpenFoodFactsProvider({ userAgent, fetch: http });

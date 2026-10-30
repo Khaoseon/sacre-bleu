@@ -1,7 +1,7 @@
 {
-  "name": "app-reserve",
+  "name": "sacre-bleu",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -73,6 +73,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Khaoseon/App_reserve.git"
+    "url": "git+https://github.com/Khaoseon/sacre-bleu.git"
   }
 }
