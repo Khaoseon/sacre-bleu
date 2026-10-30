@@ -1,51 +1,31 @@
-# Scanner caméra — phase 3
+# Camera scanner
 
-État au **28 octobre 2026**. Recette principale iPhone Safari/Samsung Chrome confirmée : EAN-13, anti-doublon dix secondes, ajustements/annulation, interruptions/reprise, synchronisation de deux comptes et préférences persistantes. Limites complémentaires dans `VALIDATION.md`, bilan dans `HANDOFF_3.md`. Serveur HTTPS arrêté, autorité/clé de recette nettoyées ; aucun hébergement, tunnel ou Open Food Facts.
+Current behavior; the [French phase-3 record](history/SCANNER_FR.md) preserves the original library comparison and device evidence. [TESTING.md](TESTING.md) separates implemented behavior from physical acceptance.
 
-## Choix technique
+## Decoder and lifecycle
 
-Comparaison documentaire des projets actuels, puis décodage synthétique avec le lecteur retenu ; aucun benchmark sur téléphone n’est revendiqué.
+The project locks ZXing Browser 0.2.1 and ZXing JS 0.23.0. `src/scanner/decoder.ts` loads on explicit camera activation, in a separate same-origin chunk. It uses canvas/video and `getUserMedia`, not a mandatory native BarcodeDetector. The chunk is excluded from initial PWA precache and cached on first use. No CDN or frame upload.
 
-| Solution                                                                                               | Intérêt                                                                                                           | Limites pour cette phase                                                                                       |
-| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| [ZXing Browser](https://github.com/zxing-js/browser) + [ZXing JS](https://github.com/zxing-js/library) | EAN-13, EAN-8, UPC-A ; API canvas/vidéo ; TypeScript ; intégration compacte ; publications actuelles 0.2.1/0.23.0 | Travail CPU en JavaScript ; qualité autofocus, éclairage et vitesse à mesurer sur appareils                    |
-| [Quagga2](https://github.com/ericblade/quagga2)                                                        | Localisation des codes 1D et rotation, lecteurs EAN/UPC, configuration des workers/fréquence                      | Davantage de réglages et de cycle vidéo à intégrer ; aucune supériorité de performance déduite sans essai réel |
-| [ZXing WASM](https://github.com/Sec-ant/zxing-wasm)                                                    | Moteur ZXing-C++, formats demandés et option intéressante pour les performances                                   | Binaire WASM et chargement à gérer localement ; complexité supplémentaire à justifier par des mesures          |
-| [BarcodeDetector](https://developer.mozilla.org/en-US/docs/Web/API/BarcodeDetector)                    | Accélération native lorsque disponible                                                                            | Disponibilité limitée : ne couvre pas seul la cible Safari iOS/Android                                         |
+`src/scanner/camera.ts` owns tracks; `CameraScanner.tsx` owns controls. Prefer rear-facing video with ideal 1920×1080, no audio, muted inline playback. Continuous focus is requested only when supported; browser lens selection is not guaranteed to match the phone's native 1× lens. A device-local camera preference is available after permission.
 
-Choix : **ZXing Browser 0.2.1 et bibliothèque 0.23.0**, versions exactes dans le lockfile. Le lecteur 1D reçoit exclusivement EAN-13, EAN-8 et UPC-A. Il utilise canvas et `getUserMedia`, sans dépendance à BarcodeDetector. Safari iOS et les navigateurs Android disposant de ces API en HTTPS sont les cibles ; leur compatibilité complète n’est pas certifiée par la comparaison documentaire. Node **24 minimum** pour les outils du projet, conformément à la dépendance ZXing actuelle.
+Detection pauses during a lookup, form or uncertain request without treating the pause as barcode withdrawal. Exit/background stops tracks and releases decoder/canvas resources. Foreground resumption is explicit. Denied permissions or unsupported capture leave manual entry available. Form closure/navigation/background invalidates pending product lookup results.
 
-Le module est importé après activation explicite de la caméra. Son fichier séparé (~478 Ko, ~125 Ko gzip) est exclu du précache PWA et mis en cache à la première utilisation seulement, sur la même origine. Le bundle principal reste autour de 523 Ko (~152 Ko gzip) ; Vite signale encore son seuil de 500 Ko. Aucun CDN. Les images restent dans un canvas en mémoire, libéré à la fermeture ; aucun fichier, télémétrie ou image transmis par ce module.
+## Recognition and repeat intentions
 
-## Session et parcours
+Pure recognition rules are in `src/model.ts` and tested independently of optics:
 
-- Scanner → **Activer la caméra** : permission à ce moment seulement. Caméra arrière préférée (`facingMode: environment`), définition idéale 1920×1080 sans minimum obligatoire, sans audio, vidéo muette, `playsInline`, `autoPlay` et appel explicite à `play()`. Mise au point continue demandée seulement si les capacités de la piste l’annoncent ; son absence ou son refus ne ferme pas le lecteur. L’optique choisie reste celle que le navigateur expose, sans garantie de correspondance à l’objectif natif « 1× ».
-- Après permission, préférence pour les objectifs empiriquement validés de la recette (détails dans `VALIDATION.md`). La roue crantée ouvre les préférences depuis Scanner : choix manuel prioritaire, sauvegardé uniquement dans le navigateur (identifiant/libellé), retrouvé par nom si l’identifiant change. Si absent/indisponible, repli vers la sélection arrière ; aucune relance automatique après refus de permission. Stockage bloqué : erreur sans faux succès. Ancien flux fermé avant changement, verrou anti-doublon conservé, aucune image ni identifiant transmis. Permission explicite et arrêt caméra conservés.
-- Prévisualisation conservée entre produits, remplie par recadrage centré (`object-fit: cover`), sans déformation ni bandes noires ajoutées par la mise en page. Le cadre partage ses proportions avec le décodeur ; ses coordonnées sont projetées dans le flux source selon la taille réelle de la vidéo affichée, y compris après rotation. Décodage de cette seule zone, largeur plafonnée à 960 px, nouvelle tentative 150 ms après chaque traitement : pas de rendu React par image et pas de boucle concurrente.
-- Ajouter vert par défaut, Retirer rouge ; une reconnaissance déclenche le parcours `scan` existant, puis RPC et relecture cohérente en partagé. Aucun stock n’est modifié par le module caméra.
-- Le compteur traite le dernier mouvement : +/−, répétition explicite et Annuler inchangés. Le changement de mode prépare la prochaine intention et ne réinterprète pas le mouvement précédent.
-- Inconnu : détection suspendue, flux conservé, formulaire existant avec code prérempli. Validation ou annulation ferme le formulaire et reprend la détection. Le code encore présent reste verrouillé : retirer/représenter ou saisir explicitement pour le traiter. En partagé, création à zéro puis scan en Ajouter, mêmes clés/reprises ; Annuler conserve la fiche à zéro.
-- Écriture lente/incertaine, fiche ou paramètres ouverts : décodage suspendu. Une demande incertaine bloque toujours les écritures jusqu’à « Reprendre la demande ». Même UUID et mêmes paramètres, même après rechargement ; le code du produit en attente est reverrouillé. Aucune vibration ni réussite avant confirmation et snapshot courant.
-- Sortie du scanner/déconnexion : démontage et arrêt des pistes. `visibilitychange` caché, `pagehide`, interruption de piste (`ended`/`mute`) ou pause système de la vidéo : fermeture et état en pause. Au retour, **Reprendre la caméra** ; pas de relance automatique ni multiplication des lecteurs. Le verrou du dernier code est conservé pendant cette pause dans la même page.
-- Les générations de session neutralisent les réponses tardives des permissions et du chargement. Tout flux arrivé après annulation est arrêté immédiatement ; un ancien lecteur ne peut arrêter la nouvelle session.
-- Lampe proposée seulement si la piste annonce `torch` ; échec non bloquant. Saisie manuelle repliable disponible même sans caméra ou après refus ; contrat historique des codes personnels 4 à 32 chiffres conservé.
+1. Camera codes must contain exactly 8, 12 or 13 digits, pass the modulo-10 check and not be all zeroes. Never convert the whole code to a number.
+2. Require at least three matching observations over at least 240 ms. A gap over 500 ms restarts stabilization; this is not a decoding-speed guarantee.
+3. Lock the accepted code for as long as it continues to be read. A different stable code can be accepted immediately.
+4. Re-arm the same code after at least five no-result observations spanning one second, then a new stabilization. Missing frames, a modal, network wait or mode change are not withdrawal observations.
+5. An explicit repeat starts a new business intention and locks the presentation again.
 
-## Reconnaissance et doubles lectures
+Blur can resemble withdrawal; optical detection is not proof that the user physically removed a product. Use the counter/repeat command for identical packages. Manual entry retains its separate 1.2-second delay and explicit repeat action.
 
-`src/model.ts` contient la validation et le filtre purs ; `src/scanner/camera.ts` possède le flux, `decoder.ts` le lecteur et `CameraScanner.tsx` les commandes. Les RPC, migrations et types générés sont inchangés.
+UPC-A at 12 digits and its leading-zero EAN-13 representation share one lock. Configure EAN-13/EAN-8 decoding so UPC bars retain the leading zero representation; catalogue search tries an exact match before that equivalence. Existing stored codes are never rewritten. Non-checksummed demo examples remain manual-entry examples, not camera validation evidence.
 
-1. Format caméra : exactement 8, 12 ou 13 chiffres, clé modulo 10 valide ; chaînes tout à zéro refusées. Jamais de conversion du code complet en nombre.
-2. Reconnaissance stable : au moins trois résultats concordants sur 240 ms minimum ; plus de 500 ms entre résultats recommence la stabilisation. Avec la cadence nominale, environ 300 ms plus le temps de décodage, sans garantie de vitesse sur appareil.
-3. Code accepté verrouillé **sans expiration tant qu’il est relu**. Un autre code stable peut être traité immédiatement.
-4. Réarmement du même code : au moins cinq tentatives sans résultat couvrant une seconde, puis nouvelle stabilisation. Une pause sans images, un formulaire, un réseau lent et un changement de mode ne comptent jamais comme un retrait.
-5. « Scanner à nouveau » traite explicitement un exemplaire, avec une nouvelle intention métier ; il reverrouille la caméra pour éviter une seconde opération automatique.
+## Shared operation boundary
 
-Une absence de résultat est une observation optique, pas une preuve physique absolue de retrait : un flou prolongé peut aussi la produire. Vérifier ce compromis avec les emballages réels ; +/− et la répétition explicite restent préférables pour traiter un lot identique rapidement. Les seuils ne prétendent pas éliminer tous les faux positifs.
+A local scanner identity is distinct from synchronized reserve snapshots. Polling cannot reinterpret a still-visible code as a fresh request. Known catalogue codes bypass OFF. Unknown codes open an editable form and use the existing create-at-zero then identified-scan path in Ajouter. Adjustments and undo retain the server-side version/revision checks described in [BACKEND.md](BACKEND.md).
 
-UPC-A à 12 chiffres et sa représentation EAN-13 préfixée d’un zéro partagent un verrou. Le moteur est configuré EAN-13/EAN-8 : les barres UPC-A sont lues sous leur représentation EAN-13 à zéro initial, pour empêcher ZXing de supprimer le premier zéro d’un EAN-13 ambigu. Recherche exacte du catalogue prioritaire, puis cette seule équivalence ; une fiche existante UPC-A à 12 chiffres est donc retrouvée. Un nouvel UPC-A issu de la caméra est enregistré sous sa représentation EAN-13. Les chaînes déjà stockées, y compris leurs zéros initiaux, ne sont jamais réécrites. Les exemples historiques de démo non conformes aux clés restent saisissables manuellement ; ils ne servent pas de preuve de lecture caméra.
-
-Tests et limites effectives : [VALIDATION.md](VALIDATION.md). Préparation HTTPS et recette physique : [TESTS_TELEPHONES.md](TESTS_TELEPHONES.md).
-
-## Extension phase 4 — recherche d’un inconnu
-
-Le catalogue confirmé reste recherché synchroniquement avant tout appel externe. Pour un inconnu, `ProductSearch` pilote une requête annulable et l’état de chargement du formulaire ; `CameraScanner.paused` conserve le flux et le verrou de présentation pendant cette attente. Le bouton de saisie manuelle permet de poursuivre sans réseau. Fermer/quitter/masquer annule ou ignore le résultat tardif. Aucun changement du décodeur, des seuils, des observations ou des préférences caméra. Après validation de la fiche, les mêmes RPC créent puis scannent le produit et la détection reprend avec la caméra conservée. Recette OFF physique restante dans `HANDOFF_4.md`.
+The original phase-3 iPhone/Samsung core journey was exercised physically. Later browser simulations use synthetic video/decoders; they do not prove autofocus, all barcode formats, every lens or the historical substitution incident on real phones. No phone-speed benchmark is claimed. Historical physical matrices remain in [the documentation inventory](README.md).

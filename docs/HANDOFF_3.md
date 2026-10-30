@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Transmission — clôture de recette phase 3
 
 État au **28 octobre 2026**. Implémentation et recette principale iPhone/Samsung livrées. L’utilisateur confirme les derniers réglages et demande la clôture. **Ne pas commencer Open Food Facts ni une autre phase sans nouvelle demande.** Historique et limites détaillés dans `VALIDATION.md` ; protocole reproductible dans `TESTS_TELEPHONES.md`.

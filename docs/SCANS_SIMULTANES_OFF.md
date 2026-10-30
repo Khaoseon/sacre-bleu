@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Scans simultanés et créneau OFF — correctif préparé
 
 **Livré et clôturé le 30 octobre 2026 :** migrations V1 et Edge v3 déployés après autorisation globale, PR #1 fusionnée, frontend publié `62f7f92bcb01`. [Rapport courant](HANDOFF_V1_STABILISATION.md). L'investigation et les mentions de préparation ci-dessous conservent leur chronologie ; le bug physique exact reste non reproduit et aucune nouvelle validation matérielle n'est revendiquée.

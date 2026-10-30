@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Recette privée sur iPhone et Samsung
 
 **Clôture du 28 octobre 2026 :** recette principale iPhone/Samsung et synchronisation des deux comptes confirmées, référence finale stock 2 / courses 0. Préférences/choix caméra persistant confirmés ensuite. Serveur arrêté, autorité Windows et clés/fichiers de recette supprimés ; nettoyage des deux téléphones confirmé par l’utilisateur. Les mentions de certificats conservés plus bas décrivent la clôture Samsung précédente. La procédure reste une référence pour une nouvelle recette autorisée : recréer une autorité isolée, ne pas réutiliser des clés supprimées. Cas complémentaires non réalisés détaillés dans `VALIDATION.md` ; ne pas les considérer validés par cette matrice.

@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Transmission — clôture de la phase 2C
 
 État au **27 octobre 2026**. Lire `AGENTS.md`, `SPEC.md`, `PLAN.md`, `BACKEND.md`, puis `CLOUD.md` et `BACKUP.md`. **Phase 2C validée : recette Cloud à deux comptes et répétition de restauration réussies.** Une première sauvegarde durable chiffrée a depuis été créée et vérifiée ; voir le complément en fin de document. Pas de phase 3, caméra réelle, OFF, Storage privé ou hébergement public PWA.

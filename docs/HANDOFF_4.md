@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Transmission — phase 4 Open Food Facts
 
 État au **28 octobre 2026**. Base de départ `ba18738`. **Phase 4 déployée après autorisation sur Supabase Free Paris ; parcours OFF réel validé depuis le navigateur de l’ordinateur.** Recette iPhone/Samsung encore à effectuer. Aucun début des phases 5/6.

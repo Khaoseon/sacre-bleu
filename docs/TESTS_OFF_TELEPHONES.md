@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Recette Open Food Facts — iPhone et Samsung
 
 **Clôture 4B le 29 octobre 2026 : fonctionnement Samsung confirmé globalement par l’utilisateur après les consignes sans enregistrement ; pas de relevé détaillé des codes ou durées. iPhone non testé, compatibilité supposée et limite acceptée.** Phase 4 activée sur Supabase Free Paris le 28 octobre 2026 après sauvegarde et contrôles ; trois recherches réelles validées depuis l’ordinateur sans enregistrement. En phase 4B, le frontend est publié sur **https://sacre-bleu.pages.dev** ; Auth et cette origine OFF sont configurés après accord. Les tests physiques de phase 3 ne valident pas cette intégration. Cette recette ne commence pas la phase 5 ; installation et relance HTTPS se préparent dans `TESTS_PAGES_TELEPHONES.md`.

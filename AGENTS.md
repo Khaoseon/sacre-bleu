@@ -1,11 +1,11 @@
-# Conventions du dépôt
+# Repository conventions
 
-- Lire `docs/SPEC.md` pour les comportements et règles métier, `docs/PLAN.md` pour le périmètre et les validations de chaque étape.
-- Interface et messages en français, mobile d’abord, contrôles accessibles au clavier et au toucher.
-- TypeScript strict. Garder les règles métier pures dans `src/model.ts`, le stockage dans `src/storage.ts` et les composants dans `src/`.
-- Ne jamais afficher une mutation réussie avant l’écriture effective. Quantités entières, jamais négatives ; conserver les produits à zéro.
-- Tester les règles métier modifiées. Avant livraison : `npm test`, `npm run typecheck`, `npm run build`, `npm run format:check`.
-- Dépendances limitées, versions verrouillées avec `package-lock.json`. Ne jamais versionner de secrets, données personnelles ou fichiers `.env`.
-- Aucun service distant ni déploiement sans demande explicite correspondant à l’étape du projet.
-- Pour le backend, lire `docs/BACKEND.md`. Toute mutation partagée passe par une RPC autorisée ; conserver les lectures RLS, privilèges explicites et `search_path` vide des fonctions privilégiées.
-- Après une migration, repartir d’une base locale vierge, exécuter pgTAP, concurrence et Auth/API, puis régénérer `src/backend/database.generated.ts` avec `npm run db:types` ; ne pas modifier ce fichier à la main. Ne jamais lancer les fixtures locales sur un hébergement.
+- Read `docs/SPEC.md` for behavior and business rules, and `docs/PLAN.md` for each phase's scope and validation.
+- Keep the interface and messages in French, mobile first, with keyboard- and touch-accessible controls.
+- Use strict TypeScript. Keep pure business rules in `src/model.ts`, persistence in `src/storage.ts` and components under `src/`.
+- Never show a successful mutation before the write actually completes. Quantities are integers and never negative; retain products at zero stock.
+- Test changed business rules. Before delivery run `npm test`, `npm run typecheck`, `npm run build` and `npm run format:check`.
+- Limit dependencies and lock versions with `package-lock.json`. Never commit secrets, personal data or `.env` files.
+- No remote service or deployment without an explicit request corresponding to the project phase.
+- For backend work, read `docs/BACKEND.md`. Every shared mutation uses an authorized RPC; preserve RLS reads, explicit privileges and an empty `search_path` on privileged functions.
+- After a migration, start from a fresh local database, run pgTAP, concurrency and Auth/API tests, then regenerate `src/backend/database.generated.ts` with `npm run db:types`; never edit it by hand. Never run local fixtures on hosted services.

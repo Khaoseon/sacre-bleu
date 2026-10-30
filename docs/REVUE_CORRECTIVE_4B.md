@@ -1,3 +1,5 @@
+> Historical French record. Dates, commands and approval states below belong to their original phase; do not use them as current setup instructions. See the [English documentation index](README.md), [current installation guide](INSTALL.md) and [translation inventory](README.md#organization-and-translation-inventory).
+
 # Revue corrective après 4B — préparation du 29 octobre 2026
 
 **Suite livrée le 30 octobre 2026 après autorisation globale :** correctifs frontend/CI fusionnés via PR #1 et publiés, deux migrations V1 appliquées, Edge v3 actif. Inscriptions fermées et données conservées. [Clôture V1](HANDOFF_V1_STABILISATION.md). Le présent audit conserve ses constats et autorisations historiques ; ses mentions « en attente/non publié » ne constituent plus l'état courant. Aucun gel SQL global de création de réserves ajouté.
