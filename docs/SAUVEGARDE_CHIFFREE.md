@@ -1,6 +1,6 @@
 # Sauvegarde chiffrée de la réserve
 
-**Préparation phase 5, avant accord de production :** depuis la branche contenant sept sources, ajouter `--before-phase5` pour un export administratif avant cette migration. Ce mode exige exactement les six versions historiques appliquées et la seule `20261030000100` en attente ; il n’applique rien. Après migration approuvée, revenir au mode ordinaire avec sept versions alignées. La procédure utilisateur JSON séparée est décrite dans [PHASE5.md](PHASE5.md) ; elle ne contient aucun Auth ni secret.
+**Phase 5 appliquée et clôturée après accord le 30 octobre 2026 :** les sept versions sont alignées, utiliser la commande ordinaire ci-dessous pour une nouvelle sauvegarde administrative. `--before-phase5` reste disponible uniquement pour l’ancien état de six migrations appliquées et la septième en attente ; il refuse l’état Cloud actuel et n’applique rien. La procédure utilisateur JSON publiée est séparée, sans Auth ni secret : [PHASE5.md](PHASE5.md). Aucun nouvel export administratif ni import réel réalisé pendant cette publication ; archive antérieure conservée.
 
 Prérequis : Node, Docker actif, dépendances installées par `npm ci`, CLI connectée et projet lié selon `CLOUD.md`. GnuPG 2.4+ est requis ; le script détecte notamment celui fourni par Git for Windows. Suspendre les modifications dans les deux sessions pendant l’export et jusqu’au contrôle préalable au déploiement. Le script lit la production et refuse un historique de migrations divergent.
 
