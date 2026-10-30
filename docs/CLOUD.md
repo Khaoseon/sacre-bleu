@@ -1,3 +1,5 @@
+> Current independent installation instructions: [INSTALL.md](INSTALL.md). Owner-specific phase procedures below are historical, not a fresh installation guide.
+
 # Supabase Cloud — procédure de phase 2C
 
 **Évolution phase 4B du 29 octobre 2026 :** le frontend est publié sur `https://sacre-bleu.pages.dev`. Après accord, Site URL et callback HTTPS sont configurés, les quatre callbacks locaux conservés. La configuration versionnée `config/cloud` est alignée ; `config/pages-auth` fournit aussi la variante limitée aux seules URL Auth. État actuel et contrôles dans `CLOUDFLARE_PAGES.md`, essais dans `TESTS_PAGES_TELEPHONES.md`. Les procédures et valeurs de phase 2C ci-dessous décrivent leur contexte historique.

@@ -3,8 +3,11 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fingerprintSQL, sameFingerprint } from './backup-plan.mjs';
+const expectedProject = process.argv[2];
+if (!/^[a-z]{20}$/.test(expectedProject ?? '') || process.argv.length !== 3)
+  throw new Error('Pass the expected project reference explicitly');
 const project = readFileSync('supabase/.temp/project-ref', 'utf8').trim();
-if (project !== 'uznbnihmdzxdnlxanjcl') throw new Error('Unexpected linked project');
+if (project !== expectedProject) throw new Error('Unexpected linked project');
 const cli = JSON.parse(readFileSync('node_modules/supabase/package.json', 'utf8'));
 function query(sql, isFile = false) {
   let raw;

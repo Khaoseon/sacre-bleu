@@ -1,3 +1,5 @@
+> Phase 6B1: independent installation/configuration prepared on a review branch; no hosted settings or data changed. Current setup: [INSTALL.md](INSTALL.md).
+
 # Plan de réalisation
 
 **Avancement phase 5 au 30 octobre 2026 : livrée et clôturée après autorisation globale.** PR #3 et publication applicative `6fc72c965482`, seule septième migration appliquée, CI complète et contrôles HTTPS/sécurité conformes. Données préservées avec seule évolution technique Auth `updated_at` précisément vérifiée. [Périmètre exact et contrats](PHASE5.md), [bilan et preuves](HANDOFF_5.md). Les anciens états de stabilisation ci-dessous restent l’historique ; aucune phase 6/V1.1 commencée.

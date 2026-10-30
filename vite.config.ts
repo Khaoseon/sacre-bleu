@@ -1,4 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { instanceHeaders } from './src/backend/headers.ts';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { execFileSync } from 'node:child_process';
@@ -25,7 +28,8 @@ function buildRevision(): string {
 }
 
 export default defineConfig(({ mode }) => {
-  const error = backendEnvironmentError(mode, loadEnv(mode, process.cwd(), 'VITE_'));
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  const error = backendEnvironmentError(mode, env);
   if (error) throw new Error(error);
   return {
     define: {
@@ -39,6 +43,15 @@ export default defineConfig(({ mode }) => {
     build: { outDir: mode === 'cloud' ? 'dist-cloud' : 'dist' },
     plugins: [
       react(),
+      {
+        name: 'instance-headers',
+        writeBundle(output) {
+          writeFileSync(
+            resolve(output.dir!, '_headers'),
+            instanceHeaders(readFileSync('public/_headers', 'utf8'), mode, env),
+          );
+        },
+      },
       VitePWA({
         registerType: 'prompt',
         injectRegister: false,
