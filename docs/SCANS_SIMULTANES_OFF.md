@@ -1,5 +1,7 @@
 # Scans simultanés et créneau OFF — correctif préparé
 
+**Livré et clôturé le 30 octobre 2026 :** migrations V1 et Edge v3 déployés après autorisation globale, PR #1 fusionnée, frontend publié `62f7f92bcb01`. [Rapport courant](HANDOFF_V1_STABILISATION.md). L'investigation et les mentions de préparation ci-dessous conservent leur chronologie ; le bug physique exact reste non reproduit et aucune nouvelle validation matérielle n'est revendiquée.
+
 **29 octobre 2026 — branche locale `codex/revue-corrective-4b`.** Investigation initialement remise sans commit ; préparation ultérieure des commits locaux autorisée, sans push, fusion ou déploiement : [livraison contrôlée V1](LIVRAISON_CORRECTIFS_V1.md). Les préparations de sécurité/CI précédentes sont conservées. Les inscriptions Supabase restent fermées ; aucune écriture ni test de charge sur Supabase Cloud ou OFF réel pendant cette investigation. Phase 5 non commencée.
 
 L'utilisateur confirme désormais que les deux comptes existants se connectent depuis Samsung et iPhone à la même réserve. Cela confirme l'accès iPhone actuel, pas la recette physique de ce correctif non publié.

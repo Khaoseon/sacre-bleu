@@ -1,5 +1,7 @@
 # Sauvegarde et reprise — Supabase Free
 
+**Point de reprise V1 validé et livraison clôturée le 30 octobre 2026 :** archive chiffrée originale conservée en stockage privé hors dépôt, restauration intégrale isolée et rollback d'échec vérifiés. Onze empreintes identiques avant migration ; dix tables métier/Auth toujours identiques après publication, singleton OFF modifié uniquement par la migration autorisée. Aucune restauration Cloud ni nouvel export pendant la publication. [Bilan V1](HANDOFF_V1_STABILISATION.md).
+
 Procédure administrative pour deux utilisateurs, au 27 octobre 2026. **Export Cloud et restauration SQL répétés avec succès sur une cible locale vierge isolée**, après accord spécifique pour cette copie temporaire des données privées/Auth. L’exercice avait supprimé sa copie ; une première archive durable chiffrée a ensuite été créée et vérifiée le 27 octobre 2026 (voir `HANDOFF_2C.md`). L’export JSON de démonstration ne sauvegarde pas la réserve partagée. L’import utilisateur avec prévisualisation reste une fonction future de phase 5.
 
 ## Quoi conserver et à quelle fréquence

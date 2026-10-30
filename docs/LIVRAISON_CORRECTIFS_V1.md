@@ -1,5 +1,7 @@
 # Livraison contrôlée des correctifs V1
 
+**Livraison exécutée et lot clôturé le 30 octobre 2026 après autorisation globale explicite.** CI verte sur `455c047`, deux migrations autorisées appliquées, Edge v3 ACTIVE/JWT conservé, PR #1 fusionnée et Cloudflare publié sur `62f7f92bcb01`. Données métier/Auth identiques à la sauvegarde ; inscriptions toujours fermées. Bilan faisant foi : [HANDOFF_V1_STABILISATION.md](HANDOFF_V1_STABILISATION.md). Les états et interdictions de préparation ci-dessous sont conservés comme historique ; ils ne décrivent plus l'état de production. Aucun accord de retour arrière ni de phase 5/V1.1 n'en découle.
+
 Préparation du 29 octobre 2026. Branche `codex/revue-corrective-4b`, issue de `9eca5d11a42d`. L'utilisateur autorise désormais commit correctif, push de cette seule branche et PR en brouillon si tous les tests techniques passent. Aucune fusion, migration Cloud, modification Edge ou publication Pages autorisée. Aucune phase 5, V1.1 ou refonte. Diagnostic et validations détaillés dans [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md) et [VALIDATION.md](VALIDATION.md).
 
 **Blocage SDK résolu localement :** six migrations sur base vierge, refus rapide HTTP 409 avec code JSON 40001, clients publié et actuel testés. La sixième migration ne change que les deux levées d'erreur métier de scans périmés : SQLSTATE PGRST au lieu de 40001, sans changement des conditions ni des transactions. PT409 seul n'est pas retenu car l'ancien client le classerait incertain. PGRST permet de conserver le code JSON déjà reconnu tout en arrêtant les relances SQL. Source : [erreurs personnalisées PostgREST 14](https://docs.postgrest.org/en/v14/references/errors.html#add-http-headers-with-raise). Le test de parité vérifie que le reste de la fonction historique et ses privilèges sont strictement inchangés.
@@ -49,7 +51,7 @@ Ne fusionner qu'après contrôle Application et PWA réussi sur le dernier commi
 
 **Attention à la fusion future :** employer un commit de fusion ou un titre de squash **sans [CF-Pages-Skip] ni [skip ci]** pour la publication voulue. Vérifier le contenu du commit fusionné et la référence déployée ; ne pas reprendre aveuglément le titre du dernier commit de branche.
 
-## 3. Procédure ordonnée Supabase puis Pages — non exécutée
+## 3. Procédure ordonnée Supabase puis Pages — exécutée pour ce lot, historique
 
 Chaque étape distante ci-dessous demande l'accord correspondant. Un accord de push/PR ne vaut pas accord SQL, Edge ou publication.
 

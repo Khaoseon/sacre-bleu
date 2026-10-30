@@ -1,5 +1,7 @@
 # Phase 4B — préparation et suivi de publication
 
+**Publication corrective V1 du 30 octobre 2026 :** PR #1 fusionnée après CI exacte verte et contrôles backend, déploiement production `de611bc3-412c-4277-b13a-c8418f5a0241` réussi sur `62f7f92bcb01`. Node 24.22.1 et commande/sortie vérifiés dans le journal distant ; référence confirmée dans l'interface et le module servi. Production automatique conservée, aucun réglage Pages modifié. [Bilan V1](HANDOFF_V1_STABILISATION.md). Les constats 4B ci-dessous conservent leur date.
+
 ## État de clôture
 
 **Phase 4B clôturée le 29 octobre 2026 à la demande de l’utilisateur**, après confirmation globale des contrôles Samsung. Version applicative confirmée : `43c8897428e4`. iPhone non testé, compatibilité supposée et limite acceptée ; journal détaillé Node/npm distant non inspecté. Rapport de livraison : [HANDOFF_4B.md](HANDOFF_4B.md). Les sections suivantes conservent la chronologie des accords, préparations et vérifications ; leurs mentions d’essais restants sont à lire à leur date. Phase 5 non commencée.
