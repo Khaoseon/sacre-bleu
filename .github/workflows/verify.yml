@@ -2,7 +2,7 @@ name: Vérifications avant fusion
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, release/v1.1]
   workflow_dispatch:
 
 permissions:
@@ -28,14 +28,17 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
+      - run: npm run typecheck:7a
       - run: npm run format:check
       - run: npm run notices:check
       - run: npm run build
+      - run: npm run build:7a
       - run: npm run build:cloud
         env:
           VITE_SUPABASE_URL: https://aaaaaaaaaaaaaaaaaaaa.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_fixture
       - run: npx playwright install --with-deps chrome
+      - run: npm run test:7a:browser
       - run: npm run test:ui:browser
       - run: npm run test:i18n:browser
       - run: npm run test:off:browser
