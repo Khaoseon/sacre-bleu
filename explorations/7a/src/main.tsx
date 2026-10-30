@@ -11,7 +11,6 @@ import { createRoot } from 'react-dom/client';
 import {
   Archive,
   ArrowDownUp,
-  ArrowRight,
   Bean,
   Camera,
   Check,
@@ -26,6 +25,7 @@ import {
   ScanLine,
   Search,
   Settings2,
+  Pencil,
   ShoppingBasket,
   SlidersHorizontal,
   Sparkles,
@@ -53,7 +53,7 @@ import {
 } from '../../../src/model';
 import { phase7aText, type Phase7aKey } from '../../../src/i18n/phase7a';
 import mascot from '../../../public/icon-192.png';
-import { fixtures, sampleImages } from './fixtures';
+import { fixtures, realityFixtures, sampleImages, imageConditions, offCredits } from './fixtures';
 import { useContentSwipe } from './useContentSwipe';
 import './style.css';
 
@@ -67,7 +67,8 @@ type Scenario = 'ready' | 'offline' | 'failure' | 'uncertain' | 'empty' | 'loadi
 type Sheet =
   | { kind: 'detail' | 'edit' | 'delete'; product: Product }
   | { kind: 'create'; barcode?: string; mode?: 1 | -1 }
-  | { kind: 'settings' };
+  | { kind: 'settings' }
+  | { kind: 'link' };
 
 function ImageArea({ product }: { product?: Product }) {
   const t = useText();
@@ -80,7 +81,7 @@ function ImageArea({ product }: { product?: Product }) {
         ? Bean
         : Package;
   return (
-    <span className="image-area">
+    <span className={`image-area ${imageConditions[product?.id ?? ''] ?? ''}`}>
       {src && failed !== src ? (
         <img src={src} alt="" loading="lazy" decoding="async" onError={() => setFailed(src)} />
       ) : (
@@ -97,23 +98,27 @@ function Quantity({
   value,
   disabled,
   change,
+  minimum = 0,
+  shopping = false,
 }: {
   product: string;
   value: number;
   disabled: boolean;
   change: (delta: 1 | -1) => void;
+  minimum?: number;
+  shopping?: boolean;
 }) {
   const t = useText();
   return (
     <div className="stepper">
       <button
         aria-label={`${t('Retirer')} ${product}`}
-        disabled={disabled || value === 0}
+        disabled={disabled || value <= minimum}
         onClick={() => change(-1)}
       >
         <Minus size={17} />
       </button>
-      <output aria-label={t('Quantité en stock')}>{value}</output>
+      <output aria-label={t(shopping ? 'Quantité à acheter' : 'Quantité en stock')}>{value}</output>
       <button
         aria-label={`${t('Ajouter')} ${product}`}
         disabled={disabled || value >= 9999}
@@ -141,7 +146,28 @@ function SheetFrame({
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = ref.current!;
     dialog.showModal();
+    const viewport = window.visualViewport;
+    const fit = () => {
+      if (!viewport) return;
+      dialog.style.maxHeight = `${viewport.height - 16}px`;
+      dialog.style.bottom = `${Math.max(0, innerHeight - viewport.height - viewport.offsetTop)}px`;
+      requestAnimationFrame(() => {
+        const field = dialog.querySelector<HTMLElement>('input:focus,select:focus');
+        const save = dialog.querySelector('.editor-save');
+        if (
+          field &&
+          save &&
+          field.getBoundingClientRect().bottom > save.getBoundingClientRect().top - 12
+        )
+          field.scrollIntoView({ block: 'center' });
+      });
+    };
+    fit();
+    viewport?.addEventListener('resize', fit);
+    viewport?.addEventListener('scroll', fit);
     return () => {
+      viewport?.removeEventListener('resize', fit);
+      viewport?.removeEventListener('scroll', fit);
       dialog.close();
       if (previous?.isConnected) previous.focus();
     };
@@ -157,7 +183,7 @@ function SheetFrame({
       }}
     >
       <div className="sheet-grip" aria-hidden="true" />
-      <header>
+      <header className="sheet-header">
         <h2 id="sheet-title">{title}</h2>
         <button className="round" aria-label={t('Fermer')} disabled={busy} onClick={close}>
           <X size={21} />
@@ -186,6 +212,10 @@ function Editor({
   const [draftId] = useState(product?.id ?? id());
   const [photo, setPhoto] = useState(product?.photo);
   const [photoError, setPhotoError] = useState(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) requestAnimationFrame(() => errorRef.current?.scrollIntoView({ block: 'center' }));
+  }, [error]);
   const [reading, setReading] = useState(false);
   const [name, setName] = useState(product?.name ?? '');
   async function choosePhoto(file?: File) {
@@ -233,7 +263,22 @@ function Editor({
     });
   }
   return (
-    <form onSubmit={submit} className="editor">
+    <form
+      onSubmit={submit}
+      className="editor"
+      onFocusCapture={(e) => {
+        const field = e.target;
+        if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement)
+          requestAnimationFrame(() => {
+            const save = field.closest('form')?.querySelector('.editor-save');
+            if (
+              save &&
+              field.getBoundingClientRect().bottom > save.getBoundingClientRect().top - 12
+            )
+              field.scrollIntoView({ block: 'center' });
+          });
+      }}
+    >
       <fieldset disabled={busy || reading}>
         <div className="edit-image">
           <ImageArea
@@ -269,7 +314,7 @@ function Editor({
         {(photoError || reading) && (
           <p role={photoError ? 'alert' : 'status'}>
             {photoError
-              ? t('Choisissez une image JPG, PNG ou WebP de moins de 500 Ko.')
+              ? t('Photo invalide : JPG, PNG ou WebP, 500 Ko et 4096 px maximum.')
               : t('Chargement')}
           </p>
         )}
@@ -362,15 +407,17 @@ function Editor({
           <small>{t('Modifiez le stock avec les boutons + et − de l’écran Stock.')}</small>
         )}
         {error && (
-          <p className="error" role="alert">
+          <p ref={errorRef} className="error" role="alert">
             {t('Échec simulé. Aucun changement appliqué.')}
           </p>
         )}
+      </fieldset>
+      <footer className="editor-save">
         <button className="primary full" disabled={busy || reading}>
           {busy ? <LoaderCircle className="spinning" size={18} /> : <Check size={18} />}
           {t(busy ? 'Enregistrement en cours…' : 'Enregistrer')}
         </button>
-      </fieldset>
+      </footer>
     </form>
   );
 }
@@ -415,6 +462,7 @@ function Prototype({
   const [code, setCode] = useState('');
   const [scan, setScan] = useState<ScanOperation | null>(null);
   const [manual, setManual] = useState(false);
+  const [imageSet, setImageSet] = useState('studio');
   const heading = useRef<HTMLHeadingElement>(null);
   const locked = busy || ['offline', 'uncertain', 'loading'].includes(scenario);
   function navigate(next: number) {
@@ -430,6 +478,9 @@ function Prototype({
     navigate,
     locked || !!sheet || camera || !!shoppingName || !!code,
   );
+  useEffect(() => {
+    if (scan) document.querySelector('.page-1')?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [scan?.id]);
   useEffect(() => {
     document.documentElement.lang = language;
     document.title = `Sacré bleu · ${t('Atelier 7A · données fictives')}`;
@@ -489,7 +540,7 @@ function Prototype({
       },
     );
   }
-  const products = scenario === 'empty' ? [] : selectProducts(state, query, category);
+  const products = selectProducts(state, query, category);
   if (sorted)
     products.sort(
       (a, b) => (a.category ?? '').localeCompare(b.category ?? '') || a.name.localeCompare(b.name),
@@ -500,11 +551,6 @@ function Prototype({
   const completed = state.shopping.filter((i) => i.checked);
   const scannedProduct = state.products.find((p) => p.id === scan?.productId);
   const titles = ['La réserve', 'Scanner', 'Les courses'] as const;
-  const subtitles = [
-    'Le quotidien, bien rangé.',
-    'Un scan. Et c’est rangé.',
-    'Le prochain repas commence ici.',
-  ] as const;
   const navItems = [
     { label: 'Stock', icon: Archive },
     { label: 'Scanner', icon: ScanLine },
@@ -547,106 +593,99 @@ function Prototype({
               : t('Article libre')}
           </small>
         </div>
-        <div className="shopping-count">
-          <span>×{item.quantity}</span>
-          <button
-            className="round"
-            aria-label={`${t('Ajouter')} ${item.name}`}
-            disabled={locked || item.quantity >= 9999}
-            onClick={() =>
-              void mutate((s) => ({
-                ...s,
-                shopping: s.shopping.map((i) =>
-                  i.id === item.id ? { ...i, quantity: i.quantity + 1, checked: false } : i,
-                ),
-              }))
-            }
-          >
-            <Plus size={16} />
-          </button>
-        </div>
+        <Quantity
+          product={item.name}
+          value={item.quantity}
+          minimum={1}
+          shopping
+          disabled={locked}
+          change={(delta) =>
+            void mutate((s) => ({
+              ...s,
+              shopping: s.shopping.map((i) =>
+                i.id === item.id
+                  ? { ...i, quantity: Math.max(1, i.quantity + delta), checked: false }
+                  : i,
+              ),
+            }))
+          }
+        />
+        <button
+          className="round remove-item"
+          aria-label={t('Supprimer') + ' ' + item.name}
+          disabled={locked}
+          onClick={() =>
+            void mutate((s) => ({ ...s, shopping: s.shopping.filter((i) => i.id !== item.id) }))
+          }
+        >
+          <Trash2 size={17} />
+        </button>
       </article>
     );
   }
-  return (
-    <div className="atelier">
-      <div className="prototype-ribbon">{t('Atelier 7A · données fictives')}</div>
-      <div className="app-shell">
-        <header className="brand-bar">
-          <span className="wordmark">sacré bleu</span>
-          <button
-            className="round"
-            aria-label={t('Paramètres')}
-            onClick={() => setSheet({ kind: 'settings' })}
-          >
-            <SlidersHorizontal size={20} />
-          </button>
-        </header>
-        <main ref={swipe.ref}>
-          <div
-            className={`page-content page-${page}`}
-            style={{ transform: `translateX(${swipe.offset}px)` }}
-          >
-            <header className="page-title">
-              <div className="eyebrow">
-                {t(
-                  page === 0
-                    ? 'À portée de main'
-                    : page === 1
-                      ? 'Reconnu dans votre réserve'
-                      : 'Un petit tour au marché ?',
-                )}
-              </div>
-              <div className="title-line">
-                <h1 ref={heading} tabIndex={-1}>
-                  {t(titles[page])}
-                  <span>.</span>
-                </h1>
-                {page === 0 && (
-                  <button
-                    className="add-product"
-                    aria-label={t('Ajouter un produit')}
-                    disabled={locked}
-                    onClick={() => {
-                      setError(false);
-                      setSheet({ kind: 'create' });
-                    }}
-                  >
-                    <Plus size={24} />
-                  </button>
-                )}
-              </div>
-              <p>{t(subtitles[page])}</p>
-            </header>
-            {['offline', 'uncertain'].includes(scenario) && (
-              <div className="state-banner" role="status">
-                <CloudOff size={19} />
-                <span>
-                  {t(
-                    scenario === 'offline'
-                      ? 'Copie hors ligne · lecture seule'
-                      : 'Résultat incertain · vérifiez avant de continuer.',
-                  )}
-                </span>
-                <button onClick={() => setScenario('ready')}>
-                  {t(scenario === 'offline' ? 'Actualiser' : 'Reprendre la demande')}
-                </button>
-              </div>
+  function renderPage(destination: number) {
+    return (
+      <div
+        className={`page-content page-${destination}`}
+        aria-hidden={destination !== page}
+        inert={destination !== page}
+        style={{
+          left: `${destination * 100}%`,
+          position: destination === page ? 'relative' : 'absolute',
+        }}
+      >
+        <header className="page-title">
+          <div className="title-line">
+            <h1 ref={destination === page ? heading : undefined} tabIndex={-1}>
+              {t(titles[destination])}
+              <span>.</span>
+            </h1>
+            {destination === 0 && (
+              <button
+                className="add-product"
+                aria-label={t('Ajouter un produit')}
+                disabled={locked}
+                onClick={() => {
+                  setError(false);
+                  setSheet({ kind: 'create' });
+                }}
+              >
+                <Plus size={24} />
+              </button>
             )}
-            {page === 0 && (
+          </div>
+        </header>
+        {['offline', 'uncertain'].includes(scenario) && (
+          <div className="state-banner" role="status">
+            <CloudOff size={19} />
+            <span>
+              {t(
+                scenario === 'offline'
+                  ? 'Copie hors ligne · lecture seule'
+                  : 'Résultat incertain · vérifiez avant de continuer.',
+              )}
+            </span>
+            <button onClick={() => setScenario('ready')}>
+              {t(scenario === 'offline' ? 'Actualiser' : 'Reprendre la demande')}
+            </button>
+          </div>
+        )}
+        {destination === 0 && (
+          <>
+            {low.length > 0 && (
+              <button className="restock-note" onClick={() => navigate(2)}>
+                <ShoppingBasket size={18} />
+                <span>
+                  {low.length}{' '}
+                  {t(
+                    low.length === 1 ? 'Produit à compléter' : 'Produits à compléter',
+                  ).toLocaleLowerCase(language)}
+                </span>
+                <ChevronRight size={17} />
+              </button>
+            )}
+            {state.products.length > 0 && (
               <>
-                <button className="restock-note" onClick={() => navigate(2)}>
-                  <span className="restock-icon">
-                    <ShoppingBasket size={21} />
-                  </span>
-                  <span>
-                    <strong>
-                      {low.length} {t('Produits à compléter').toLocaleLowerCase(language)}
-                    </strong>
-                    <small>{t('Voir la liste')}</small>
-                  </span>
-                  <ArrowRight size={20} />
-                </button>
                 <div className="search-bar">
                   <Search size={19} />
                   <input
@@ -664,355 +703,421 @@ function Prototype({
                       <X size={17} />
                     </button>
                   )}
+                  <button
+                    className="round sort-products"
+                    aria-label={t('Trier les produits')}
+                    aria-pressed={sorted}
+                    title={t(sorted ? 'Par catégorie' : 'Par nom')}
+                    onClick={() => setSorted(!sorted)}
+                  >
+                    <ArrowDownUp size={18} />
+                  </button>
                 </div>
                 <div className="filters" data-no-swipe aria-label={t('Filtrer par catégorie')}>
                   {['Tout', ...categories].map((c) => (
                     <button key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>
                       {t(c as 'Tout' | (Product['category'] & string))}
+                      {c === 'Tout' && (
+                        <span className="filter-count">{state.products.length}</span>
+                      )}
                     </button>
                   ))}
                 </div>
-                <div className="section-title">
-                  <h2>
-                    {t('Vos essentiels')} <span>{products.length}</span>
-                  </h2>
-                  <button onClick={() => setSorted(!sorted)} aria-label={t('Trier les produits')}>
-                    <ArrowDownUp size={14} />
-                    {t(sorted ? 'Par catégorie' : 'Par nom')}
-                  </button>
-                </div>
-                {scenario === 'loading' ? (
-                  <div className="skeleton-grid" role="status" aria-label={t('Chargement')}>
-                    {[1, 2, 3, 4].map((i) => (
-                      <div className="skeleton" key={i} />
-                    ))}
-                  </div>
-                ) : products.length ? (
-                  <div className="product-grid">
-                    {products.map((p) => (
-                      <article
-                        className={`product-card ${p.quantity === 0 ? 'exhausted' : ''}`}
-                        key={p.id}
-                        data-product={p.id}
-                      >
-                        <div className="product-visual">
-                          <ImageArea product={p} />
-                          {p.minimum !== undefined && p.quantity <= p.minimum && (
-                            <span className={`stock-badge ${p.quantity === 0 ? 'zero' : ''}`}>
-                              {t(p.quantity === 0 ? 'Plus en réserve' : 'Stock bas')}
-                            </span>
-                          )}
-                          <button
-                            className="image-hit"
-                            aria-label={`${t('Détails')} ${p.name}`}
-                            onClick={() => {
-                              setError(false);
-                              setSheet({ kind: 'detail', product: p });
-                            }}
-                          />
-                        </div>
-                        <div className="card-copy">
-                          <small>{p.brand ?? t(p.category ?? 'Autres')}</small>
-                          <button
-                            className="product-name"
-                            onClick={() => {
-                              setError(false);
-                              setSheet({ kind: 'detail', product: p });
-                            }}
-                          >
-                            {p.name}
-                          </button>
-                          <span className="package-size">
-                            {p.size} {p.unit}
-                          </span>
-                        </div>
-                        <Quantity
-                          product={p.name}
-                          value={p.quantity}
-                          disabled={locked}
-                          change={(delta) => void mutate((s) => changeStock(s, p.id, delta))}
-                        />
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <img src={mascot} alt="" />
-                    <h2>
-                      {t(
-                        query || category !== 'Tout'
-                          ? 'Aucun produit trouvé'
-                          : 'Votre réserve commence ici',
-                      )}
-                    </h2>
-                    <p>
-                      {t(
-                        query || category !== 'Tout'
-                          ? 'Essayez un autre nom ou une autre catégorie.'
-                          : 'Ajoutez votre premier produit pour commencer.',
-                      )}
-                    </p>
-                    <button
-                      className="primary"
-                      onClick={() => {
-                        if (query || category !== 'Tout') {
-                          setQuery('');
-                          setCategory('Tout');
-                        } else setSheet({ kind: 'create' });
-                      }}
-                    >
-                      {t(
-                        query || category !== 'Tout'
-                          ? 'Voir tous les produits'
-                          : 'Ajouter un produit',
-                      )}
-                    </button>
-                  </div>
-                )}
               </>
             )}
-            {page === 1 && (
-              <div className="scanner-content">
-                <div className="segmented">
-                  {([1, -1] as const).map((v) => (
-                    <button
-                      key={v}
-                      aria-pressed={mode === v}
-                      disabled={busy}
-                      onClick={() => {
-                        setMode(v);
-                        setCamera(false);
-                        setScan(null);
-                      }}
-                    >
-                      {v === 1 ? <Plus size={18} /> : <Minus size={18} />}
-                      {t(v === 1 ? 'Ajouter' : 'Retirer')}
-                    </button>
-                  ))}
-                </div>
-                <div
-                  className={`viewfinder ${camera ? 'scanning' : ''} ${scan && !camera ? 'result-held' : ''}`}
-                  data-no-swipe
-                >
-                  <div className="camera-caption">
-                    <span className="live-dot" />
-                    {t('Simulation de caméra')}
-                  </div>
-                  <div className="scan-object">
-                    <img src={sampleImages.pasta} alt="" />
-                  </div>
-                  <div className="scan-corners" aria-hidden="true" />
-                  <div className="scan-ray" aria-hidden="true" />
-                  <span className="viewfinder-label">
-                    {t(camera ? 'Placez le code au centre' : 'Aucun appareil photo utilisé.')}
-                  </span>
-                </div>
-                <button
-                  className="primary full"
-                  disabled={locked}
-                  onClick={() => (camera ? doScan() : setCamera(true))}
-                >
-                  <ScanLine size={20} />
-                  {t(
-                    camera
-                      ? 'Simuler une lecture'
-                      : scan
-                        ? 'Scanner à nouveau'
-                        : 'Démarrer la simulation',
-                  )}
-                </button>
-                {camera && (
-                  <button className="text-button full" onClick={() => setCamera(false)}>
-                    {t('Arrêter')}
-                  </button>
-                )}
-                <button
-                  className="text-button full"
-                  aria-expanded={manual}
-                  onClick={() => {
-                    setManual(!manual);
-                    setCamera(false);
-                  }}
-                >
-                  {t('Saisir un code-barres')}
-                  <ChevronRight size={16} />
-                </button>
-                {manual && (
-                  <form
-                    className="manual-entry"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      doScan(code);
-                    }}
+            {scenario === 'loading' ? (
+              <div className="skeleton-grid" role="status" aria-label={t('Chargement')}>
+                {[1, 2, 3, 4].map((i) => (
+                  <div className="skeleton" key={i} />
+                ))}
+              </div>
+            ) : products.length ? (
+              <div className="product-grid">
+                {products.map((p) => (
+                  <article
+                    className={`product-card ${p.quantity === 0 ? 'exhausted' : ''}`}
+                    key={p.id}
+                    data-product={p.id}
                   >
-                    <label>
-                      {t('Code-barres')}
-                      <input
-                        required
-                        inputMode="numeric"
-                        pattern="[0-9]{4,32}"
-                        maxLength={32}
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        placeholder="8076802085738"
-                      />
-                    </label>
-                    <button className="primary" disabled={locked}>
-                      {t('Valider')}
-                    </button>
-                  </form>
-                )}
-                {scan && scannedProduct && (
-                  <section className="scan-result">
-                    <span className="success-label">
-                      <CircleCheck size={18} />
-                      {t('Lecture confirmée')}
-                    </span>
-                    <div className="scan-product">
-                      <ImageArea product={scannedProduct} />
-                      <div>
-                        <small>{t('Reconnu dans votre réserve')}</small>
-                        <h2>{scannedProduct.name}</h2>
-                        <p>
-                          {scannedProduct.quantity} · {t('EN STOCK')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="scan-total">
-                      <span>{t('Total traité')}</span>
-                      <Quantity
-                        product={t('Total traité')}
-                        value={scan.quantity}
-                        disabled={locked}
-                        change={(delta) => {
-                          let op: ScanOperation;
-                          void mutate(
-                            (s) => {
-                              const r = adjustScan(s, scan, scan.quantity + delta);
-                              op = r.operation;
-                              return r.state;
-                            },
-                            (s) => setScan({ ...op!, revision: s.revision }),
-                          );
+                    <div className="product-visual">
+                      <ImageArea product={p} />
+                      <button
+                        className="image-hit"
+                        data-swipe-surface
+                        aria-label={`${t('Détails')} ${p.name}`}
+                        onClick={() => {
+                          setError(false);
+                          setSheet({ kind: 'detail', product: p });
                         }}
                       />
                     </div>
-                    <button
-                      className="text-button"
+                    <div className="card-copy">
+                      {(p.quantity === 0 ||
+                        (p.minimum !== undefined && p.quantity < p.minimum)) && (
+                        <span className={`stock-badge ${p.quantity === 0 ? 'zero' : ''}`}>
+                          {t(p.quantity === 0 ? 'Plus en réserve' : 'Stock bas')}
+                        </span>
+                      )}
+
+                      <small>{p.brand ?? t(p.category ?? 'Autres')}</small>
+                      <button
+                        className="product-name"
+                        data-swipe-surface
+                        onClick={() => {
+                          setError(false);
+                          setSheet({ kind: 'detail', product: p });
+                        }}
+                      >
+                        {p.name}
+                      </button>
+                      <span className="package-size">
+                        {p.size} {p.unit}
+                      </span>
+                      <button
+                        className="quick-edit round"
+                        disabled={locked}
+                        aria-label={t('Modifier directement') + ' ' + p.name}
+                        onClick={() => {
+                          setError(false);
+                          setSheet({ kind: 'edit', product: p });
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </div>
+                    <Quantity
+                      product={p.name}
+                      value={p.quantity}
                       disabled={locked}
-                      onClick={() =>
-                        void mutate((s) => undoOperation(s, scan.before, scan.revision))
-                      }
-                    >
-                      <Undo2 size={16} />
-                      {t('Annuler le dernier scan')}
-                    </button>
-                  </section>
-                )}
+                      change={(delta) => void mutate((s) => changeStock(s, p.id, delta))}
+                    />
+                  </article>
+                ))}
               </div>
-            )}
-            {page === 2 && (
-              <>
-                <div className="shopping-summary">
-                  <span className="shopping-big">
-                    {remaining.length.toString().padStart(2, '0')}
-                  </span>
-                  <div>
-                    <strong>{t('À prendre')}</strong>
-                    <small>{t('Votre liste est prête.')}</small>
-                  </div>
-                  <ShoppingBasket size={32} strokeWidth={1.3} />
-                </div>
-                <form
-                  className="shopping-add"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const name = shoppingName.trim();
-                    if (name)
-                      void mutate(
-                        (s) => addShopping(s, name, 1),
-                        () => setShoppingName(''),
-                      );
+            ) : (
+              <div className="empty-state">
+                <img src={mascot} alt="" />
+                <h2>
+                  {t(
+                    query || category !== 'Tout'
+                      ? 'Aucun produit trouvé'
+                      : 'Votre réserve commence ici',
+                  )}
+                </h2>
+                <p>
+                  {t(
+                    query || category !== 'Tout'
+                      ? 'Essayez un autre nom ou une autre catégorie.'
+                      : 'Ajoutez votre premier produit pour commencer.',
+                  )}
+                </p>
+                <button
+                  className="primary"
+                  onClick={() => {
+                    if (query || category !== 'Tout') {
+                      setQuery('');
+                      setCategory('Tout');
+                    } else setSheet({ kind: 'create' });
                   }}
                 >
-                  <input
-                    aria-label={t('Ajouter à la liste')}
-                    placeholder={t('Une chose à ajouter…')}
-                    maxLength={120}
-                    required
-                    value={shoppingName}
-                    onChange={(e) => setShoppingName(e.target.value)}
+                  {t(
+                    query || category !== 'Tout' ? 'Voir tous les produits' : 'Ajouter un produit',
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+        {destination === 1 && (
+          <div className={`scanner-content ${scan && !camera ? 'has-result' : ''}`}>
+            {scan && scannedProduct && !camera && (
+              <section className="scan-result">
+                <span className="success-label">
+                  <CircleCheck size={18} />
+                  {t('Lecture confirmée')}
+                </span>
+                <div className="scan-product">
+                  <ImageArea product={scannedProduct} />
+                  <div>
+                    <small>{t('Reconnu dans votre réserve')}</small>
+                    <h2>{scannedProduct.name}</h2>
+                    <p>
+                      {scannedProduct.quantity} · {t('EN STOCK')}
+                    </p>
+                  </div>
+                </div>
+                <div className="scan-total">
+                  <span>{t('Total traité')}</span>
+                  <Quantity
+                    product={t('Total traité')}
+                    value={scan.quantity}
+                    disabled={locked}
+                    change={(delta) => {
+                      let op: ScanOperation;
+                      void mutate(
+                        (s) => {
+                          const r = adjustScan(s, scan, scan.quantity + delta);
+                          op = r.operation;
+                          return r.state;
+                        },
+                        (s) => setScan({ ...op!, revision: s.revision }),
+                      );
+                    }}
                   />
-                  <button
-                    className="round"
-                    aria-label={t('Ajouter à la liste')}
-                    disabled={locked || !shoppingName.trim()}
-                  >
-                    <Plus size={22} />
-                  </button>
-                </form>
+                </div>
+                <button
+                  className="text-button"
+                  disabled={locked}
+                  onClick={() => void mutate((s) => undoOperation(s, scan.before, scan.revision))}
+                >
+                  <Undo2 size={16} />
+                  {t('Annuler le dernier scan')}
+                </button>
+              </section>
+            )}
+
+            <div className="segmented">
+              {([1, -1] as const).map((v) => (
+                <button
+                  key={v}
+                  aria-pressed={mode === v}
+                  disabled={busy}
+                  onClick={() => {
+                    setMode(v);
+                    setCamera(false);
+                    setScan(null);
+                  }}
+                >
+                  {v === 1 ? <Plus size={18} /> : <Minus size={18} />}
+                  {t(v === 1 ? 'Ajouter' : 'Retirer')}
+                </button>
+              ))}
+            </div>
+            <div
+              className={`viewfinder ${camera ? 'scanning' : ''} ${scan && !camera ? 'result-held' : ''}`}
+              data-no-swipe
+            >
+              <div className="camera-caption">
+                <span className="live-dot" />
+                {t('Vue caméra simulée · aucune capture')}
+              </div>
+              <div className="camera-scene" aria-hidden="true">
+                <div className="scene-carton">
+                  <span>MAISON BLEUE</span>
+                  <strong>RIGATONI</strong>
+                  <span className="fake-barcode" />
+                </div>
+                <div className="scene-edge" />
+              </div>
+              <div className="scan-corners" aria-hidden="true" />
+              <div className="scan-ray" aria-hidden="true" />
+              <span className="viewfinder-label">{t('Placez le code au centre')}</span>
+            </div>
+            <button
+              className="primary full"
+              disabled={locked}
+              onClick={() => (camera ? doScan() : setCamera(true))}
+            >
+              <ScanLine size={20} />
+              {t(
+                camera
+                  ? 'Simuler une lecture'
+                  : scan
+                    ? 'Scanner à nouveau'
+                    : 'Démarrer la simulation',
+              )}
+            </button>
+            {camera && (
+              <button className="text-button full" onClick={() => setCamera(false)}>
+                {t('Arrêter')}
+              </button>
+            )}
+            <button
+              className="text-button full"
+              aria-expanded={manual}
+              onClick={() => {
+                setManual(!manual);
+                setCamera(false);
+              }}
+            >
+              {t('Saisir un code-barres')}
+              <ChevronRight size={16} />
+            </button>
+            {manual && (
+              <form
+                className="manual-entry"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  doScan(code);
+                }}
+              >
+                <label>
+                  {t('Code-barres')}
+                  <input
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9]{4,32}"
+                    maxLength={32}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="8076802085738"
+                  />
+                </label>
+                <button className="primary" disabled={locked}>
+                  {t('Valider')}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+        {destination === 2 && (
+          <>
+            <form
+              className="shopping-add"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const name = shoppingName.trim();
+                if (name)
+                  void mutate(
+                    (s) => addShopping(s, name, 1),
+                    () => setShoppingName(''),
+                  );
+              }}
+            >
+              <input
+                aria-label={t('Ajouter à la liste')}
+                placeholder={t('Une chose à ajouter…')}
+                maxLength={120}
+                required
+                value={shoppingName}
+                onChange={(e) => setShoppingName(e.target.value)}
+              />
+              <button
+                className="round"
+                aria-label={t('Ajouter à la liste')}
+                disabled={locked || !shoppingName.trim()}
+              >
+                <Plus size={22} />
+              </button>
+            </form>
+            <button
+              className="text-button from-catalog"
+              disabled={locked || !state.products.length}
+              onClick={() => setSheet({ kind: 'link' })}
+            >
+              <Archive size={16} />
+              {t('Depuis la réserve')}
+            </button>
+            <div className="section-title">
+              <h2>
+                {t('À prendre')} <span>{remaining.length}</span>
+              </h2>
+            </div>
+            <div className="shopping-list">{remaining.map(shoppingRow)}</div>
+            {!remaining.length && (
+              <div className="empty-state">
+                <img src={mascot} alt="" />
+                <h2>{t('Tout est dans le panier.')}</h2>
+                <p>{t('Tout va bien')}</p>
+              </div>
+            )}
+            {completed.length > 0 && (
+              <>
                 <div className="section-title">
                   <h2>
-                    {t('À prendre')} <span>{remaining.length}</span>
+                    {t('Dans le panier')} <span>{completed.length}</span>
                   </h2>
-                  <span className="small-caps">{t('À acheter')}</span>
+                  <button
+                    className="text-button"
+                    disabled={locked}
+                    onClick={() =>
+                      void mutate((s) => ({ ...s, shopping: s.shopping.filter((i) => !i.checked) }))
+                    }
+                  >
+                    {t('Vider les cochés')}
+                  </button>
                 </div>
-                <div className="shopping-list">{remaining.map(shoppingRow)}</div>
-                {!remaining.length && (
-                  <div className="empty-state">
-                    <img src={mascot} alt="" />
-                    <h2>{t('Tout est dans le panier.')}</h2>
-                    <p>{t('Tout va bien')}</p>
-                  </div>
-                )}
-                {completed.length > 0 && (
-                  <>
-                    <div className="section-title">
-                      <h2>
-                        {t('Dans le panier')} <span>{completed.length}</span>
-                      </h2>
-                      <Check size={17} />
-                    </div>
-                    <div className="shopping-list">{completed.map(shoppingRow)}</div>
-                  </>
-                )}
-                {low.some((p) => !remaining.some((i) => i.productId === p.id)) && (
-                  <section className="suggestions">
-                    <span className="eyebrow">
-                      <Sparkles size={15} />
-                      {t('À prévoir')}
-                    </span>
-                    {low
-                      .filter((p) => !remaining.some((i) => i.productId === p.id))
-                      .map((p) => (
-                        <div key={p.id}>
-                          <span>{p.name}</span>
-                          <button
-                            className="text-button"
-                            disabled={locked}
-                            onClick={() =>
-                              void mutate((s) =>
-                                addShopping(
-                                  s,
-                                  p.name,
-                                  Math.max(1, (p.minimum ?? 1) - p.quantity),
-                                  p.id,
-                                ),
-                              )
-                            }
-                          >
-                            <Plus size={16} />
-                            {t('Ajouter')}
-                          </button>
-                        </div>
-                      ))}
-                  </section>
-                )}
+                <div className="shopping-list">{completed.map(shoppingRow)}</div>
               </>
             )}
-            <footer className="page-foot">
-              <Leaf size={13} /> Sacré bleu · {t('Le quotidien, bien rangé.')}
-            </footer>
+            {low.some((p) => !remaining.some((i) => i.productId === p.id)) && (
+              <section className="suggestions">
+                <span className="eyebrow">
+                  <Sparkles size={15} />
+                  {t('À prévoir')}
+                </span>
+                {low
+                  .filter((p) => !remaining.some((i) => i.productId === p.id))
+                  .map((p) => (
+                    <div key={p.id}>
+                      <span>{p.name}</span>
+                      <button
+                        className="text-button"
+                        disabled={locked}
+                        onClick={() =>
+                          void mutate((s) =>
+                            addShopping(
+                              s,
+                              p.name,
+                              Math.max(1, (p.minimum ?? 1) - p.quantity),
+                              p.id,
+                            ),
+                          )
+                        }
+                      >
+                        <Plus size={16} />
+                        {t('Ajouter')}
+                      </button>
+                    </div>
+                  ))}
+              </section>
+            )}
+          </>
+        )}
+        <footer className="page-foot">
+          <Leaf size={13} /> Sacré bleu · {t('Le quotidien, bien rangé.')}
+        </footer>
+      </div>
+    );
+  }
+  return (
+    <div className="atelier">
+      <div className="prototype-ribbon">{t('Atelier 7A · données fictives')}</div>
+      <div className="app-shell">
+        <header className="brand-bar">
+          <span className="wordmark">sacré bleu</span>
+          <button
+            className="round"
+            aria-label={t('Paramètres')}
+            onClick={() => setSheet({ kind: 'settings' })}
+          >
+            <SlidersHorizontal size={20} />
+          </button>
+        </header>
+        <main
+          ref={swipe.ref}
+          onClickCapture={(e) => {
+            const pointer = e.nativeEvent as PointerEvent & {
+              sourceCapabilities?: { firesTouchEvents?: boolean };
+            };
+            if (
+              swipe.suppressClick() &&
+              (pointer.pointerType === 'touch' || pointer.sourceCapabilities?.firesTouchEvents)
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+        >
+          <div
+            className={`page-track ${swipe.dragging ? 'dragging' : ''}`}
+            style={{ transform: `translate3d(calc(${-page * 100}% + ${swipe.offset}px),0,0)` }}
+          >
+            {[0, 1, 2].map((i) => (
+              <div className="pane-contents" key={i}>
+                {renderPage(i)}
+              </div>
+            ))}
           </div>
         </main>
         <div
@@ -1025,7 +1130,7 @@ function Prototype({
               <LoaderCircle className="spinning" size={17} />
               {t('Enregistrement en cours…')}
             </>
-          ) : notice ? (
+          ) : notice && !(scan && page === 1 && !error) ? (
             <>
               {!error && <Check size={17} />}
               {t(notice)}
@@ -1062,13 +1167,15 @@ function Prototype({
           title={t(
             sheet.kind === 'settings'
               ? 'Paramètres'
-              : sheet.kind === 'edit'
-                ? 'Modifier le produit'
-                : sheet.kind === 'create'
-                  ? 'Ajouter un produit'
-                  : sheet.kind === 'delete'
-                    ? 'Supprimer le produit ?'
-                    : 'Détails',
+              : sheet.kind === 'link'
+                ? 'Choisir un produit'
+                : sheet.kind === 'edit'
+                  ? 'Modifier le produit'
+                  : sheet.kind === 'create'
+                    ? 'Ajouter un produit'
+                    : sheet.kind === 'delete'
+                      ? 'Supprimer le produit ?'
+                      : 'Détails',
           )}
         >
           {busy && (
@@ -1081,7 +1188,32 @@ function Prototype({
               {t('Échec simulé. Aucun changement appliqué.')}
             </p>
           )}
-          {sheet.kind === 'settings' ? (
+          {sheet.kind === 'link' ? (
+            <div className="catalog-picker">
+              {state.products.map((p) => (
+                <button
+                  className="catalog-choice"
+                  key={p.id}
+                  disabled={locked}
+                  onClick={() =>
+                    void mutate(
+                      (s) => addShopping(s, p.name, 1, p.id),
+                      () => setSheet(null),
+                    )
+                  }
+                >
+                  <ImageArea product={p} />
+                  <span>
+                    <strong>{p.name}</strong>
+                    <small>
+                      {p.size} {p.unit}
+                    </small>
+                  </span>
+                  <Plus size={20} />
+                </button>
+              ))}
+            </div>
+          ) : sheet.kind === 'settings' ? (
             <div className="settings-content">
               <label>
                 {t('Langue')}
@@ -1096,12 +1228,48 @@ function Prototype({
               </label>
               <h3>{t('Contrôles de l’atelier')}</h3>
               <label>
+                {t('Exemples d’images')}
+                <select
+                  aria-label={t('Exemples d’images')}
+                  value={imageSet}
+                  disabled={busy}
+                  onChange={(e) => {
+                    setImageSet(e.target.value);
+                    setState(e.target.value === 'mixed' ? realityFixtures() : fixtures());
+                    setCode('');
+                    setManual(false);
+                    setShoppingName('');
+                    setCamera(false);
+                    setSorted(false);
+                    setNotice(null);
+                    setError(false);
+                    setScenario('ready');
+                    setScan(null);
+                    setQuery('');
+                    setCategory('Tout');
+                  }}
+                >
+                  <option value="studio">{t('Packshots studio')}</option>
+                  <option value="mixed">{t('Conditions variées')}</option>
+                </select>
+              </label>
+              <label>
                 {t('Simuler un état')}
                 <select
                   value={scenario}
                   disabled={busy}
                   onChange={(e) => {
-                    setScenario(e.target.value as Scenario);
+                    const next = e.target.value as Scenario;
+                    setScenario(next);
+                    if (next === 'empty') {
+                      setState({ ...current.current, products: [], shopping: [] });
+                      setCode('');
+                      setManual(false);
+                      setShoppingName('');
+                      setScan(null);
+                      setQuery('');
+                      setCategory('Tout');
+                    }
                     setNotice(null);
                     setError(false);
                     setCamera(false);
@@ -1128,6 +1296,12 @@ function Prototype({
                 disabled={busy}
                 onClick={() => {
                   setState(fixtures());
+                  setImageSet('studio');
+                  setCode('');
+                  setManual(false);
+                  setShoppingName('');
+                  setCamera(false);
+                  setSorted(false);
                   setScenario('ready');
                   setScan(null);
                   setQuery('');
@@ -1142,7 +1316,24 @@ function Prototype({
               <div className="credits">
                 <img src={mascot} alt="" />
                 <h3>{t('À propos des images')}</h3>
-                <p>{t('Photos de produits synthétiques. Marques fictives.')}</p>
+                <p>{t('Visuels synthétiques et images OFF locales. Aucun appel distant.')}</p>
+                <p>
+                  <a
+                    href={new URL('../assets/fonts/Fraunces-OFL.txt', import.meta.url).href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Fraunces · SIL OFL 1.1
+                  </a>
+                  <br />
+                  <a
+                    href={new URL('../assets/fonts/Manrope-OFL.txt', import.meta.url).href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Manrope · SIL OFL 1.1
+                  </a>
+                </p>
                 <small>{t('Mascotte : Eloane ROURE · MIT')}</small>
               </div>
             </div>
@@ -1210,13 +1401,44 @@ function Prototype({
               <div className="detail-image">
                 <ImageArea product={sheet.product} />
               </div>
-              <small className="image-credit">
-                {t(
-                  sheet.product.photo
-                    ? 'Photo personnelle · locale à cette session'
-                    : 'Visuel fictif · exploration',
-                )}
-              </small>
+              {offCredits[sheet.product.id] && !sheet.product.photo ? (
+                <p className="image-credit">
+                  <a
+                    href={`https://world.openfoodfacts.org/product/${offCredits[sheet.product.id].code}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open Food Facts · {offCredits[sheet.product.id].author}
+                  </a>
+                  <br />
+                  <a
+                    href="https://creativecommons.org/licenses/by-sa/3.0/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    CC BY-SA 3.0
+                  </a>
+                  {' · '}
+                  <a
+                    href="https://opendatacommons.org/licenses/odbl/1-0/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    ODbL
+                  </a>
+                  {sheet.product.id === 'crop' && ' · ' + t('Cadrage de test')}
+                </p>
+              ) : (
+                <small className="image-credit">
+                  {t(
+                    sheet.product.photo
+                      ? 'Photo personnelle · locale à cette session'
+                      : sheet.product.id === 'personal'
+                        ? 'Photo personnelle fictive'
+                        : 'Visuel fictif · exploration',
+                  )}
+                </small>
+              )}
               <div className="detail-title">
                 <div>
                   <span className="eyebrow">

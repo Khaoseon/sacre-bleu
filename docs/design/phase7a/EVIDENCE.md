@@ -1,5 +1,19 @@
 # Phase 7A verification · 30 October 2026
 
+## Phase 7A.1 refinement
+
+Current source is the refinement documented in [REFINEMENT](REFINEMENT.md). The original Phase 7A results below are retained as dated baseline evidence.
+
+The refinement's local `npm test` passes **334 Vitest tests in 24 files**, including six gesture-intention cases, plus five configuration tests. `npm run typecheck`, `npm run typecheck:7a`, `npm run build` and `npm run build:7a` pass. The normal build retains its pre-existing main-chunk warning. The prototype is about 99 KB gzip JS and 5.4 KB gzip CSS, plus original review imagery and about 264 KB self-hosted fonts; none enters normal production output.
+
+`npm run test:7a:browser` passes the revised responsive and interaction matrix. It captures clean fixtures **before** running mutation tests. Four viewports (320/375/430/900 px) each cover stock, warning, scanner, immediate confirmation, shopping, English shopping, detail, editing, empty, offline, reduced-height keyboard geometry, mixed images, personal-photo example and OFF provenance. Finite transitions, local fonts and visible image decoding are awaited; no result screenshot scrolls to find the confirmed scan. Original 7A screenshots are preserved under `screenshots/before/` for comparison.
+
+Assertions include 12 px minimum warning type, warning visibility at every width, confirmed result/repeat/manual controls above the navigation without scrolling, sticky-save visibility **and focused-field clearance**, consistent empty counts, photo tap-versus-swipe arbitration and 1:1 intermediate track movement. Shopping tests exercise both quantity directions, checking/unchecking, quantity-triggered unchecking, product-linked accumulation, removal and clearing only completed entries. Editing tests retain the draft after failure, then confirm a retry; photo selection/removal remains session-only. Scan correction/undo, new-product retention at zero, uncertain/offline blocking, guarded gestures, English user-content preservation, keyboard and reduced-motion checks remain.
+
+The run asserts no remote runtime request, JS exception, persistent account storage or service worker, and scans the normal production bundle for prototype imagery/fonts/markers. Public font/image downloads were development-time fixture acquisition only. Actual iOS/Android keyboard, Safari, camera recognition, physical gestures and installed-PWA acceptance remain unverified. No hosted backend work was performed.
+
+`npm run format:check` and existing V1 navigation/i18n browser regressions also passed. Empty-state primary actions and the first offline stock controls are explicitly checked above navigation at all four widths. Remote PR CI is a separate execution on the exact pushed head; its status is reported in the handoff instead of inferred here.
+
 ## Executed locally
 
 | Command                     | Actual result                                                                                                                                                   |

@@ -1,6 +1,6 @@
-# Sacré bleu V1.1 · Phase 7A
+# Sacré bleu V1.1 · Phase 7A / 7A.1
 
-**Design proposal for maintainer review. No design approval, integration or deployment is implied.**
+**Current review: [Phase 7A.1 refinement, before/after and full screen matrix](REFINEMENT.md). No design approval, integration or deployment is implied.**
 
 The direction is **L’épicerie bleue**: an ivory canvas, ink-blue typography, restrained cobalt actions and generous product photographs. A pantry should feel like a carefully arranged cupboard. Its navigation still has exactly three destinations: Stock, Scanner and À acheter.
 
@@ -24,17 +24,17 @@ npm run test:7a:browser
 
 The browser check uses installed Chrome (`npx playwright install chrome` if needed), starts its own loopback server if port 5197 is free, and captures evidence. Run `npm run build` first for its production-isolation assertions. The standalone build goes to ignored `.tmp/phase7a-build/`. Its own Vite config has no PWA plugin, public-directory copying or environment-file loading. The normal production entry point/configuration never imports the prototype, its catalogue or its assets.
 
-Source: `explorations/7a/src/`; paired presentation strings: `src/i18n/phase7a.ts`. This separate, typed catalogue reuses existing strings and does not enter the V1 production import graph. Existing model functions drive stock, product, scan, undo and linked-shopping simulations. React memory replaces persistence; a 550 ms simulated receipt precedes every successful change. There are no new dependencies or lockfile changes.
+Source: `explorations/7a/src/`; paired presentation strings: `src/i18n/phase7a.ts`. This separate, typed catalogue reuses existing strings and does not enter the V1 production import graph. Existing model functions drive stock, product, scan, undo and linked-shopping simulations. React memory replaces persistence; a 550 ms simulated receipt precedes every successful change. There are no new dependencies or lockfile changes. The refinement adds locally bundled open-licence fonts and attributed public OFF image snapshots; runtime remains loopback-only.
 
 ## Review walkthrough
 
-1. Open Stock at 375 × 812 or 430 × 932. Browse photographs; search `huile`; filter categories; switch alphabetical/category order. Zero-stock products remain at the bottom.
+1. Open Stock at 375 × 812 or 430 × 932. Browse photographs; search `huile`; filter categories; use the sort icon inside search to switch alphabetical/category order. Zero-stock products remain at the bottom.
 2. Adjust stock. The count stays unchanged while saving; controls lock. Open settings, choose failure on next save, close, and repeat: no count changes. Offline and uncertain states similarly block writes. These states are explicit review controls, not real network detection.
-3. Tap a product photo/name → detail sheet → edit. Change its name, category, package or minimum. Select a JPEG/PNG/WebP under 500 KB and 4096 px per dimension; the picture remains local to this session. Save only updates metadata for an existing product. Deletion has a separate confirmation and detaches linked shopping through the existing model.
-4. Start a swipe around the middle of the heading or on noninteractive card copy; move horizontally across roughly a fifth of the content width. Vertical motion, controls, category strips, system edges, a sheet and an active scanner stay protected. The bottom bar and keyboard buttons provide the same destinations, without wrapping.
+3. Tap a product photo/name → detail sheet → edit, or tap its pencil for direct editing. Change its name, category, package or minimum. Select a JPEG/PNG/WebP under 500 KB and 4096 px per dimension; the picture remains local to this session. Save only updates metadata for an existing product. Deletion has a separate confirmation and detaches linked shopping through the existing model.
+4. Start a swipe across the heading, product photograph or product name; move horizontally across roughly a fifth of the content width. Vertical motion, quantity/edit controls, category strips, system edges, a sheet and an active scanner stay protected. Neighboring real panes track the finger continuously; inactive panes are inert. The bottom bar and keyboard buttons provide the same destinations, without wrapping.
 5. On Scanner, choose Ajouter/Retirer, explicitly start simulation, then simulate a reading. The known Rigatoni barcode uses the existing scan rules, including linked shopping reduction on positive movement. The confirmed result offers absolute processed-total adjustments and undo. A later mutation invalidates this correction. Use manual code `1234567890123` for a new fictitious product; positive-scan undo keeps its catalogue entry at zero.
-6. On À acheter, add free text, increment quantities, check/uncheck entries. Checked rows stay in a separate group. A product-linked entry has an image; free text has a deliberately neutral image slot. Suggestions require an explicit addition.
-7. In settings, switch Français/English and try empty, loading, offline, failed-save and uncertain states. Reset examples when finished. The original mascot appears in empty states and credits without redrawing.
+6. On À acheter, add free text or explicitly choose a product, decrease/increase quantities, check/uncheck, remove rows and clear completed entries. Checked rows stay in a separate group. A product-linked entry has an image; free text has a deliberately neutral image slot. Suggestions require an explicit addition.
+7. In settings, switch Français/English and try empty, loading, offline, failed-save and uncertain states. Empty clears catalogue/shopping together; the image selector loads a mixed-condition review set. Reset examples when finished. The original mascot appears in empty states and credits without redrawing.
 
 ## Visual evidence
 
@@ -44,7 +44,7 @@ Actual Chrome rendering, not generated UI mockups. See [verification and limits]
 | ----------------------------------------------- | --------------------------------------- | ---------------------------------------------- |
 | ![Compact stock](screenshots/inventory-320.png) | ![Stock](screenshots/inventory-375.png) | ![Larger stock](screenshots/inventory-430.png) |
 
-| Scanner                                 | Confirmed scan, scrolled to result              | Shopping                                  |
+| Scanner                                 | Confirmed scan, immediately visible             | Shopping                                  |
 | --------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
 | ![Scanner](screenshots/scanner-375.png) | ![Scan result](screenshots/scan-result-375.png) | ![Shopping](screenshots/shopping-375.png) |
 
@@ -52,7 +52,7 @@ Actual Chrome rendering, not generated UI mockups. See [verification and limits]
 | ------------------------------------- | -------------------------------------- | ----------------------------------- |
 | ![Detail](screenshots/detail-375.png) | ![Editing](screenshots/editor-375.png) | ![Empty](screenshots/empty-375.png) |
 
-Additional evidence: [English shopping](screenshots/shopping-en-375.png), [offline stock](screenshots/offline-375.png), [wide browser](screenshots/inventory-900.png). Editing sheets scroll internally; the first viewport intentionally does not contain every form field or the save action.
+Additional evidence: [English shopping](screenshots/shopping-en-375.png), [offline stock](screenshots/offline-375.png), [wide browser](screenshots/inventory-900.png). Editing sheets scroll internally, with a sticky save action and focused-field clearance. Every primary screen and state now has captures at all four requested widths in the refinement matrix.
 
 ## Assessment of V1
 
@@ -72,27 +72,27 @@ Design hypotheses to validate: imagery may improve recognition but reduce visibl
 
 ## Visual foundation
 
-| Layer               | Proposed decision                                                                                                                                                                                                                                                           |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type                | Georgia/Times New Roman serif for wordmark and large titles; system UI sans for controls and product data. No downloaded fonts or extra font licence payload. Georgia is a system-dependent choice; verify actual iOS/Android fallbacks and French accents before adoption. |
-| Hierarchy           | 36–47 px page titles (34 px compact), 25–28 px sheet titles, 14–16 px names/actions, 12–14 px supporting text, 9–10 px nonessential eyebrows/brand metadata. Data and controls remain readable without the decorative labels.                                               |
-| Palette             | Canvas `#faf9f5`, surface `#fffefa`, inset `#f0eee7`, ink `#1d314d`, secondary ink `#69717b`, brand `#233f8c`, brand tint `#e9edf7`. Warning `#80571d` on `#f6e8cc`; danger `#a33b31`; confirmed `#356451`. Text/icons always accompany semantic colour.                    |
-| Geometry            | 4 px spacing unit; 18–24 px phone gutters, 36 px wide gutters; 12–20 px radii for controls/cards; 28 px sheets. Default touch targets 44 px or more, 50 px primary actions. Safe-area padding on bottom navigation.                                                         |
-| Imagery             | Reusable contain-fit area, neutral inset background, stable aspect ratio and lazy decode. Portrait packages remain whole. No invented crops of labels; no photographic treatment for free text. Failed images resolve to a reserved category slot.                          |
-| Navigation          | Three equally reachable, labelled bottom buttons. Icon tint/pill, label and `aria-current` identify selection. Shopping badge counts unchecked rows, not units. No extra primary destinations.                                                                              |
-| Surfaces            | Flat warm canvas, quiet borders and almost no elevation. Shadows belong to transient sheets/feedback. No blur-dependent contrast or decorative gradients.                                                                                                                   |
-| Forms               | Persistent labels, 16 px input text, paired package/unit fields, native selects, visible focus, inline errors. Form values survive a failed simulated save. Quantities are not editable as metadata on existing products.                                                   |
-| Empty/loading/error | Original mascot only in welcoming/empty/credit contexts; reserved image slots and skeleton grid for loading; actionable text for failure/offline/uncertain state. The uncertain state must retain the real UUID recovery contract in 7B.                                    |
+| Layer               | Proposed decision                                                                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type                | Fraunces for wordmark/titles and Manrope for interface/data, locally served under the bundled SIL OFL notices. System serif/sans fallbacks remain. About 264 KB original TTF payload is prototype-only; production WOFF2/subsetting remains a decision.  |
+| Hierarchy           | 34–38 px page titles, 25–27 px sheet/detail titles, 14–16 px names/actions, 12–13 px supporting text. Redundant editorial labels and the oversized shopping count are removed.                                                                           |
+| Palette             | Canvas `#faf9f5`, surface `#fffefa`, inset `#f0eee7`, ink `#1d314d`, secondary ink `#626c77`, brand `#233f8c`, brand tint `#e9edf7`. Warning `#80571d` on `#f6e8cc`; danger `#a33b31`; confirmed `#356451`. Text/icons always accompany semantic colour. |
+| Geometry            | 4 px spacing unit; 18–24 px phone gutters, 36 px wide gutters; 12–20 px radii for controls/cards; 28 px sheets. Default touch targets 44 px or more, 50 px primary actions. Safe-area padding on bottom navigation.                                      |
+| Imagery             | Reusable contain-fit area, neutral inset background, stable aspect ratio and lazy decode. Portrait packages remain whole. No invented crops of labels; no photographic treatment for free text. Failed images resolve to a reserved category slot.       |
+| Navigation          | Three equally reachable, labelled bottom buttons. Icon tint/pill, label and `aria-current` identify selection. Shopping badge counts unchecked rows, not units. No extra primary destinations.                                                           |
+| Surfaces            | Flat warm canvas, quiet borders and almost no elevation. Shadows belong to transient sheets/feedback. No blur-dependent contrast or decorative gradients.                                                                                                |
+| Forms               | Persistent labels, 16 px input text, paired package/unit fields, native selects, visible focus, inline errors. Form values survive a failed simulated save. Quantities are not editable as metadata on existing products.                                |
+| Empty/loading/error | Original mascot only in welcoming/empty/credit contexts; reserved image slots and skeleton grid for loading; actionable text for failure/offline/uncertain state. The uncertain state must retain the real UUID recovery contract in 7B.                 |
 
-The four synthetic package images and complete generation prompts are in [the asset record](../../../explorations/7a/ASSETS.md). They are prototype fixtures, not proposed real catalogue data. OFF provenance/licence links must remain on real provider-backed detail/editor views. Personal photos must not inherit OFF image attribution.
+The synthetic package/personal-photo prompts, public OFF snapshot provenance and font licences are in [the asset record](../../../explorations/7a/ASSETS.md). They are prototype fixtures, not proposed real catalogue data. OFF provenance/licence links must remain on real provider-backed detail/editor views. Personal photos must not inherit OFF image attribution.
 
 ## Gesture and motion contract
 
-The isolated `useContentSwipe` hook observes one touch across usable noninteractive content. It leaves the outer 24 px for browser/system navigation; rejects buttons, inputs, labels, links, editable elements and explicitly marked strips/viewfinder; cancels vertical intent before horizontal capture; cancels multitouch, resize, interruption and changing page/state. No page wrapping. A dirty manual code or shopping draft also blocks content swipes.
+The refined standalone hook allows single-touch navigation on ordinary content and explicitly marked product-photo/name buttons. Tap opens details; horizontal intent captures a swipe and suppresses its compatibility click. Quantity/edit controls, fields, links, filter strips, viewfinder, system edges, open sheets, pending writes and dirty drafts remain protected. The 24 px outer edge is reserved for system/browser gestures. Zoom is not disabled. Each pane scrolls independently; inactive panes are inert and hidden from assistive technology.
 
-Exploration parameters: direction locks after 12 px with a horizontal/vertical ratio above 1.8; vertical intent cancels after 10 px; commit distance is 20% of content width clamped to 56–96 px. These values were exercised at 320/375/430 px with successful/short/vertical/cancel/edge/control/camera cases. They are **calibration candidates**, not validated human factors or a final universal threshold. Drag feedback uses bounded translation and resistance at the first/last destination, settling in 240 ms. It does not disable browser zoom or globally suppress touch scrolling. Physical Safari back gestures, Android navigation, long lists and tremor/motor accessibility still need acceptance testing. [MDN describes the browser's gesture ownership/cancellation model](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action).
+Motion uses a single track with 1:1 finger translation and an actually rendered neighboring pane, settling in 280 ms with resistance at the first/last destination. Presentation-only calibration is exercised in browser and intention tests: 12 px direction lock, ratio 1.8, distance 20% clamped to 56–96 px, or a ≥40 px short flick faster than 0.55 px/ms. These remain device-calibration candidates, not physical-phone acceptance. See [the browser gesture ownership model](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action) and [refinement trade-offs](REFINEMENT.md).
 
-Press feedback lasts 110 ms; sheet entry and scan-result appearance 240 ms. Quantity/check changes occur only after confirmation; pending is immediate but never green/successful. Success notices expire after 2.4 s; errors persist until another action. Shopping completion moves a confirmed row into the completed section. `prefers-reduced-motion` removes transitions and animations without removing text feedback or pending locks. Haptics are only a future optional post-confirmation enhancement; do not depend on vibration support or add repeated vibration to routine stock buttons.
+Press feedback is 110 ms; sheet entry 240 ms. Quantity/check changes wait for confirmation, pending remains immediate, and errors remain actionable. A confirmed scan is its own result-first feedback surface, without an overlapping success toast. Reduced motion removes transitions/animations while retaining status and locks. No new haptic behavior is implemented.
 
 ## Secondary-screen inventory for 7B
 

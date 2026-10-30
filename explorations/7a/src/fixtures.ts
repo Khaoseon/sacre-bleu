@@ -3,8 +3,77 @@ import pasta from '../assets/pasta.png';
 import tomato from '../assets/tomato.png';
 import oil from '../assets/oil.png';
 import chickpea from '../assets/chickpea.png';
+import spread from '../assets/reality/3017620422003.jpg';
+import cola from '../assets/reality/5449000000996.jpg';
+import personal from '../assets/reality/personal-lentils.png';
 
-export const sampleImages: Record<string, string> = { pasta, tomato, oil, chickpea };
+export const sampleImages: Record<string, string> = {
+  pasta,
+  tomato,
+  oil,
+  chickpea,
+  spread,
+  cola,
+  crop: spread,
+  personal,
+};
+export const imageConditions: Record<string, string> = {
+  crop: 'poor-crop',
+  cola: 'low-resolution',
+  personal: 'personal-photo',
+};
+export const offCredits: Record<string, { code: string; author: string }> = {
+  spread: { code: '3017620422003', author: 'org-ferrero-france-commerciale' },
+  crop: { code: '3017620422003', author: 'org-ferrero-france-commerciale' },
+  cola: { code: '5449000000996', author: 'zeynepozturk11' },
+};
+export function realityFixtures(): State {
+  const state = fixtures();
+  const updatedAt = '2026-10-30T12:00:00.000Z';
+  return {
+    ...state,
+    products: [
+      {
+        id: 'spread',
+        name: 'Nutella',
+        brand: 'Ferrero',
+        category: 'Épicerie',
+        size: 400,
+        unit: 'g',
+        quantity: 1,
+        minimum: 2,
+        updatedAt,
+      },
+      {
+        id: 'cola',
+        name: 'Coca-Cola Original',
+        category: 'Épicerie',
+        size: 330,
+        unit: 'ml',
+        quantity: 2,
+        updatedAt,
+      },
+      { id: 'crop', name: 'Cadrage difficile', category: 'Autres', quantity: 1, updatedAt },
+      {
+        id: 'personal',
+        name: 'Lentilles du placard',
+        category: 'Légumineuses',
+        quantity: 2,
+        updatedAt,
+      },
+      ...state.products,
+      {
+        id: 'broken',
+        name: 'Image indisponible',
+        category: 'Autres',
+        quantity: 0,
+        minimum: 1,
+        photo: '/missing-test-image.jpg',
+        updatedAt,
+      },
+    ],
+  };
+}
 export function fixtures(): State {
   const updatedAt = '2026-10-30T12:00:00.000Z';
   return {

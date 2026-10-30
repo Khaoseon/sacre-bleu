@@ -3,6 +3,33 @@ import { catalog } from './catalog';
 
 export const phase7aCatalog = {
   ...catalog,
+  'Cadrage de test': { fr: 'Cadrage de test', en: 'Crop test' },
+  'Visuels synthétiques et images OFF locales. Aucun appel distant.': {
+    fr: 'Visuels synthétiques et images OFF locales. Aucun appel distant.',
+    en: 'Synthetic visuals and local OFF images. No remote requests.',
+  },
+  'Produit à compléter': { fr: 'Produit à compléter', en: 'Product to restock' },
+  'Depuis la réserve': { fr: 'Depuis la réserve', en: 'From the pantry' },
+  'Choisir un produit': { fr: 'Choisir un produit', en: 'Choose a product' },
+  'Vider les cochés': { fr: 'Vider les cochés', en: 'Clear completed' },
+  'Quantité à acheter': { fr: 'Quantité à acheter', en: 'Shopping quantity' },
+  'Exemples d’images': { fr: 'Exemples d’images', en: 'Image examples' },
+  'Conditions variées': { fr: 'Conditions variées', en: 'Mixed conditions' },
+  'Packshots studio': { fr: 'Packshots studio', en: 'Studio packshots' },
+  'Vue caméra simulée · aucune capture': {
+    fr: 'Vue caméra simulée · aucune capture',
+    en: 'Simulated camera · no capture',
+  },
+  'Reprendre la simulation': { fr: 'Reprendre la simulation', en: 'Resume simulation' },
+  'Photo personnelle fictive': { fr: 'Photo personnelle fictive', en: 'Fictional personal photo' },
+  'Images OFF · CC BY-SA 3.0': { fr: 'Images OFF · CC BY-SA 3.0', en: 'OFF images · CC BY-SA 3.0' },
+  'En pause': { fr: 'En pause', en: 'Paused' },
+  'Modifier directement': { fr: 'Modifier directement', en: 'Edit directly' },
+  'Photo invalide : JPG, PNG ou WebP, 500 Ko et 4096 px maximum.': {
+    fr: 'Photo invalide : JPG, PNG ou WebP, 500 Ko et 4096 px maximum.',
+    en: 'Invalid photo: JPG, PNG or WebP, at most 500 KB and 4096 px.',
+  },
+  '2 produits à compléter': { fr: '2 produits à compléter', en: '2 products to restock' },
   Détails: { fr: 'Détails', en: 'Details' },
   'Hors ligne': { fr: 'Hors ligne', en: 'Offline' },
   'Annuler le dernier scan': { fr: 'Annuler le dernier scan', en: 'Undo last scan' },

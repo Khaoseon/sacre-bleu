@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { swipeDestination } from './gesture';
 
-// Exploration calibration, covered at 320/375/430 px. Device acceptance remains 7B work.
+// Local exploration only. Keep V1's hook untouched; device calibration follows review.
 export function useContentSwipe(
   index: number,
   navigate: (index: number) => void,
@@ -10,6 +11,8 @@ export function useContentSwipe(
   const latest = useRef({ index, navigate, blocked });
   latest.current = { index, navigate, blocked };
   const [offset, setOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const suppressUntil = useRef(0);
   useEffect(() => {
     const root = ref.current!;
     let g: {
@@ -18,36 +21,40 @@ export function useContentSwipe(
       y: number;
       width: number;
       index: number;
-      dx: number;
       locked: boolean;
+      time: number;
     } | null = null;
     const reset = () => {
       g = null;
       setOffset(0);
+      setDragging(false);
     };
     const unavailable = () => latest.current.blocked || !!document.querySelector('dialog[open]');
     const start = (e: TouchEvent) => {
+      suppressUntil.current = 0;
       reset();
       if (unavailable() || e.touches.length !== 1 || e.defaultPrevented) return;
       const target = e.target instanceof Element ? e.target : null;
       if (
         !target ||
-        target.closest(
-          'button,input,select,textarea,a,label,summary,[data-no-swipe],[contenteditable]',
-        )
+        target.closest('[data-no-swipe],input,select,textarea,label,summary,[contenteditable]')
       )
         return;
-      const touch = e.touches[0];
-      // Leave system-owned edges alone. The rest of the content is available.
-      if (touch.clientX < 24 || touch.clientX > innerWidth - 24) return;
+      if (
+        target.closest('button,a,[role="button"],[role="slider"]') &&
+        !target.closest('[data-swipe-surface]')
+      )
+        return;
+      const t = e.touches[0];
+      if (t.clientX < 24 || t.clientX > innerWidth - 24) return;
       g = {
-        id: touch.identifier,
-        x: touch.clientX,
-        y: touch.clientY,
+        id: t.identifier,
+        x: t.clientX,
+        y: t.clientY,
         width: root.clientWidth,
         index: latest.current.index,
-        dx: 0,
         locked: false,
+        time: performance.now(),
       };
     };
     const move = (e: TouchEvent) => {
@@ -59,46 +66,38 @@ export function useContentSwipe(
         root.clientWidth !== g.width
       )
         return reset();
-      const touch = e.touches[0];
-      const dx = touch.clientX - g.x,
-        dy = Math.abs(touch.clientY - g.y);
-      if (touch.identifier !== g.id || (!g.locked && dy > 10 && dy >= Math.abs(dx))) return reset();
-      if (!g.locked && Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.8) g.locked = true;
+      const t = e.touches[0],
+        dx = t.clientX - g.x,
+        dy = Math.abs(t.clientY - g.y);
+      if (t.identifier !== g.id || (!g.locked && dy > 10 && dy >= Math.abs(dx))) return reset();
+      if (!g.locked && Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.8) {
+        g.locked = true;
+        setDragging(true);
+      }
       if (!g.locked) return;
       if (!e.cancelable) return reset();
       e.preventDefault();
-      g.dx = dx;
+      suppressUntil.current = performance.now() + 450;
       const next = g.index + (dx < 0 ? 1 : -1);
-      setOffset(
-        Math.max(
-          -g.width * 0.3,
-          Math.min(g.width * 0.3, dx * (next < 0 || next > 2 ? 0.12 : 0.48)),
-        ),
-      );
+      setOffset(Math.max(-g.width, Math.min(g.width, dx * (next < 0 || next > 2 ? 0.18 : 1))));
     };
     const end = (e: TouchEvent) => {
-      const finished = g;
+      const done = g;
       reset();
       if (
-        !finished ||
-        !finished.locked ||
+        !done ||
+        !done.locked ||
         unavailable() ||
         e.touches.length ||
-        latest.current.index !== finished.index
+        latest.current.index !== done.index
       )
         return;
-      const touch = Array.from(e.changedTouches).find((t) => t.identifier === finished.id);
-      if (!touch || root.clientWidth !== finished.width) return;
-      const dx = touch.clientX - finished.x;
-      const threshold = Math.max(56, Math.min(96, finished.width * 0.2));
-      const next = finished.index + (dx < 0 ? 1 : -1);
-      if (
-        Math.abs(dx) >= threshold &&
-        Math.abs(dx) > Math.abs(touch.clientY - finished.y) * 1.8 &&
-        next >= 0 &&
-        next <= 2
-      )
-        latest.current.navigate(next);
+      const t = Array.from(e.changedTouches).find((t) => t.identifier === done.id);
+      if (!t || root.clientWidth !== done.width) return;
+      const dx = t.clientX - done.x,
+        dy = Math.abs(t.clientY - done.y);
+      const next = swipeDestination(done.index, dx, dy, done.width, performance.now() - done.time);
+      if (next !== null) latest.current.navigate(next);
     };
     root.addEventListener('touchstart', start, { passive: true });
     root.addEventListener('touchmove', move, { passive: false });
@@ -117,5 +116,5 @@ export function useContentSwipe(
       document.removeEventListener('visibilitychange', reset);
     };
   }, []);
-  return { ref, offset };
+  return { ref, offset, dragging, suppressClick: () => performance.now() < suppressUntil.current };
 }
