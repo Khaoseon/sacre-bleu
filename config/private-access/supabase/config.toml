@@ -1,0 +1,7 @@
+# Applied after explicit approval on the existing Cloud project, 29 October 2026.
+# Future remote changes still require a separate approval and exact diff review.
+# Keep email/password login, sessions, SMTP and existing users unchanged.
+project_id = "app-reserve-private-access"
+
+[auth]
+enable_signup = false

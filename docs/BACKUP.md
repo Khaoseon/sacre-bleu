@@ -14,6 +14,8 @@ Les exports Auth contiennent des adresses et empreintes de mots de passe, les jo
 
 ## Sauvegarde chiffrée reproductible
 
+Pour le lot correctif V1 désormais composé de six sources, utiliser **`--before-v1-conflicts`**, après accord de sauvegarde. Il exige quatre migrations historiques appliquées et les deux migrations V1 `20261029000100`/`20261029000200` en attente, ou les cinq premières appliquées et la seule sixième en attente pour une reprise examinée. Aucun trou ni version inconnue admis ; seules les sources réellement appliquées sont archivées, le manifeste liste le suffixe en attente. Le mode ordinaire refuse les migrations en attente. Les anciens modes `--before-phase4` et `--before-lookup-budget` restent strictement limités à leurs anciens inventaires de quatre/cinq sources ; ne pas les utiliser avec les six sources actuelles. Ces modes ne se cumulent pas, ne déploient rien et n'ont pas été appliqués au Cloud pendant ce correctif. Détails : LIVRAISON_CORRECTIFS_V1.md.
+
 Voir [la procédure courte](SAUVEGARDE_CHIFFREE.md) pour créer, vérifier et extraire une archive. Elle remplace les exports SQL manuels en fichiers, en conservant le périmètre de restauration éprouvé ci-dessous.
 
 ## Reprendre un projet suspendu
@@ -25,6 +27,10 @@ La [documentation de pause consultée](https://supabase.com/docs/guides/platform
 Aucune tâche de maintien artificiel d’activité n’est ajoutée. Des requêtes périodiques ne constituent ni sauvegarde, ni garantie de disponibilité ou de conservation ; un changement de politique reste possible. Supabase Pro évite la pause automatique, mais entraîne un abonnement à faire approuver séparément.
 
 ## Restauration après incident
+
+Commande de répétition locale intégrée : `npm run backup:restore:local -- CHEMIN_ABSOLU_EXTRACTION_PRIVEE`. Elle exige une extraction vérifiée hors Git, les quatre migrations archivées attendues et le backend de développement local disponible pour son schéma Auth. Elle ne se connecte à aucune base Cloud : tous les imports passent par un conteneur jetable créé sans réseau ni port, stockage tmpfs et journaux Docker désactivés, détruit en fin de recette. Elle vérifie les empreintes internes, teste le rollback après chargement complet, restaure et compare les onze tables puis refuse une seconde restauration sur cible remplie sans modifier les empreintes. Aucun chemin privé n'est intégré au code. Cette commande ne crée pas de nouvelle sauvegarde et ne restaure pas de session HTTP Auth.
+
+**Correction vérifiée le 30 octobre 2026 :** la quatrième migration initialise déjà `private.product_lookup_gate`. L'import complet sans préparation provoque 23505 car le dump contient aussi cette ligne. Sur une cible vierge isolée, `restoreImportSQL` dans `scripts/backend/restore-import.mjs` vérifie l'état initial, supprime uniquement cette ligne dans la transaction, puis importe le dump inchangé. Ne pas exclure la table du dump ni supprimer sa clé primaire. L'ancien exemple psql ci-dessous doit intégrer cette préparation dès que la quatrième migration est présente ; ne pas l'utiliser tel quel pour ce périmètre. Ne jamais viser le projet source Cloud. Régression de rollback et restauration complète exécutées, détails dans VALIDATION.md.
 
 Une restauration n’est jamais un reset du Cloud existant. Préparer une instance **neuve**, locale et isolée pour l’exercice, puis un projet de remplacement seulement après accord si nécessaire. Ne pas utiliser les fixtures 2A/2B sur l’hébergement.
 

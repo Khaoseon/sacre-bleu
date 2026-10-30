@@ -6,6 +6,10 @@ Exigences fonctionnelles d’origine conservées ci-dessous. La phase 2B relie l
 
 ## Contexte du produit
 
+**Préparation corrective post-4B, non publiée :** voir [SCANS_SIMULTANES_OFF.md](SCANS_SIMULTANES_OFF.md) pour l'identité locale du scan, les attentes réseau bornées, le budget OFF détaillé et son indicateur. Les protections SQL de compensation restent inchangées. Ne pas confondre ce code local avec la version actuellement installée sur les téléphones. La seule évolution Cloud déjà appliquée est la fermeture des inscriptions après accord, sans suppression de compte.
+
+Les conflits de scan périmé gardent toutes leurs conditions et sont refusés rapidement via SQLSTATE PGRST/HTTP 409 avec code JSON 40001, reconnu par les anciens clients ; aucun succès ou mouvement supplémentaire en cas de conflit. Migration V1 préparée et testée uniquement localement. L'utilisateur accepte une publication après tests techniques sans nouvelle recette physique préalable, en conservant explicitement la limite du bug iPhone non reproduit.
+
 Le nom public de l'application est **Sacré bleu**, choisi en phase 4B. Il apparaît dans l'interface, le titre du navigateur et les noms du manifeste PWA. `App_reserve` reste le nom technique du dépôt ; les identifiants de stockage, de session et du backend existants sont conservés.
 
 Le logo fourni en phase 4B (sac bleu illustré) apparaît à côté du nom et sert aux icônes PWA, Apple et navigateur. La variante Android adaptative conserve une marge de sécurité. Source et dérivés documentés dans `assets/branding/README.md` ; installation physique à valider après hébergement HTTPS.

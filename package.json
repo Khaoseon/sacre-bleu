@@ -8,6 +8,7 @@
     "dev:cloud": "vite --mode cloud --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "build:cloud": "tsc -b && vite build --mode cloud",
+    "verify:cloud": "npm test && npm run typecheck && npm run format:check && npm run build:cloud",
     "preview": "vite preview --host 127.0.0.1",
     "preview:cloud": "vite preview --mode cloud --outDir dist-cloud --host 127.0.0.1",
     "phone:serve": "node scripts/phone-serve.mjs",
@@ -15,6 +16,7 @@
     "test:off:browser": "node scripts/browser/off.integration.mjs",
     "test:ui:browser": "node scripts/browser/navigation.integration.mjs",
     "test:pwa:browser": "node scripts/browser/updates.integration.mjs",
+    "test:scanners:browser": "node scripts/browser/two-scanners.integration.mjs",
     "test:off:edge": "node --test scripts/backend/off-edge.integration.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
@@ -33,7 +35,8 @@
     "test:db:concurrency": "node --test --test-concurrency=1 scripts/backend/concurrency.integration.mjs",
     "db:types": "node scripts/backend/generate-types.mjs",
     "test:db:api": "node --test scripts/backend/auth-api.integration.mjs",
-    "db:lint": "supabase db lint --local --fail-on error"
+    "db:lint": "supabase db lint --local --fail-on error",
+    "backup:restore:local": "node scripts/backend/restore-local.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
@@ -49,6 +52,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "pg": "8.23.1",
+    "playwright": "1.62.1",
     "prettier": "3.9.10",
     "supabase": "2.122.0",
     "typescript": "7.0.2",

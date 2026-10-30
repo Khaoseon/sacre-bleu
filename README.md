@@ -6,6 +6,10 @@ PWA React/TypeScript, en français, pour partager une réserve alimentaire entre
 
 ## Démarrer localement
 
+Revue corrective post-4B : [audit sécurité et CI](docs/REVUE_CORRECTIVE_4B.md). La seule modification Supabase déjà autorisée puis appliquée est la fermeture des inscriptions (`disable_signup=true`), comptes et données préservés. [Livraison contrôlée V1](docs/LIVRAISON_CORRECTIFS_V1.md) : précontrôles, compatibilité, arrêts et recette physique ultérieure. Branche corrective et PR brouillon autorisées après tests verts, aucune publication ; [scans simultanés et délais OFF](docs/SCANS_SIMULTANES_OFF.md), migrations/Edge soumis à des accords distincts.
+
+**Blocage technique levé localement :** la sixième migration conserve le refus périmé et son code JSON 40001, avec SQLSTATE PGRST/HTTP 409 sans relance PostgREST. SDK publié/actuel et régressions techniques validés. L'utilisateur accepte une publication sans nouvelle recette physique préalable, sans prétendre que la substitution iPhone est résolue. Push de branche et PR brouillon autorisés après tests verts ; fusion, SQL/Edge Cloud et publication restent soumis à accord.
+
 La phase 4 Open Food Facts est active sur le backend existant. En **phase 4B**, le frontend **Sacré bleu** est publié après accord sur [sacre-bleu.pages.dev](https://sacre-bleu.pages.dev), avec logo, icônes téléphone et en-têtes statiques vérifiés. Production automatique conservée et previews désactivées ; URL Auth et origine OFF configurées après accord. La connexion et les derniers contrôles Samsung sont confirmés par l’utilisateur. Les essais iPhone 4B restent non réalisés et acceptés comme limite de livraison. Réglages, validations et limites : [docs/CLOUDFLARE_PAGES.md](docs/CLOUDFLARE_PAGES.md).
 
 Prérequis : Node.js 24+, npm, Docker Desktop avec moteur Linux démarré pour le backend local.

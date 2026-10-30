@@ -12,8 +12,9 @@ export class OpenFoodFactsProvider implements ProductProvider {
   private cache = new Map<string, { until: number; result: LookupResult }>();
   private busy = false;
   private next = 0;
+  private limited = false;
   get retryAfterSeconds() {
-    return Math.max(60, Math.ceil((this.next - (this.options.now ?? Date.now)()) / 1000));
+    return Math.max(1, Math.ceil((this.next - (this.options.now ?? Date.now)()) / 1000));
   }
   constructor(
     private options: {
@@ -29,10 +30,12 @@ export class OpenFoodFactsProvider implements ProductProvider {
     const now = this.options.now ?? Date.now;
     const cached = this.cache.get(barcode);
     if (cached && cached.until > now()) return cached.result;
-    if (this.busy || this.next > now()) return { status: 'unavailable', reason: 'rate-limit' };
+    if (this.busy || this.next > now())
+      return { status: 'unavailable', reason: this.limited ? 'rate-limit' : 'cooldown' };
     if (!/^App_reserve\/[^\s]+ \(https:\/\/github\.com\/Khaoseon\)$/.test(this.options.userAgent))
       return { status: 'unavailable', reason: 'disabled' };
     this.busy = true;
+    this.limited = false;
     this.next =
       now() +
       Math.max(6000, Number.isFinite(this.options.intervalMs) ? this.options.intervalMs! : 6000);
@@ -66,9 +69,12 @@ export class OpenFoodFactsProvider implements ProductProvider {
             : retry
               ? Math.ceil((Date.parse(retry) - now()) / 1000)
               : 60;
-        this.next =
+        this.next = Math.max(
+          this.next,
           now() +
-          Math.min(86400000, Math.max(60000, Number.isFinite(seconds) ? seconds * 1000 : 60000));
+            Math.min(86400000, Math.max(1000, Number.isFinite(seconds) ? seconds * 1000 : 60000)),
+        );
+        this.limited = true;
         result = { status: 'unavailable', reason: 'rate-limit' };
       } else if (!response.ok) result = { status: 'unavailable', reason: 'network' };
       else {
@@ -100,7 +106,7 @@ export class OpenFoodFactsProvider implements ProductProvider {
     } finally {
       this.busy = false;
     }
-    if (!signal.aborted) {
+    if (!signal.aborted && result.status !== 'unavailable') {
       if (this.cache.size >= 200) this.cache.delete(this.cache.keys().next().value!);
       this.cache.set(barcode, {
         until:

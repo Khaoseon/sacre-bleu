@@ -1,12 +1,14 @@
-import { isLookupBarcode, record, type ProductProvider } from './productInfo.ts';
+import { isLookupBarcode, record, type ProductProvider, type LookupSlot } from './productInfo.ts';
+export class LookupAuthError extends Error {}
 
 /** Authorization is injected; the HTTP handler never receives a service-role client. */
 export function createLookupHandler(options: {
   provider: ProductProvider;
   origins: string[];
   authorize: (token: string, signal: AbortSignal) => Promise<boolean>;
-  claim?: (token: string, signal: AbortSignal) => Promise<boolean>;
-  defer?: (token: string, signal: AbortSignal) => Promise<void>;
+  claim?: (token: string, signal: AbortSignal) => Promise<boolean | LookupSlot>;
+  defer?: (token: string, signal: AbortSignal) => Promise<void | LookupSlot>;
+  retryAfterSeconds?: () => number;
 }) {
   return async (request: Request): Promise<Response> => {
     const origin = request.headers.get('Origin');
@@ -19,6 +21,7 @@ export function createLookupHandler(options: {
             'Access-Control-Allow-Origin': origin,
             'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Expose-Headers': 'Retry-After',
           }
         : {}),
     };
@@ -64,18 +67,39 @@ export function createLookupHandler(options: {
         !isLookupBarcode(data.barcode)
       )
         return reply(400, { error: 'Code invalide.' });
-      if (options.claim && !(await options.claim(auth.slice(7), signal))) {
-        headers['Retry-After'] = '60';
-        return reply(429, { status: 'unavailable', reason: 'rate-limit' });
+      const claimedAt = Date.now();
+      const decision = options.claim ? await options.claim(auth.slice(7), signal) : true;
+      const budget: LookupSlot =
+        typeof decision === 'boolean'
+          ? { allowed: decision, reason: 'cooldown', retryAfterSeconds: 6 }
+          : decision;
+      if (!budget.allowed) {
+        headers['Retry-After'] = String(budget.retryAfterSeconds);
+        return reply(429, { status: 'unavailable', reason: budget.reason, budget });
       }
       const result = await options.provider.lookup(data.barcode, signal);
       if (result.status === 'unavailable' && result.reason === 'rate-limit') {
-        await options.defer?.(auth.slice(7), signal);
-        headers['Retry-After'] = '60';
-        return reply(429, result);
+        let deferred: void | LookupSlot = undefined;
+        try {
+          deferred = await options.defer?.(auth.slice(7), signal);
+        } catch {
+          console.warn('OFF_SHARED_COOLDOWN_UNCONFIRMED');
+        }
+        const blocked = deferred ?? {
+          allowed: false,
+          reason: 'rate-limit',
+          retryAfterSeconds: options.retryAfterSeconds?.() ?? 60,
+        };
+        headers['Retry-After'] = String(blocked.retryAfterSeconds);
+        return reply(429, { ...result, budget: blocked });
       }
-      return reply(200, result);
-    } catch {
+      const remaining = Math.max(
+        1,
+        budget.retryAfterSeconds - Math.floor((Date.now() - claimedAt) / 1000),
+      );
+      return reply(200, { ...result, budget: { ...budget, retryAfterSeconds: remaining } });
+    } catch (error) {
+      if (error instanceof LookupAuthError) return reply(401, { error: 'Accès refusé.' });
       return reply(200, { status: 'unavailable', reason: 'network' });
     }
   };

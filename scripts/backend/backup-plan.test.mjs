@@ -6,6 +6,32 @@ const files = versions.map((version) => `${version}_example.sql`);
 const applied = versions.map((version) => ({ local: version, remote: version }));
 const pending = applied.map((row, i) => ({ ...row, remote: i === 3 ? '' : row.remote }));
 
+test('V1 preflight accepts exactly four or five applied versions and the reviewed pending suffix, never a hole', () => {
+  const all = [...versions, '20261029000100', '20261029000200'];
+  const names = all.map((v) => `${v}_example.sql`);
+  for (const count of [4, 5]) {
+    const rows = all.map((local, index) => ({ local, remote: index < count ? local : '' }));
+    assert.throws(() => backupPlan(rows, names), /en attente/);
+    const plan = backupPlan(rows, names, false, false, true);
+    assert.deepEqual(plan.pendingVersions, all.slice(count));
+    assert.deepEqual(plan.appliedVersions, all.slice(0, count));
+    assert.equal(plan.files.length, count);
+    assert.throws(() => backupPlan(rows, names, false, true, true));
+    assert.throws(() =>
+      backupPlan(
+        rows.map((r, i) => (i === 2 ? { ...r, remote: '' } : r)),
+        names,
+        false,
+        false,
+        true,
+      ),
+    );
+  }
+  const full = all.map((local) => ({ local, remote: local }));
+  assert.equal(backupPlan(full, names).pendingVersion, null);
+  assert.throws(() => backupPlan(full, names, false, false, true));
+});
+
 test('pre-phase-4 backup contains only the three applied migrations and ten source tables', () => {
   const plan = backupPlan(pending, files, true);
   assert.deepEqual(plan.files, files.slice(0, 3));
@@ -19,6 +45,26 @@ test('ordinary backups reject pending migrations and include the budget only aft
   assert.equal(backupPlan(applied, files).tables.length, 11);
   assert.equal(backupPlan(applied.slice(0, 3), files.slice(0, 3)).tables.length, 10);
   assert.throws(() => backupPlan(applied, files, true), /trois migrations/);
+});
+test('explicit lookup-budget preflight backs up four applied migrations with only the reviewed fifth pending', () => {
+  const next = '20261029000100';
+  const rows = [...applied, { local: next, remote: '' }];
+  const names = [...files, `${next}_lookup_budget_details.sql`];
+  assert.throws(() => backupPlan(rows, names), /en attente/);
+  const plan = backupPlan(rows, names, false, true);
+  assert.equal(plan.pendingVersion, next);
+  assert.equal(plan.files.length, 4);
+  assert.equal(plan.tables.length, 11);
+  assert.throws(() => backupPlan(rows, names, true, true));
+  assert.throws(() =>
+    backupPlan(
+      rows.map((r, i) => (i === 1 ? { ...r, remote: '' } : r)),
+      names,
+      false,
+      true,
+    ),
+  );
+  assert.equal(backupPlan([...applied, { local: next, remote: next }], names).pendingVersion, null);
 });
 test('predeployment exception cannot hide divergence, missing history, unknown versions or extra pending migrations', () => {
   for (const rows of [

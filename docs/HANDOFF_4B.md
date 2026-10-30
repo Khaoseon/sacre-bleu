@@ -1,5 +1,7 @@
 # Clôture et transmission — phase 4B
 
+**Revue corrective ultérieure :** [REVUE_CORRECTIVE_4B.md](REVUE_CORRECTIVE_4B.md). Après constat des inscriptions ouvertes, leur fermeture globale a été explicitement autorisée et appliquée, sans changement de comptes/données. Correctifs frontend/CI encore locaux ; [investigation des scans simultanés et OFF](SCANS_SIMULTANES_OFF.md) également préparée sans déploiement. L'utilisateur confirme depuis l'accès iPhone/Samsung ; le rapport ci-dessous conserve les faits et limites à la date de clôture.
+
 **Phase 4B clôturée le 29 octobre 2026 à la demande de l'utilisateur**, après sa confirmation globale que les derniers contrôles fonctionnent. Dernière version applicative validée : `43c8897428e4`. Le commit de clôture ne modifie que la documentation ; sa référence sera celle du commit Git, sans auto-référence dans ce document.
 
 ## Résultat livré

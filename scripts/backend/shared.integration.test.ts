@@ -1,4 +1,4 @@
-import { test, expect } from 'vitest';
+import { test, expect, vi } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -10,6 +10,7 @@ import { ReserveAuth } from '../../src/backend/auth';
 import { parseLink, invitationLink } from '../../src/backend/links';
 import { SharedPantryStore } from '../../src/backend/store';
 import type { ReserveBackend } from '../../src/backend/contracts';
+import { publishedClient } from './legacy-client.mjs';
 
 const manifest = JSON.parse(readFileSync('node_modules/supabase/package.json', 'utf8'));
 const status = JSON.parse(
@@ -221,8 +222,33 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
     await a.scanProduct(product.id, 1);
     await b.refresh();
     await b.changeStock(product, 1);
+    const staleScan = a.getSnapshot().scan!;
+    const beforeConflict = await owner.backend.getSnapshot(reserveId);
+    const conflictKey = crypto.randomUUID();
+    const started = Date.now();
+    const conflict = await owner.client.rpc('mutate_reserve', {
+      p_request_id: conflictKey,
+      p_reserve_id: reserveId,
+      p_action: 'adjust_scan',
+      p_payload: { scan_id: staleScan.id, expected_version: staleScan.version, quantity: 2 },
+    });
+    expect(Date.now() - started).toBeLessThan(5000);
+    expect(conflict.status).toBe(409);
+    expect(conflict.error?.code).toBe('40001');
+    expect(await owner.backend.getSnapshot(reserveId)).toEqual(beforeConflict);
+    expect(
+      (
+        await admin.query('select count(*)::int as n from private.requests where request_id=$1', [
+          conflictKey,
+        ])
+      ).rows[0].n,
+    ).toBe(0);
     expect(await a.adjustScan(1)).toBe(false);
     expect(a.getSnapshot().scan).toBeNull();
+    expect(a.getSnapshot().pending).toBeNull();
+    expect(a.getSnapshot().busy).toBe(false);
+    expect(a.writable).toBe(true);
+    expect(a.getSnapshot().error).toContain('La réserve a changé');
     expect(a.getSnapshot().snapshot?.products[0].quantity).toBe(4);
     console.log(
       'PASS concurrent increments, independent stock controls, removal limit and stale scan refusal.',
@@ -264,6 +290,116 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
     expect(await c.undoScan()).toBe(true);
     expect(c.getSnapshot().snapshot?.products.length).toBe(count! + 1);
     expect(c.getSnapshot().snapshot?.products.find((p) => p.id === unknown.id)?.quantity).toBe(0);
+    // Independent scanner identities on the SAME real reserve, two distinct accounts.
+    const concurrentProducts = ['A', 'B'].map((suffix, index) => ({
+      id: crypto.randomUUID(),
+      name: `Concurrence ${suffix}`,
+      barcode: `000000000000${index + 1}`,
+      quantity: 0,
+      updatedAt: new Date().toISOString(),
+    }));
+    const previousLocalIdentity = a.getSnapshot().lastProductId;
+    for (const entry of concurrentProducts) {
+      expect(await a.saveProduct(entry, false)).toBe(true);
+      expect(await a.addShopping(entry.name, 5, entry.id)).toBe(true);
+    }
+    expect(a.getSnapshot().lastProductId).toBe(previousLocalIdentity);
+    await Promise.all([a.refresh(), b.refresh()]);
+    expect(
+      await Promise.all([
+        a.scanProduct(concurrentProducts[0].id, 1),
+        b.scanProduct(concurrentProducts[1].id, 1),
+      ]),
+    ).toEqual([true, true]);
+    await Promise.all([a.refresh(), b.refresh()]);
+    expect(a.getSnapshot().lastProductId).toBe(concurrentProducts[0].id);
+    expect(b.getSnapshot().lastProductId).toBe(concurrentProducts[1].id);
+    for (const entry of concurrentProducts) {
+      expect(a.getSnapshot().snapshot?.products.find((p) => p.id === entry.id)?.quantity).toBe(1);
+      expect(
+        b.getSnapshot().snapshot?.shopping.find((p) => p.product_id === entry.id)?.quantity,
+      ).toBe(4);
+    }
+    // >20 deliberate known scans/minute without a provider or shared OFF claim.
+    for (let index = 0; index < 24; index++)
+      expect(
+        await (index % 2 ? a : b).scanProduct(concurrentProducts[index % 2 ? 0 : 1].id, 1),
+      ).toBe(true);
+    await Promise.all([a.refresh(), b.refresh()]);
+    expect(a.getSnapshot().lastProductId).toBe(concurrentProducts[0].id);
+    expect(b.getSnapshot().lastProductId).toBe(concurrentProducts[1].id);
+    console.log(
+      'PASS two independent local identities, concurrent distinct scans, 24 rapid known movements, coherent stock/shopping.',
+    );
+    // Polling captured before B's write arrives late while A's mutation waits.
+    const liveRead = owner.backend.getSnapshot.bind(owner.backend);
+    let releasePoll: (() => void) | undefined;
+    let delayPoll = true;
+    owner.backend.getSnapshot = async (id) => {
+      const old = await liveRead(id);
+      if (!delayPoll) return old;
+      delayPoll = false;
+      return new Promise((resolve) => {
+        releasePoll = () => resolve(old);
+      });
+    };
+    try {
+      const polling = a.refresh();
+      await vi.waitFor(() => expect(releasePoll).toBeTypeOf('function'));
+      const localScan = a.scanProduct(concurrentProducts[0].id, 1);
+      expect(await b.scanProduct(concurrentProducts[1].id, 1)).toBe(true);
+      releasePoll!();
+      await polling;
+      expect(await localScan).toBe(true);
+      await Promise.all([a.refresh(), b.refresh()]);
+      expect(a.getSnapshot().lastProductId).toBe(concurrentProducts[0].id);
+      expect(b.getSnapshot().lastProductId).toBe(concurrentProducts[1].id);
+      expect(a.getSnapshot().snapshot?.reserve.revision).toBe(
+        b.getSnapshot().snapshot?.reserve.revision,
+      );
+      expect(a.writable && b.writable).toBe(true);
+    } finally {
+      owner.backend.getSnapshot = liveRead;
+    }
+    console.log(
+      'PASS late polling and parallel scan, local identities retained and scanner remains writable.',
+    );
+    // Exact old V1 store + adapter + error classifier against the new SQL/HTTP contract.
+    const legacy = await publishedClient();
+    const old = new legacy.Store(
+      new legacy.Backend(owner.client),
+      owner.id,
+      reserveId,
+      journal(),
+      () => true,
+    ) as SharedPantryStore;
+    stores.push(old);
+    await old.refresh();
+    for (const undo of [false, true]) {
+      expect(await old.scanProduct(concurrentProducts[0].id, 1)).toBe(true);
+      await b.refresh();
+      expect(await b.scanProduct(concurrentProducts[1].id, 1)).toBe(true);
+      const start = Date.now();
+      expect(await (undo ? old.undoScan() : old.adjustScan(1))).toBe(false);
+      expect(Date.now() - start).toBeLessThan(5000);
+      expect(old.getSnapshot().scan).toBeNull();
+      expect(old.getSnapshot().pending).toBeNull();
+      expect(old.getSnapshot().busy).toBe(false);
+      expect(old.getSnapshot().error).toContain('La réserve a changé');
+      expect(old.writable).toBe(true);
+    }
+    expect(await old.scanProduct(concurrentProducts[0].id, 1)).toBe(true);
+    await a.refresh();
+    expect(await a.scanProduct(concurrentProducts[0].id, 1)).toBe(true);
+    await b.refresh();
+    expect(await b.scanProduct(concurrentProducts[1].id, 1)).toBe(true);
+    expect(await a.undoScan()).toBe(false);
+    expect(a.getSnapshot().pending).toBeNull();
+    expect(a.writable).toBe(true);
+    expect(await a.scanProduct(concurrentProducts[0].id, 1)).toBe(true);
+    console.log(
+      'PASS HTTP 409/code 40001 is fast and atomic; published and current clients reject stale adjust/undo, clear pending and scan again.',
+    );
     const linked = c.getSnapshot().snapshot!.shopping[0];
     expect(await c.updateShopping(linked.id, { checked: true })).toBe(true);
     expect(await c.updateShopping(linked.id, { checked: false })).toBe(true);

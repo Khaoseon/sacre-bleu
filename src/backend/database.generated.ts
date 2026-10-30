@@ -213,6 +213,7 @@ export type Database = {
         Returns: Json;
       };
       claim_product_lookup: { Args: { p_cooldown_seconds?: number }; Returns: boolean };
+      claim_product_lookup_slot: { Args: { p_cooldown_seconds?: number }; Returns: Json };
       create_reserve: { Args: { p_name: string; p_request_id: string }; Returns: Json };
       get_reserve_snapshot: { Args: { p_reserve_id: string }; Returns: Json };
       invite_member: {

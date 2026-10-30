@@ -38,12 +38,14 @@ const { values, positionals } = parseArgs({
     archive: { type: 'string' },
     'project-ref': { type: 'string' },
     'before-phase4': { type: 'boolean', default: false },
+    'before-lookup-budget': { type: 'boolean', default: false },
+    'before-v1-conflicts': { type: 'boolean', default: false },
   },
 });
 const command = positionals[0];
 if (!['create', 'verify', 'extract'].includes(command) || positionals.length !== 1)
   throw new Error(
-    'Usage : create --destination CHEMIN --project-ref REF [--before-phase4] | verify --archive FICHIER | extract --archive FICHIER --destination DOSSIER_NEUF',
+    'Usage : create --destination CHEMIN --project-ref REF [--before-phase4 | --before-lookup-budget | --before-v1-conflicts] | verify --archive FICHIER | extract --archive FICHIER --destination DOSSIER_NEUF',
   );
 process.chdir(root);
 if (!process.stdin.isTTY || !process.stdout.isTTY)
@@ -183,7 +185,13 @@ try {
       .map((name) => basename(name))
       .filter((name) => /^\d{14}_[a-z0-9_]+\.sql$/.test(name))
       .sort();
-    const plan = backupPlan(migrations, migrationFiles, values['before-phase4']);
+    const plan = backupPlan(
+      migrations,
+      migrationFiles,
+      values['before-phase4'],
+      values['before-lookup-budget'],
+      values['before-v1-conflicts'],
+    );
     const sourceFingerprint = () => {
       const result = JSON.parse(
         supabase(
@@ -290,6 +298,7 @@ try {
       gitCommit,
       appliedMigrations: plan.appliedVersions,
       pendingMigration: plan.pendingVersion,
+      pendingMigrations: plan.pendingVersions,
       databaseFingerprint,
       postgres: scope.postgres,
       pgcrypto: scope.pgcrypto,
@@ -335,6 +344,7 @@ try {
           projectRef,
           appliedMigrations: plan.appliedVersions,
           pendingMigration: plan.pendingVersion,
+          pendingMigrations: plan.pendingVersions,
           databaseFingerprint,
           openPGPIntegrity: true,
           decryptedPayloadMatchesExport: true,

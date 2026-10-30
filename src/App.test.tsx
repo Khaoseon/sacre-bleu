@@ -49,7 +49,7 @@ describe('shared saving feedback without moving the page content', () => {
     expect(f.store.writable).toBe(false);
     expect(f.store.getSnapshot().completed).toBe(0);
     receipt({ revision: 2 });
-    await Promise.resolve();
+    await vi.waitFor(() => expect(snapshot).toBeTypeOf('function'));
     expect(f.render()).not.toContain('sync-message');
     expect(f.store.getSnapshot().completed).toBe(0);
     snapshot({ ...initial, reserve: { ...initial.reserve, revision: 2 } });

@@ -104,6 +104,45 @@ async function waitForLock(admin, client) {
   }
   throw new Error('Second connection did not reach a concurrent PostgreSQL lock');
 }
+test('two accounts atomically share the detailed OFF slot, including legacy claims', async () => {
+  await fixture(async ({ admin, a, b, reserve, accept }) => {
+    await accept(b);
+    await admin.query(
+      "update private.product_lookup_gate set next_allowed_at='-infinity',blocked_reason='cooldown'",
+    );
+    const results = await Promise.all([
+      a.query('select public.claim_product_lookup_slot() as slot'),
+      b.query('select public.claim_product_lookup_slot() as slot'),
+    ]);
+    const slots = results.map((r) => r.rows[0].slot);
+    assert.equal(slots.filter((s) => s.allowed).length, 1);
+    assert.equal(slots.filter((s) => !s.allowed).length, 1);
+    for (const slot of slots) {
+      assert.equal(slot.reason, 'cooldown');
+      assert.ok(slot.retry_after_seconds >= 1 && slot.retry_after_seconds <= 6);
+    }
+    const deferred = (await a.query('select public.claim_product_lookup_slot(17) as slot')).rows[0]
+      .slot;
+    assert.equal(deferred.reason, 'rate-limit');
+    assert.equal(deferred.allowed, false);
+    assert.equal(
+      (await b.query('select public.claim_product_lookup() as allowed')).rows[0].allowed,
+      false,
+    );
+    assert.equal(
+      (await b.query('select public.claim_product_lookup_slot() as slot')).rows[0].slot.reason,
+      'rate-limit',
+    );
+    await admin.query(
+      "update private.product_lookup_gate set next_allowed_at=clock_timestamp()-interval '1 second'",
+    );
+    assert.equal(
+      (await b.query('select public.claim_product_lookup_slot() as slot')).rows[0].slot.allowed,
+      true,
+    );
+    assert.ok(reserve);
+  });
+});
 async function blockedPair(admin, first, second, runFirst, runSecond) {
   await first.query('begin');
   const a = await runFirst();
@@ -260,14 +299,16 @@ test('another member’s committed change prevents stale scan adjustment and com
       () => rpc(ctx.b, ctx.reserve, 'stock', { product_id: id, delta: 1 }),
       () => rpc(ctx.a, ctx.reserve, 'undo_scan', { scan_id: scan.scan_id, expected_version: 1 }),
     );
-    assert.equal(result.b.error?.code, '40001');
+    assert.equal(result.b.error?.code, 'PGRST');
+    assert.equal(JSON.parse(result.b.error.message).code, '40001');
+    assert.equal(JSON.parse(result.b.error.detail).status, 409);
     await assert.rejects(
       rpc(ctx.a, ctx.reserve, 'adjust_scan', {
         scan_id: scan.scan_id,
         expected_version: 1,
         quantity: 3,
       }),
-      (error) => error.code === '40001',
+      (error) => error.code === 'PGRST' && JSON.parse(error.message).code === '40001',
     );
     assert.equal(
       (await ctx.admin.query('select quantity from public.product_stock where product_id=$1', [id]))

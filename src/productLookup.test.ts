@@ -42,7 +42,7 @@ describe('OFF HTTP, cache and request budget', () => {
     expect(await provider.lookup(code, signal())).toEqual({ status: 'missing' });
     expect(await provider.lookup('00001234', signal())).toEqual({
       status: 'unavailable',
-      reason: 'rate-limit',
+      reason: 'cooldown',
     });
     now += 600001;
     await provider.lookup(code, signal());
