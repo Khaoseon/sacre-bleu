@@ -1,0 +1,3 @@
+{
+  "imports": { "jpeg-js": "npm:jpeg-js@0.4.4" }
+}

@@ -49,6 +49,7 @@ export type Database = {
           off_barcode: string | null;
           off_image_url: string | null;
           photo_path: string | null;
+          photo_version: number;
           reserve_id: string;
           size: number | null;
           unit: string | null;
@@ -64,6 +65,7 @@ export type Database = {
           off_barcode?: string | null;
           off_image_url?: string | null;
           photo_path?: string | null;
+          photo_version?: number;
           reserve_id: string;
           size?: number | null;
           unit?: string | null;
@@ -78,6 +80,7 @@ export type Database = {
           off_barcode?: string | null;
           off_image_url?: string | null;
           photo_path?: string | null;
+          photo_version?: number;
           reserve_id?: string;
           size?: number | null;
           unit?: string | null;
@@ -214,6 +217,22 @@ export type Database = {
       };
       claim_product_lookup: { Args: { p_cooldown_seconds?: number }; Returns: boolean };
       claim_product_lookup_slot: { Args: { p_cooldown_seconds?: number }; Returns: Json };
+      claim_product_photo: { Args: { p_reserve_id: string }; Returns: undefined };
+      commit_product_photo: {
+        Args: {
+          p_actor: string;
+          p_data: string;
+          p_expected_path: string;
+          p_expected_version: number;
+          p_hash: string;
+          p_height: number;
+          p_product_id: string;
+          p_request_id: string;
+          p_reserve_id: string;
+          p_width: number;
+        };
+        Returns: Json;
+      };
       create_reserve: { Args: { p_name: string; p_request_id: string }; Returns: Json };
       get_reserve_snapshot: { Args: { p_reserve_id: string }; Returns: Json };
       invite_member: {
@@ -222,6 +241,10 @@ export type Database = {
       };
       mutate_reserve: {
         Args: { p_action: string; p_payload: Json; p_request_id: string; p_reserve_id: string };
+        Returns: Json;
+      };
+      read_product_photo: {
+        Args: { p_path: string; p_product_id: string; p_reserve_id: string };
         Returns: Json;
       };
       restore_reserve: {

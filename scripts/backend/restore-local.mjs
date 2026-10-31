@@ -124,6 +124,10 @@ const tables = [
   'private.scan_operations',
   'auth.users',
   'auth.identities',
+  ...(metadata.appliedMigrations.includes('20261028000100') ? ['private.product_lookup_gate'] : []),
+  ...(metadata.appliedMigrations.includes('20261031000100')
+    ? ['private.product_photos', 'private.photo_rate']
+    : []),
 ];
 const fingerprints =
   'select jsonb_build_object(' +

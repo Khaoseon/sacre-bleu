@@ -18,7 +18,9 @@ npm run notices:generate
 npm run notices:check
 ```
 
-The generator uses a reviewed list of 25 browser/worker packages and emitted-helper sources, not every tool in `node_modules`. On dependency or PWA changes, review the actual output/runtime imports and adjust that list; the check detects version/text drift, not new unlisted imports. The unused ZXing text-encoding dependency and workbox-window are not in the emitted bundles and are excluded. Build/test/CLI tools such as Vite, TypeScript, Vitest, Playwright and Supabase CLI are not deployed site code; they retain their package licenses when installed through npm. No extra license-scanner dependency or build service is required.
+The generator uses a reviewed list of 26 browser/worker/Edge packages and emitted-helper sources, not every tool in `node_modules`. On dependency or PWA changes, review the actual output/runtime imports and adjust that list; the check detects version/text drift, not new unlisted imports. The unused ZXing text-encoding dependency and workbox-window are not in the emitted bundles and are excluded. Build/test/CLI tools such as Vite, TypeScript, Vitest, Playwright and Supabase CLI are not deployed site code; they retain their package licenses when installed through npm. No extra license-scanner dependency or build service is required.
+
+The private-photo Edge processor additionally redistributes jpeg-js 0.4.4 (Apache-2.0 decoder and BSD-style Adobe encoder notices). It is pinned as a development dependency for local processor tests and as an npm import in the Edge function, and is absent from the browser bundle.
 
 ## Production fonts
 

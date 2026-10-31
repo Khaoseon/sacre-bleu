@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 
 type ProductMediaProps = {
   src?: string;
@@ -6,18 +6,28 @@ type ProductMediaProps = {
   alt: string;
   fallback: ReactNode;
   className?: string;
+  mediaRef?: Ref<HTMLSpanElement>;
+  title?: string;
 };
 
 /** Presentation only. The caller validates sources and retains provenance/credits. */
 export function ProductMedia({ src, ...props }: ProductMediaProps) {
   // A new source gets fresh error state, including A → B → A retries.
-  return <MediaSource key={src ?? ''} src={src} {...props} />;
+  return (
+    <span
+      ref={props.mediaRef}
+      title={props.title}
+      className={`sb-product-media ${props.className ?? ''}`}
+    >
+      <MediaSource key={src ?? ''} src={src} {...props} />
+    </span>
+  );
 }
 
-function MediaSource({ src, alt, fallback, className = '' }: ProductMediaProps) {
+function MediaSource({ src, alt, fallback }: ProductMediaProps) {
   const [failed, setFailed] = useState(false);
   return (
-    <span className={`sb-product-media ${className}`}>
+    <>
       {src && !failed ? (
         <img
           src={src}
@@ -32,6 +42,6 @@ function MediaSource({ src, alt, fallback, className = '' }: ProductMediaProps) 
           {fallback}
         </span>
       )}
-    </span>
+    </>
   );
 }

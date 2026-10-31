@@ -29,6 +29,10 @@ Screenshots and UI redesign are deferred. Offline mutations, private photo Stora
 
 French/English presentation, local language selection, locale-aware formatting and bilingual regression coverage are merged in the verified Phase 6D baseline. No migration, Auth/Edge change, deployment or merge is included. See [localization architecture, audit and evidence](I18N.md); public V1.0 and physical device acceptance remain separate.
 
+## V1.1 Phase 7B-D: private product photos
+
+Optional bounded household photos, trusted local-testable processing, authenticated online-only reads, transaction-safe replacement/removal, compatibility and photo-aware administrative backups are prepared for review. [The implementation and production/rollback runbook](design/PHASE7BD.md) records the architecture, local evidence and remaining risks. This phase authorizes a feature branch and PR only; hosted migration/Edge/frontend rollout each require separate maintainer authorization. No merge, deployment or Phase 7C acceptance work is included.
+
 ## Phase 6D: final release preparation
 
 Prepare public identity `Khaoseon/sacre-bleu`, version 1.0.0, completed mascot attribution, configurable OFF operator identity, exposure audit and a practical publication runbook. No history rewrite, merge, tag, rename, visibility/security-setting change or hosted operation is authorized. [RELEASE.md](RELEASE.md) records evidence, accepted limitations and manual actions.

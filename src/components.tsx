@@ -1,5 +1,7 @@
 import type { DisplayMessage } from './i18n';
 import { ProductMedia } from './ui/ProductMedia';
+import { usePrivatePhoto } from './ui/PrivatePhotos';
+import { preparePhoto } from './photos';
 import { t, message, label, locale, number, packages } from './i18n';
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
@@ -45,16 +47,36 @@ const productIcons = {
   Épicerie: Leaf,
   Autres: Package,
 };
-export function ProductImage({ product }: { product: Product }) {
+export function ProductImage({
+  product,
+  describe = false,
+}: {
+  product: Product;
+  describe?: boolean;
+}) {
+  const personal = usePrivatePhoto(product.id, product.privatePhotoPath);
   const Icon = product.id === 'thon' ? Fish : productIcons[product.category ?? 'Autres'];
-  const src = product.photo ?? imageUrl(product.external?.imageUrl);
+  const src = product.photo ?? personal.src ?? imageUrl(product.external?.imageUrl);
   return (
-    <ProductMedia
-      src={src}
-      alt=""
-      className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}
-      fallback={<Icon aria-hidden="true" size={28} strokeWidth={1.5} />}
-    />
+    <>
+      <ProductMedia
+        mediaRef={personal.ref}
+        title={
+          product.privatePhotoPath && !personal.src
+            ? t('Photo personnelle indisponible. Image OFF ou catégorie affichée.')
+            : undefined
+        }
+        src={src}
+        alt=""
+        className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}
+        fallback={<Icon aria-hidden="true" size={28} strokeWidth={1.5} />}
+      />
+      {describe && product.privatePhotoPath && !personal.src && !product.photo && (
+        <small role="status">
+          {t('Photo personnelle indisponible. Image OFF ou catégorie affichée.')}
+        </small>
+      )}
+    </>
   );
 }
 export function ProductAttribution({
@@ -75,7 +97,7 @@ export function ProductAttribution({
       </a>
       {image && (
         <>
-          {t(' · Photo ')}
+          {t(' · Photo OFF ')}
           <a
             href="https://creativecommons.org/licenses/by-sa/3.0/"
             target="_blank"
@@ -217,7 +239,8 @@ export function ProductForm({
   const defaults = p ?? proposed;
   const draftId = useRef(p?.id ?? id());
   const [photo, setPhoto] = useState(p?.photo);
-  const [external, setExternal] = useState(p?.external ?? proposed?.external);
+  const [photoChange, setPhotoChange] = useState<string | null | undefined>();
+  const [external] = useState(p?.external ?? proposed?.external);
   const [photoError, setPhotoError] = useState('');
   const [minimum, setMinimum] = useState(p?.minimum !== undefined);
   const [error, setError] = useState('');
@@ -265,6 +288,9 @@ export function ProductForm({
         unit: String(data.get('unit')) as Unit,
         category: String(data.get('category') ?? 'Autres') as Category,
         photo,
+        privatePhotoPath: p?.privatePhotoPath,
+        privatePhotoVersion: p?.privatePhotoVersion,
+        photoChange: shared ? photoChange : undefined,
         external,
         quantity: Number(data.get('quantity')),
         minimum: minimum ? Number(data.get('minimum')) : undefined,
@@ -479,60 +505,61 @@ export function ProductForm({
             )}
           </details>
           <label>
-            {t('Photo')} <span>{t('facultatif · JPG, PNG ou WebP, 500 Ko max.')}</span>
+            {t('Photo')} <span>{t('JPG, PNG ou WebP · 20 Mo max.')}</span>
             <input
               type="file"
-              disabled={shared}
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => {
+              disabled={blocked || saving || reading}
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+              onChange={async (e) => {
                 setPhotoError('');
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (
-                  file.size > 500_000 ||
-                  !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-                ) {
-                  setPhotoError('Choisissez une image JPG, PNG ou WebP de moins de 500 Ko.');
-                  e.target.value = '';
-                  return;
-                }
+                e.target.value = '';
                 setReading(true);
-                const reader = new FileReader();
-                reader.onload = () => {
-                  setPhoto(String(reader.result));
+                try {
+                  const result = await preparePhoto(file);
+                  setPhoto(result);
+                  setPhotoChange(result);
+                  setDirty(true);
+                } catch (error) {
+                  setPhotoError((error as Error).message);
+                } finally {
                   setReading(false);
-                };
-                reader.onerror = () => {
-                  setPhotoError('Impossible de lire cette image.');
-                  setReading(false);
-                };
-                reader.readAsDataURL(file);
+                }
               }}
             />
           </label>
           {shared && (
             <small>
-              {t('Ajout de photos personnelles indisponible en mode partagé pour le moment.')}
+              {t(
+                'Photo privée partagée avec la réserve, en ligne uniquement. Le JSON ne contient pas les photos privées.',
+              )}
             </small>
           )}
-          {(photo || external?.imageUrl) && (
+          {(photo || external?.imageUrl || (p?.privatePhotoPath && photoChange === undefined)) && (
             <div className="photo-preview">
               <ProductImage
+                describe
                 product={{
                   id: draftId.current,
                   name: '',
                   quantity: 0,
                   updatedAt: '',
                   photo,
+                  privatePhotoPath: photoChange === undefined ? p?.privatePhotoPath : undefined,
                   external,
                 }}
               />
               <button
                 type="button"
+                disabled={
+                  blocked || saving || reading || (shared && !photo && !p?.privatePhotoPath)
+                }
                 className="text-button"
                 onClick={() => {
                   setPhoto(undefined);
-                  setExternal((r) => (r ? { ...r, imageUrl: undefined } : undefined));
+                  setPhotoChange(null);
+                  setDirty(true);
                 }}
               >
                 {t('Retirer la photo')}
