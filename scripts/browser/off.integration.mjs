@@ -57,6 +57,8 @@ try {
     await page.getByRole('status').filter({ hasText: 'Recherche du produit…' }).waitFor();
     await page.evaluate(() => window.finishLookup());
     await page.locator('input[name="name"]').waitFor();
+    // V1.1 progressively discloses the prefilled OFF metadata before editing it.
+    await page.getByText('Informations produit', { exact: true }).click();
     assert.equal(await page.locator('input[name="name"]').inputValue(), 'Nom proposé');
     assert.equal(await page.locator('input[name="brand"]').inputValue(), 'Marque proposée');
     assert.equal(await page.locator('input[name="size"]').inputValue(), '750');
