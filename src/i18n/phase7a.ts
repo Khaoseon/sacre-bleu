@@ -1,0 +1,151 @@
+/** Isolated exploration catalogue. The production entry point never imports it. */
+import { catalog } from './catalog';
+import { phase7a2Catalog } from './phase7a2';
+
+export const phase7aCatalog = {
+  ...catalog,
+  ...phase7a2Catalog,
+  'Cadrage de test': { fr: 'Cadrage de test', en: 'Crop test' },
+  'Visuels synthétiques et images OFF locales. Aucun appel distant.': {
+    fr: 'Visuels synthétiques et images OFF locales. Aucun appel distant.',
+    en: 'Synthetic visuals and local OFF images. No remote requests.',
+  },
+  'Produit à compléter': { fr: 'Produit à compléter', en: 'Product to restock' },
+  'Depuis la réserve': { fr: 'Depuis la réserve', en: 'From the pantry' },
+  'Choisir un produit': { fr: 'Choisir un produit', en: 'Choose a product' },
+  'Vider les cochés': { fr: 'Vider les cochés', en: 'Clear completed' },
+  'Quantité à acheter': { fr: 'Quantité à acheter', en: 'Shopping quantity' },
+  'Exemples d’images': { fr: 'Exemples d’images', en: 'Image examples' },
+  'Conditions variées': { fr: 'Conditions variées', en: 'Mixed conditions' },
+  'Packshots studio': { fr: 'Packshots studio', en: 'Studio packshots' },
+  'Vue caméra simulée · aucune capture': {
+    fr: 'Vue caméra simulée · aucune capture',
+    en: 'Simulated camera · no capture',
+  },
+  'Reprendre la simulation': { fr: 'Reprendre la simulation', en: 'Resume simulation' },
+  'Photo personnelle fictive': { fr: 'Photo personnelle fictive', en: 'Fictional personal photo' },
+  'Images OFF · CC BY-SA 3.0': { fr: 'Images OFF · CC BY-SA 3.0', en: 'OFF images · CC BY-SA 3.0' },
+  'En pause': { fr: 'En pause', en: 'Paused' },
+  'Modifier directement': { fr: 'Modifier directement', en: 'Edit directly' },
+  'Photo invalide : JPG, PNG ou WebP, 500 Ko et 4096 px maximum.': {
+    fr: 'Photo invalide : JPG, PNG ou WebP, 500 Ko et 4096 px maximum.',
+    en: 'Invalid photo: JPG, PNG or WebP, at most 500 KB and 4096 px.',
+  },
+  '2 produits à compléter': { fr: '2 produits à compléter', en: '2 products to restock' },
+  Détails: { fr: 'Détails', en: 'Details' },
+  'Hors ligne': { fr: 'Hors ligne', en: 'Offline' },
+  'Annuler le dernier scan': { fr: 'Annuler le dernier scan', en: 'Undo last scan' },
+  'Supprimer le produit ?': { fr: 'Supprimer le produit ?', en: 'Delete this product?' },
+  'Le produit sera supprimé. Ses lignes de courses seront conservées en texte libre.': {
+    fr: 'Le produit sera supprimé. Ses lignes de courses seront conservées en texte libre.',
+    en: 'The product will be deleted. Its shopping entries will be kept as free text.',
+  },
+  'Atelier 7A · données fictives': {
+    fr: 'Atelier 7A · données fictives',
+    en: '7A studio · sample data',
+  },
+  'Le quotidien, bien rangé.': { fr: 'Le quotidien, bien rangé.', en: 'Everyday, in good order.' },
+  'La réserve': { fr: 'La réserve', en: 'The pantry' },
+  'Les courses': { fr: 'Les courses', en: 'The shopping list' },
+  'Un scan. Et c’est rangé.': { fr: 'Un scan. Et c’est rangé.', en: 'Scan it. Sorted.' },
+  'À portée de main': { fr: 'À portée de main', en: 'Always to hand' },
+  'Vos essentiels': { fr: 'Vos essentiels', en: 'Your essentials' },
+  'À prévoir': { fr: 'À prévoir', en: 'Running low' },
+  'Tout va bien': { fr: 'Tout va bien', en: 'All stocked up' },
+  'Voir la liste': { fr: 'Voir la liste', en: 'View the list' },
+  'Produits à compléter': { fr: 'Produits à compléter', en: 'Products to restock' },
+  'Stock bas': { fr: 'Stock bas', en: 'Low stock' },
+  'Plus en réserve': { fr: 'Plus en réserve', en: 'Out of stock' },
+  'Par nom': { fr: 'Par nom', en: 'By name' },
+  'Par catégorie': { fr: 'Par catégorie', en: 'By category' },
+  'Le prochain repas commence ici.': {
+    fr: 'Le prochain repas commence ici.',
+    en: 'The next good meal starts here.',
+  },
+  'Ajouter à la liste': { fr: 'Ajouter à la liste', en: 'Add to the list' },
+  'À prendre': { fr: 'À prendre', en: 'To pick up' },
+  'Dans le panier': { fr: 'Dans le panier', en: 'In the basket' },
+  'Votre liste est prête.': { fr: 'Votre liste est prête.', en: 'Your list is ready.' },
+  'Un petit tour au marché ?': { fr: 'Un petit tour au marché ?', en: 'A trip to the market?' },
+  'Tout est dans le panier.': {
+    fr: 'Tout est dans le panier.',
+    en: 'Everything is in the basket.',
+  },
+  'Une chose à ajouter…': { fr: 'Une chose à ajouter…', en: 'One more thing…' },
+  'Article libre': { fr: 'Article libre', en: 'Free-text item' },
+  'Simulation de caméra': { fr: 'Simulation de caméra', en: 'Simulated camera' },
+  'Démarrer la simulation': { fr: 'Démarrer la simulation', en: 'Start simulation' },
+  'Simuler une lecture': { fr: 'Simuler une lecture', en: 'Simulate a scan' },
+  'Lecture simulée en cours': { fr: 'Lecture simulée en cours', en: 'Simulated scanning active' },
+  'Lecture confirmée': { fr: 'Lecture confirmée', en: 'Scan confirmed' },
+  'Reconnu dans votre réserve': { fr: 'Reconnu dans votre réserve', en: 'Found in your pantry' },
+  'Total traité': { fr: 'Total traité', en: 'Processed total' },
+  'Simulation en pause': { fr: 'Simulation en pause', en: 'Simulation paused' },
+  'Aucun appareil photo utilisé.': {
+    fr: 'Aucun appareil photo utilisé.',
+    en: 'No camera is used.',
+  },
+  'Code inconnu · complétez la fiche.': {
+    fr: 'Code inconnu · complétez la fiche.',
+    en: 'Unknown barcode · complete the product.',
+  },
+  'Photo personnelle · locale à cette session': {
+    fr: 'Photo personnelle · locale à cette session',
+    en: 'Personal photo · this session only',
+  },
+  'Visuel fictif · exploration': {
+    fr: 'Visuel fictif · exploration',
+    en: 'Fictional image · exploration',
+  },
+  'Choisir une photo': { fr: 'Choisir une photo', en: 'Choose a photo' },
+  'Revenir au visuel proposé': { fr: 'Revenir au visuel proposé', en: 'Use the suggested image' },
+  'Vérifiez le nom et le conditionnement.': {
+    fr: 'Vérifiez le nom et le conditionnement.',
+    en: 'Check the name and package size.',
+  },
+  'Enregistré dans la simulation.': {
+    fr: 'Enregistré dans la simulation.',
+    en: 'Saved in the simulation.',
+  },
+  'Échec simulé. Aucun changement appliqué.': {
+    fr: 'Échec simulé. Aucun changement appliqué.',
+    en: 'Simulated failure. No changes applied.',
+  },
+  'Copie hors ligne · lecture seule': {
+    fr: 'Copie hors ligne · lecture seule',
+    en: 'Offline copy · read only',
+  },
+  'Résultat incertain · vérifiez avant de continuer.': {
+    fr: 'Résultat incertain · vérifiez avant de continuer.',
+    en: 'Uncertain result · check before continuing.',
+  },
+  'Contrôles de l’atelier': { fr: 'Contrôles de l’atelier', en: 'Studio controls' },
+  'Simuler un état': { fr: 'Simuler un état', en: 'Simulate a state' },
+  Prêt: { fr: 'Prêt', en: 'Ready' },
+  'Échec au prochain enregistrement': {
+    fr: 'Échec au prochain enregistrement',
+    en: 'Fail the next save',
+  },
+  'Opération incertaine': { fr: 'Opération incertaine', en: 'Uncertain operation' },
+  'Réserve vide': { fr: 'Réserve vide', en: 'Empty pantry' },
+  Chargement: { fr: 'Chargement', en: 'Loading' },
+  'Retrouver les exemples': { fr: 'Retrouver les exemples', en: 'Reset sample data' },
+  'À propos des images': { fr: 'À propos des images', en: 'About the images' },
+  'Mascotte : Eloane ROURE · MIT': {
+    fr: 'Mascotte : Eloane ROURE · MIT',
+    en: 'Mascot: Eloane ROURE · MIT',
+  },
+  'Photos de produits synthétiques. Marques fictives.': {
+    fr: 'Photos de produits synthétiques. Marques fictives.',
+    en: 'Synthetic product photos. Fictional brands.',
+  },
+  'Photo indisponible': { fr: 'Photo indisponible', en: 'Image unavailable' },
+  'Parcourir les produits': { fr: 'Parcourir les produits', en: 'Browse products' },
+  'La fiche sera conservée à zéro.': {
+    fr: 'La fiche sera conservée à zéro.',
+    en: 'The product will be kept at zero stock.',
+  },
+} as const;
+export type Phase7aKey = keyof typeof phase7aCatalog;
+export const phase7aText = (key: Phase7aKey, language: 'fr' | 'en') =>
+  phase7aCatalog[key][language];

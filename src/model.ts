@@ -10,6 +10,11 @@ export interface Product {
   size?: number;
   unit?: Unit;
   photo?: string;
+  /** Opaque shared locator; never treated as an image URL. */
+  privatePhotoPath?: string;
+  privatePhotoVersion?: number;
+  /** Editor-only intent: undefined preserves, null removes, JPEG data URL replaces. */
+  photoChange?: string | null;
   external?: ExternalReference;
   category?: Category;
   quantity: number;
@@ -372,7 +377,9 @@ export function selectProducts(state: State, query: string, category = 'Tout') {
   return state.products
     .filter(
       (p) =>
-        normalize(p.name).includes(normalize(query)) &&
+        normalize([p.name, p.brand, p.barcode].filter(Boolean).join(' ')).includes(
+          normalize(query),
+        ) &&
         (category === 'Tout' || p.category === category),
     )
     .sort(

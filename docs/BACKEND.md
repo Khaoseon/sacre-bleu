@@ -1,6 +1,6 @@
 # Backend contracts
 
-Current architecture and invariants, consolidated from the [French backend record](history/BACKEND_FR.md). Seven SQL migrations in `supabase/migrations/` are the executable schema; generated TypeScript describes structure, not permissions. [INSTALL.md](INSTALL.md) governs fresh setup; historical Cloud reports do not.
+Current architecture and invariants, consolidated from the [French backend record](history/BACKEND_FR.md). Eight SQL migrations in `supabase/migrations/` are the executable schema; generated TypeScript describes structure, not permissions. [INSTALL.md](INSTALL.md) governs fresh setup; historical Cloud reports do not.
 
 ## Data and authorization
 
@@ -18,7 +18,7 @@ Current architecture and invariants, consolidated from the [French backend recor
 
 Composite foreign keys prevent cross-reserve links. RLS is enabled on application tables. Exposed tables grant authenticated clients SELECT with membership policies; direct client INSERT/UPDATE/DELETE is not the write path. `private` is not an API schema and its tables have no direct client access. Anonymous clients cannot read pantry data or execute application RPCs.
 
-Mutating RPCs check non-anonymous authentication, confirmed email and membership; privileged actions also require ownership. Privileged functions use `search_path = ''`, qualified names and explicit execution grants, revoking default public execution. User-supplied role metadata grants no authority. The Edge Function uses a user's JWT and public project key, not a service-role key.
+Mutating RPCs check non-anonymous authentication, confirmed email and membership; privileged actions also require ownership. Privileged functions use `search_path = ''`, qualified names and explicit execution grants, revoking default public execution. User-supplied role metadata grants no authority. The OFF lookup Edge Function uses a user's JWT and public project key, not a service-role key. The private-photo processor has the separate server-only privilege described below.
 
 ## Public functions and typed client
 
@@ -55,12 +55,16 @@ Only the owner invites. A 256-bit random secret is stored as a SHA-256 hash, exp
 
 The UI removes the invitation fragment immediately after consuming it in memory. No invitation email is sent by the RPC. Do not persist/log fragments or conflate business invitations with Supabase Dashboard account invitations. Production bootstrap/provisioning and unsupported recovery flows are described in [INSTALL.md](INSTALL.md).
 
+## Private product photos (V1.1 7B-D)
+
+The eighth migration adds a product photo version, private bounded JPEG rows and processing-rate counters. Only authenticated confirmed members can execute the download/budget RPCs; only the trusted photo Edge processor can execute the commit RPC. Table writes remain ungranted, and all new privileged functions retain an empty `search_path`. Photo bytes/reference/revision/receipt replace or delete transactionally, including legacy product deletion. No Supabase Storage bucket or policy is needed. [7B-D architecture, evidence and separately authorized rollout/rollback](design/PHASE7BD.md) describes quotas, lost-response fencing, online-only Blob URLs and photo-aware administrative backup. User JSON v1 and its non-null-photo loss guard remain unchanged.
+
 ## Code and verification map
 
 - `Root.tsx`: Auth, active data source and sharing; `backend/auth.ts` and `links.ts`: session/link handling.
 - `backend/store.ts` and `usePantry.ts`: confirmed snapshots, bounded requests, recovery and visible-page polling.
 - `model.ts` and `storage.ts`: pure rules/backup validation and account/project-scoped browser persistence.
-- `supabase/migrations/`: seven ordered migrations, ending in user restore. No demo seeds.
+- `supabase/migrations/`: eight ordered migrations, ending in private product photos. No demo seeds.
 - `supabase/tests/database/`: pgTAP authorization, grants, constraints, rollback, provider budget and restore assertions.
 - `scripts/backend/concurrency.integration.mjs`: overlapping real connections, observed lock contention, retries/corrections/restore races.
 - Auth/API and shared SDK tests cover identities, outsiders and mail confirmation; the historical API fixture confirms accounts through SQL, while the shared test exercises Mailpit delivery.

@@ -76,3 +76,6 @@ enabled = false
 
 [functions.product-lookup]
 verify_jwt = true
+
+[functions.product-photo]
+verify_jwt = true

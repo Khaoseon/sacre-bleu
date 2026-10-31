@@ -1,7 +1,10 @@
 import type { DisplayMessage } from './i18n';
+import { ProductMedia } from './ui/ProductMedia';
+import { usePrivatePhoto } from './ui/PrivatePhotos';
+import { preparePhoto } from './photos';
 import { t, message, label, locale, number, packages } from './i18n';
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Bean,
   Check,
@@ -44,24 +47,36 @@ const productIcons = {
   Épicerie: Leaf,
   Autres: Package,
 };
-export function ProductImage({ product }: { product: Product }) {
+export function ProductImage({
+  product,
+  describe = false,
+}: {
+  product: Product;
+  describe?: boolean;
+}) {
+  const personal = usePrivatePhoto(product.id, product.privatePhotoPath);
   const Icon = product.id === 'thon' ? Fish : productIcons[product.category ?? 'Autres'];
-  const src = product.photo ?? imageUrl(product.external?.imageUrl);
-  const [failed, setFailed] = useState<string>();
+  const src = product.photo ?? personal.src ?? imageUrl(product.external?.imageUrl);
   return (
-    <span className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}>
-      {src && failed !== src ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={() => setFailed(src)}
-        />
-      ) : (
-        <Icon aria-hidden="true" size={28} strokeWidth={1.5} />
+    <>
+      <ProductMedia
+        mediaRef={personal.ref}
+        title={
+          product.privatePhotoPath && !personal.src
+            ? t('Photo personnelle indisponible. Image OFF ou catégorie affichée.')
+            : undefined
+        }
+        src={src}
+        alt=""
+        className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}
+        fallback={<Icon aria-hidden="true" size={28} strokeWidth={1.5} />}
+      />
+      {describe && product.privatePhotoPath && !personal.src && !product.photo && (
+        <small role="status">
+          {t('Photo personnelle indisponible. Image OFF ou catégorie affichée.')}
+        </small>
       )}
-    </span>
+    </>
   );
 }
 export function ProductAttribution({
@@ -82,7 +97,7 @@ export function ProductAttribution({
       </a>
       {image && (
         <>
-          {t(' · Photo ')}
+          {t(' · Photo OFF ')}
           <a
             href="https://creativecommons.org/licenses/by-sa/3.0/"
             target="_blank"
@@ -152,14 +167,43 @@ export function Modal({
   error?: DisplayMessage;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
-    ref.current?.showModal();
-    ref.current?.querySelector<HTMLInputElement>('input:not([type="hidden"])')?.focus();
+    const dialog = ref.current!;
+    const previous = document.activeElement;
+    dialog.showModal();
+    (
+      dialog.querySelector<HTMLElement>('input:not([type="hidden"]):not([type="radio"])') ??
+      dialog.querySelector<HTMLElement>('h2')
+    )?.focus();
+    const viewport = window.visualViewport;
+    const fit = () => {
+      dialog.style.maxHeight = `${(viewport?.height ?? window.innerHeight) - 24}px`;
+      const field = document.activeElement;
+      if (field instanceof HTMLInputElement && dialog.contains(field))
+        field.scrollIntoView({ block: 'nearest' });
+    };
+    fit();
+    viewport?.addEventListener('resize', fit);
+    return () => {
+      viewport?.removeEventListener('resize', fit);
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+    };
   }, []);
   return (
-    <dialog ref={ref} className="modal" onCancel={close} aria-labelledby="dialog-title">
+    <dialog
+      ref={ref}
+      className="modal sb-foundation"
+      onCancel={(event) => {
+        event.preventDefault();
+        close();
+      }}
+      aria-labelledby={titleId}
+    >
       <header>
-        <h2 id="dialog-title">{title}</h2>
+        <h2 id={titleId} tabIndex={-1}>
+          {title}
+        </h2>
         <button className="icon-button" aria-label={t('Fermer')} onClick={close}>
           <X size={21} />
         </button>
@@ -195,12 +239,39 @@ export function ProductForm({
   const defaults = p ?? proposed;
   const draftId = useRef(p?.id ?? id());
   const [photo, setPhoto] = useState(p?.photo);
-  const [external, setExternal] = useState(p?.external ?? proposed?.external);
+  const [photoChange, setPhotoChange] = useState<string | null | undefined>();
+  const [external] = useState(p?.external ?? proposed?.external);
   const [photoError, setPhotoError] = useState('');
   const [minimum, setMinimum] = useState(p?.minimum !== undefined);
   const [error, setError] = useState('');
   const [reading, setReading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [discard, setDiscard] = useState(false);
+  const [discardAction, setDiscardAction] = useState<'close' | 'delete'>('close');
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (discard)
+      formRef.current
+        ?.closest('dialog')
+        ?.querySelector<HTMLButtonElement>('.draft-warning button')
+        ?.focus();
+  }, [discard]);
+  function requestClose() {
+    if (saving || reading) return;
+    setDiscardAction('close');
+    if (dirty) setDiscard(true);
+    else close();
+  }
+  useEffect(() => {
+    if (!dirty) return;
+    const protect = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', protect);
+    return () => window.removeEventListener('beforeunload', protect);
+  }, [dirty]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving || blocked) return;
@@ -217,12 +288,15 @@ export function ProductForm({
         unit: String(data.get('unit')) as Unit,
         category: String(data.get('category') ?? 'Autres') as Category,
         photo,
+        privatePhotoPath: p?.privatePhotoPath,
+        privatePhotoVersion: p?.privatePhotoVersion,
+        photoChange: shared ? photoChange : undefined,
         external,
         quantity: Number(data.get('quantity')),
         minimum: minimum ? Number(data.get('minimum')) : undefined,
         updatedAt: new Date().toISOString(),
       };
-      await onSave(product);
+      if (!(await onSave(product))) setError('Impossible d’enregistrer le produit.');
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -238,8 +312,33 @@ export function ProductForm({
             ? t('Nouveau code-barres')
             : t('Ajouter un produit')
       }
-      close={close}
+      close={requestClose}
     >
+      {discard && (
+        <section className="draft-warning" role="alert">
+          <p>{t('Modifications non enregistrées')}</p>
+          <div className="detail-actions">
+            <button
+              type="button"
+              className="sb-button"
+              onClick={() => {
+                setDiscard(false);
+                formRef.current?.querySelector<HTMLInputElement>('input')?.focus();
+              }}
+            >
+              {t('Continuer la saisie')}
+            </button>
+            <button
+              type="button"
+              className="sb-button"
+              data-variant="secondary"
+              onClick={() => (discardAction === 'delete' && p ? onDelete(p) : close())}
+            >
+              {t('Abandonner les modifications')}
+            </button>
+          </div>
+        </section>
+      )}
       {recovery}
       {editor.fromScan && (
         <p className="form-note">
@@ -271,8 +370,20 @@ export function ProductForm({
           {!proposed.size && t(' · à vérifier')}
         </small>
       )}
-      {external && <ProductAttribution barcode={external.barcode} image={!!external.imageUrl} />}
-      <form onSubmit={submit} className="product-form">
+      {external && (
+        <ProductAttribution barcode={external.barcode} image={!photo && !!external.imageUrl} />
+      )}
+      <form
+        ref={formRef}
+        onSubmit={submit}
+        onInvalidCapture={(event) => {
+          const details = event.target instanceof Element ? event.target.closest('details') : null;
+          if (details) details.open = true;
+        }}
+        onChange={() => setDirty(true)}
+        className="product-form"
+        inert={discard}
+      >
         <fieldset className="form-fields" disabled={blocked || saving}>
           <label>
             {t('Nom du produit')}{' '}
@@ -285,51 +396,6 @@ export function ProductForm({
               placeholder={t('Ex. Pois chiches')}
             />
           </label>
-          <div className="field-row">
-            <label>
-              {t('Marque')} <span>{t('facultatif')}</span>
-              <input
-                name="brand"
-                maxLength={80}
-                defaultValue={defaults?.brand}
-                placeholder={t('Ex. Bonduelle')}
-              />
-            </label>
-            <label>
-              {t('Catégorie')}{' '}
-              <select name="category" defaultValue={defaults?.category ?? 'Autres'}>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {label(c)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="field-row">
-            <label>
-              {t('Conditionnement')} <span>{t('facultatif')}</span>
-              <input
-                name="size"
-                type="number"
-                min="0.01"
-                step="0.01"
-                max="99999"
-                defaultValue={defaults?.size}
-                placeholder="500"
-              />
-            </label>
-            <label>
-              {t('Unité')}{' '}
-              <select name="unit" defaultValue={defaults?.unit ?? 'g'}>
-                {units.map((u) => (
-                  <option key={u} value={u}>
-                    {label(u)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
           <div className={editor.fromScan ? '' : 'field-row'}>
             <label>
               {t('Quantité en stock')}{' '}
@@ -340,12 +406,15 @@ export function ProductForm({
                 min="0"
                 max={MAX_QUANTITY}
                 step="1"
-                readOnly={shared && !!p}
+                readOnly={!!p}
                 defaultValue={p?.quantity ?? (editor.mode === -1 ? 0 : 1)}
               />
             </label>
             {editor.fromScan ? (
-              <input type="hidden" name="barcode" value={editor.barcode} />
+              <label>
+                {t('Code-barres')}
+                <input name="barcode" value={editor.barcode} readOnly />
+              </label>
             ) : (
               <label>
                 {t('Code-barres')} <span>{t('facultatif')}</span>
@@ -363,85 +432,134 @@ export function ProductForm({
           {shared && p && (
             <small>{t('Modifiez le stock avec les boutons + et − de l’écran Stock.')}</small>
           )}
-          {!editor.fromScan && (
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={minimum}
-                onChange={(e) => setMinimum(e.target.checked)}
-              />{' '}
-              {t('Me signaler un stock bas')}
-            </label>
-          )}
-          {minimum && (
-            <label>
-              {t('Seuil minimum (emballages)')}{' '}
-              <input
-                name="minimum"
-                type="number"
-                required
-                min="0"
-                max={MAX_QUANTITY}
-                step="1"
-                defaultValue={p?.minimum ?? 2}
-              />
-            </label>
-          )}
+          <details className="product-metadata">
+            <summary>{t('Informations produit')}</summary>
+            <div className="field-row">
+              <label>
+                {t('Marque')} <span>{t('facultatif')}</span>
+                <input
+                  name="brand"
+                  maxLength={80}
+                  defaultValue={defaults?.brand}
+                  placeholder={t('Ex. Bonduelle')}
+                />
+              </label>
+              <label>
+                {t('Catégorie')}{' '}
+                <select name="category" defaultValue={defaults?.category ?? 'Autres'}>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {label(c)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="field-row">
+              <label>
+                {t('Conditionnement')} <span>{t('facultatif')}</span>
+                <input
+                  name="size"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  max="99999"
+                  defaultValue={defaults?.size}
+                  placeholder="500"
+                />
+              </label>
+              <label>
+                {t('Unité')}{' '}
+                <select name="unit" defaultValue={defaults?.unit ?? 'g'}>
+                  {units.map((u) => (
+                    <option key={u} value={u}>
+                      {label(u)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {!editor.fromScan && (
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={minimum}
+                  onChange={(e) => setMinimum(e.target.checked)}
+                />{' '}
+                {t('Me signaler un stock bas')}
+              </label>
+            )}
+            {minimum && (
+              <label>
+                {t('Seuil minimum (emballages)')}{' '}
+                <input
+                  name="minimum"
+                  type="number"
+                  required
+                  min="0"
+                  max={MAX_QUANTITY}
+                  step="1"
+                  defaultValue={p?.minimum ?? 2}
+                />
+              </label>
+            )}
+          </details>
           <label>
-            {t('Photo')} <span>{t('facultatif · JPG, PNG ou WebP, 500 Ko max.')}</span>
+            {t('Photo')} <span>{t('JPG, PNG ou WebP · 20 Mo max.')}</span>
             <input
               type="file"
-              disabled={shared}
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => {
+              disabled={blocked || saving || reading}
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+              onChange={async (e) => {
                 setPhotoError('');
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (
-                  file.size > 500_000 ||
-                  !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-                ) {
-                  setPhotoError('Choisissez une image JPG, PNG ou WebP de moins de 500 Ko.');
-                  e.target.value = '';
-                  return;
-                }
+                e.target.value = '';
                 setReading(true);
-                const reader = new FileReader();
-                reader.onload = () => {
-                  setPhoto(String(reader.result));
+                try {
+                  const result = await preparePhoto(file);
+                  setPhoto(result);
+                  setPhotoChange(result);
+                  setDirty(true);
+                } catch (error) {
+                  setPhotoError((error as Error).message);
+                } finally {
                   setReading(false);
-                };
-                reader.onerror = () => {
-                  setPhotoError('Impossible de lire cette image.');
-                  setReading(false);
-                };
-                reader.readAsDataURL(file);
+                }
               }}
             />
           </label>
           {shared && (
             <small>
-              {t('Ajout de photos personnelles indisponible en mode partagé pour le moment.')}
+              {t(
+                'Photo privée partagée avec la réserve, en ligne uniquement. Le JSON ne contient pas les photos privées.',
+              )}
             </small>
           )}
-          {(photo || external?.imageUrl) && (
+          {(photo || external?.imageUrl || (p?.privatePhotoPath && photoChange === undefined)) && (
             <div className="photo-preview">
               <ProductImage
+                describe
                 product={{
                   id: draftId.current,
                   name: '',
                   quantity: 0,
                   updatedAt: '',
                   photo,
+                  privatePhotoPath: photoChange === undefined ? p?.privatePhotoPath : undefined,
                   external,
                 }}
               />
               <button
                 type="button"
+                disabled={
+                  blocked || saving || reading || (shared && !photo && !p?.privatePhotoPath)
+                }
                 className="text-button"
                 onClick={() => {
                   setPhoto(undefined);
-                  setExternal((r) => (r ? { ...r, imageUrl: undefined } : undefined));
+                  setPhotoChange(null);
+                  setDirty(true);
                 }}
               >
                 {t('Retirer la photo')}
@@ -455,7 +573,16 @@ export function ProductForm({
           )}
           <footer className="form-actions">
             {p && (
-              <button type="button" className="danger-button" onClick={() => onDelete(p)}>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => {
+                  if (dirty) {
+                    setDiscardAction('delete');
+                    setDiscard(true);
+                  } else onDelete(p);
+                }}
+              >
                 <Trash2 size={17} /> {t('Supprimer')}
               </button>
             )}
@@ -464,7 +591,8 @@ export function ProductForm({
               disabled={reading || saving || blocked}
               type="submit"
             >
-              <Check size={18} /> {t('Enregistrer')}
+              <Check size={18} />{' '}
+              {editor.fromScan && editor.mode === -1 ? t('Créer sans retrait') : t('Enregistrer')}
             </button>
           </footer>
         </fieldset>

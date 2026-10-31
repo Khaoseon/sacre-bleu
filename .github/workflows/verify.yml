@@ -2,7 +2,7 @@ name: Vérifications avant fusion
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, release/v1.1]
   workflow_dispatch:
 
 permissions:
@@ -28,16 +28,20 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
+      - run: npm run typecheck:7a
       - run: npm run format:check
       - run: npm run notices:check
       - run: npm run build
+      - run: npm run build:7a
       - run: npm run build:cloud
         env:
           VITE_SUPABASE_URL: https://aaaaaaaaaaaaaaaaaaaa.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_fixture
       - run: npx playwright install --with-deps chrome
+      - run: npm run test:7a:browser
       - run: npm run test:ui:browser
       - run: npm run test:i18n:browser
+      - run: node scripts/browser/shop-scanner.integration.mjs
       - run: npm run test:off:browser
       - run: npm run test:pwa:browser
         env:
@@ -66,11 +70,17 @@ jobs:
       - run: git diff --exit-code -- src/backend/database.generated.ts
       - run: npm run test:db:concurrency
       - run: npm run test:db:api
+      - name: Private photo processor and authorization (local only)
+        run: |
+          npx supabase functions serve product-photo --no-verify-jwt > /tmp/product-photo-edge.log 2>&1 &
+          npm run test:photos:api
       - run: npm run test:shared
       - run: npm run test:backup
       - run: npm run env:local
       - run: npm run build
       - run: npx playwright install --with-deps chrome
+      - run: npm run test:photos:browser
+      - run: npm run test:release:browser
       - run: npm run test:phase5:browser
       - run: npm run test:scanners:browser
       - if: always()

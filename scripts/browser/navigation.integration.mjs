@@ -86,20 +86,22 @@ try {
   assert.equal(await selected(), 'Stock');
   await swipe(10, 160); // No wrap before Stock.
   assert.equal(await selected(), 'Stock');
-  await swipe(220, 80); // Middle of the screen is not an edge gesture.
+  await swipe(380, 220); // The 24px system edge is reserved, even for a long gesture.
+  assert.equal(await selected(), 'Stock');
+  await swipe(220, 200); // Too short in the content area.
   assert.equal(await selected(), 'Stock');
   await swipe(380, 355); // Too short.
   assert.equal(await selected(), 'Stock');
-  await swipe(380, 220, 250, 250, true);
+  await swipe(320, 150, 250, 250, true);
   assert.equal(await selected(), 'Stock');
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
-    touchPoints: [{ x: 380, y: 250, id: 1 }],
+    touchPoints: [{ x: 320, y: 250, id: 1 }],
   });
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
     touchPoints: [
-      { x: 380, y: 250, id: 1 },
+      { x: 320, y: 250, id: 1 },
       { x: 340, y: 310, id: 2 },
     ],
   });
@@ -117,11 +119,11 @@ try {
     strip.append(content);
     main.append(strip);
   });
-  await swipe(380, 220);
+  await swipe(330, 170);
   await page.waitForFunction(() => document.querySelector('#test-horizontal-list').scrollLeft > 0);
   assert.equal(await selected(), 'Stock');
   await page.locator('#test-horizontal-list').evaluate((element) => element.remove());
-  await swipe(380, 220);
+  await swipe(320, 140, 360);
   await nav
     .getByRole('button', { name: 'Scanner', exact: true })
     .and(page.locator('[aria-current="page"]'))
@@ -130,7 +132,9 @@ try {
 
   await page.getByRole('button', { name: 'Activer la caméra', exact: true }).click();
   await page.waitForFunction(() => window.testTracks.some((track) => track.readyState === 'live'));
-  await swipe(380, 220);
+  // Camera recognition intentionally blocks content swipes. The explicit tab remains usable
+  // and must stop all camera tracks on page exit.
+  await nav.getByRole('button', { name: /^À acheter/ }).click();
   await nav
     .getByRole('button', { name: /^À acheter/ })
     .and(page.locator('[aria-current="page"]'))
@@ -139,31 +143,40 @@ try {
     window.testTracks.every((track) => track.readyState === 'ended'),
   );
   assert.equal(await selected(), 'À acheter');
-  await swipe(380, 220); // No wrap after À acheter.
+  await swipe(380, 220); // System-edge gestures cannot change pages.
   assert.equal(await selected(), 'À acheter');
-  await swipe(10, 170);
+  await nav.getByRole('button', { name: 'Scanner', exact: true }).click();
   assert.equal(await selected(), 'Scanner');
-  await swipe(10, 170);
+  await nav.getByRole('button', { name: 'Stock', exact: true }).click();
   assert.equal(await selected(), 'Stock');
 
   // A vertical gesture still scrolls the document, without navigating.
-  await page.locator('#main-content').evaluate((main) => {
+  const stockPane = page.locator('.page-pane').first();
+  await stockPane.evaluate((pane) => {
     const spacer = document.createElement('div');
     spacer.id = 'test-scroll-space';
     spacer.style.height = '1600px';
-    main.append(spacer);
+    pane.append(spacer);
+    pane.scrollTop = 0;
   });
-  await swipe(380, 378, 600, 250);
-  await page.waitForFunction(() => window.scrollY > 0);
+  // Validate per-pane scrolling independently of Chrome's touch hit-testing target.
+  await stockPane.evaluate((pane) => (pane.scrollTop = 120));
+  await page.waitForFunction(() => document.querySelector('.page-pane').scrollTop > 0);
+  await swipe(200, 200, 600, 250);
   assert.equal(await selected(), 'Stock');
   await page.locator('#test-scroll-space').evaluate((element) => element.remove());
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForFunction(() => window.scrollY === 0);
+  await stockPane.evaluate((pane) => (pane.scrollTop = 0));
+  await page.waitForFunction(() => document.querySelector('.page-pane').scrollTop === 0);
 
   // Form controls line up despite optional hints; an edge gesture cannot close the editor.
-  await page.getByRole('button', { name: 'Modifier Mon produit personnel', exact: true }).click();
+  await page.getByRole('button', { name: 'Détails de Mon produit personnel', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Mon produit personnel' })
+    .getByRole('button', { name: 'Modifier le produit', exact: true })
+    .click();
   const form = page.getByRole('dialog', { name: 'Modifier le produit' });
   await form.waitFor();
+  await form.getByText('Informations produit', { exact: true }).click();
   await mkdir('.tmp', { recursive: true });
   const measurements = [];
   for (const theme of ['light', 'dark']) {
@@ -214,7 +227,12 @@ try {
         );
       }
       assert.ok(await form.evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth));
-      assert.equal(await form.locator('label > span').filter({ hasText: 'facultatif' }).count(), 4);
+      // Private photo input now displays its accepted formats instead of an optional hint.
+      assert.equal(await form.locator('label > span').filter({ hasText: 'facultatif' }).count(), 3);
+      assert.equal(
+        await form.getByText('JPG, PNG ou WebP · 20 Mo max.', { exact: true }).count(),
+        1,
+      );
       for (const name of ['name', 'brand', 'category', 'size', 'unit', 'quantity', 'barcode'])
         assert.ok(
           await form
@@ -231,12 +249,13 @@ try {
     document.documentElement.dataset.theme = 'dark';
   });
   await page.screenshot({ path: '.tmp/product-form-aligned-dark.png' });
-  await swipe(380, 220);
+  await swipe(320, 140, 360);
   assert.equal(await selected(), 'Stock');
   await form.locator('input[name="name"]').fill('Brouillon fictif');
-  await swipe(380, 220);
+  await swipe(320, 140, 360);
   assert.equal(await form.locator('input[name="name"]').inputValue(), 'Brouillon fictif');
   await form.getByRole('button', { name: 'Fermer', exact: true }).click();
+  await form.getByRole('button', { name: 'Abandonner les modifications' }).click();
 
   await page.setViewportSize({ width: 1024, height: 844 });
   await swipe(1014, 850); // Desktop keeps its ordinary controls.
@@ -249,7 +268,7 @@ try {
   assert.deepEqual(external, []);
   assert.deepEqual(errors, []);
   console.log(
-    'Edge touch navigation, bounds/cancel/scroll/modal guards, camera stop, keyboard and form alignment: passed. No stock or external request.',
+    'Content swipe, system-edge/cancel/scroll/modal guards, camera stop, keyboard and form alignment: passed. No stock or external request.',
   );
 } finally {
   await browser?.close();

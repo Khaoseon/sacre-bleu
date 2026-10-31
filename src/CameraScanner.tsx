@@ -46,7 +46,7 @@ export function CameraScanner({
   }, [paused, recognition]);
   const active = view.status === 'running' || view.status === 'starting';
   return (
-    <div className="camera-scanner">
+    <div className="camera-scanner" data-no-swipe>
       <div className={`camera-preview ${active ? 'camera-active' : ''}`}>
         <video
           ref={video}

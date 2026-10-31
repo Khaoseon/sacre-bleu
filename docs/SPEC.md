@@ -12,7 +12,7 @@ Production Cloud mode has no public signup or reserve-creation UI. Independent a
 
 A product has a required name, optional barcode/brand/package size and unit/category/minimum, and a quantity from 0 through 9999. Barcodes are strings; leading zeroes matter. A non-null barcode is unique within a reserve. Distinct brands/packages can have distinct products; no fuzzy merge by name. Zero stock preserves the product, displayed with exhausted items at the bottom. Search is accent-insensitive; alphabetical/recent sort is local.
 
-Creating a product writes catalogue and stock together. Existing-product edits change metadata/minimum only; stock buttons apply deltas independently so a form cannot overwrite a newer quantity. Deletion requires confirmation and detaches linked shopping rows into free-text items transactionally. Shared private photo uploads are disabled; future `photo_path` references are preserved. OFF images have separate provenance and licensing.
+Creating a product writes catalogue and stock together. Existing-product edits change metadata/minimum only; stock buttons apply deltas independently so a form cannot overwrite a newer quantity. Deletion requires confirmation and detaches linked shopping rows into free-text items transactionally. Optional private photos override OFF images for both household members; removing one reveals the retained OFF image. Legacy `photo_path` references are preserved but never trusted as URLs. Photos are online-only, limited to 40 per household, and excluded from portable JSON; see [7B-D](design/PHASE7BD.md). OFF images have separate provenance and licensing.
 
 Shopping entries are free-text or explicitly product-linked. Free-text items never merge by similar name. Only one unchecked linked entry per product is allowed; repeated additions accumulate quantities. Checking retains quantity; unchecking zero restores at least one. Explicit quantity changes uncheck unless a check state is also supplied. Minimum thresholds suggest entries but never add them automatically.
 
@@ -40,7 +40,7 @@ The last confirmed private snapshot is cached separately by backend project/acco
 
 App-shell resources are cached by the service worker; private API responses are not. Camera decoding is a separate lazy-loaded same-origin chunk. Updates offer Actualiser/Plus tard and activate/reload only after the user's action and checks for forms, pending/uncertain work, scanner activity and other windows. No automatic clearing of Auth/demo/private storage to force an update.
 
-Mobile edge swipes navigate Stock → Scanner → À acheter without wrapping; buttons remain available. Interactive fields, vertical/multi-touch gestures and busy/modal states are protected. Android requests fullscreen; actual behavior and icon refresh depend on the browser/OS. Installed-device acceptance is separate from responsive/browser testing.
+Mobile content swipes navigate Stock → Scanner → À acheter without wrapping; the outer 24px remain reserved for system gestures and buttons remain available. Interactive fields, vertical/multi-touch gestures and busy/modal states are protected. Android requests fullscreen; actual behavior and icon refresh depend on the browser/OS. Installed-device acceptance is separate from responsive/browser testing.
 
 ## Interface language
 

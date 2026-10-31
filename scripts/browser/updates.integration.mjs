@@ -149,8 +149,12 @@ try {
   assert.equal(await banner.count(), 0);
   await page.getByRole('button', { name: 'Essayer la démonstration sur cet appareil' }).click();
   await page
-    .getByRole('button', { name: /^Modifier / })
+    .getByRole('button', { name: /^Détails de / })
     .first()
+    .click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Modifier le produit', exact: true })
     .click();
   const editor = page.getByRole('dialog', { name: 'Modifier le produit' });
   await editor.locator('input[name="name"]').fill('Brouillon fictif à conserver');
@@ -164,6 +168,8 @@ try {
     'Brouillon fictif à conserver',
   );
   await editor.getByRole('button', { name: 'Fermer', exact: true }).click();
+  // The V1.1 editor requires an explicit decision before losing a dirty draft.
+  await editor.getByRole('button', { name: 'Abandonner les modifications' }).click();
   controls = await settings(true);
   await page.getByText('Données de démonstration', { exact: true }).click();
   await page.getByText(/La recherche Open Food Facts est désactivée/).waitFor();
@@ -193,16 +199,13 @@ try {
     .getByRole('navigation', { name: 'Navigation mobile' })
     .getByRole('button', { name: /^À acheter/ })
     .click();
-  await page.locator('.shopping-name input').fill('Article fictif non enregistré');
+  await page.locator('#shopping-entry').fill('Article fictif non enregistré');
   await banner.getByRole('button', { name: 'Actualiser', exact: true }).click();
   await banner
     .getByText('Terminez ou effacez la saisie dans À acheter avant d’actualiser.', { exact: true })
     .waitFor();
-  assert.equal(
-    await page.locator('.shopping-name input').inputValue(),
-    'Article fictif non enregistré',
-  );
-  await page.locator('.shopping-name input').fill('');
+  assert.equal(await page.locator('#shopping-entry').inputValue(), 'Article fictif non enregistré');
+  await page.locator('#shopping-entry').fill('');
   await page
     .getByRole('navigation', { name: 'Navigation mobile' })
     .getByRole('button', { name: 'Scanner', exact: true })

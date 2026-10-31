@@ -7,7 +7,8 @@ export type ReserveRow = Tables<'reserves'>;
 export type MemberRow = Omit<Tables<'reserve_members'>, 'role'> & {
   role: 'owner' | 'member';
 };
-export type CatalogRow = Omit<Tables<'products'>, 'unit' | 'category'> & {
+export type CatalogRow = Omit<Tables<'products'>, 'unit' | 'category' | 'photo_version'> & {
+  photo_version?: number; // Older servers / offline snapshots omit this additive field.
   unit: 'g' | 'kg' | 'ml' | 'L' | 'pièce' | null;
   category: 'Féculents' | 'Conserves' | 'Légumineuses' | 'Épicerie' | 'Autres' | null;
 };
@@ -32,6 +33,15 @@ export type ProductFields = Pick<
   | 'off_image_url'
 > & { minimum: number | null };
 export type ReserveCommand =
+  | {
+      action: 'photo';
+      payload: {
+        product_id: UUID;
+        expected_path: string | null;
+        expected_version: number;
+        hash: string | null;
+      };
+    }
   | { action: 'restore'; payload: { backup: UserBackup; expected_revision: number } }
   | {
       action: 'create_product';

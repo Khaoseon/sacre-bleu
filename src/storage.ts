@@ -9,6 +9,12 @@ export function backupSnapshot(snapshot: ReserveSnapshot): UserBackup {
     throw new Error(
       'Une photo privée nécessite une sauvegarde administrative. Export utilisateur interrompu pour éviter une copie incomplète.',
     );
+  return snapshotDomain(snapshot);
+}
+
+// The offline copy validates the same inventory domain, but retains opaque photo
+// references in its scoped snapshot. Only portable export must refuse those refs.
+function snapshotDomain(snapshot: ReserveSnapshot): UserBackup {
   return validateBackup({
     format: 'sacre-bleu',
     version: 1,
@@ -102,7 +108,7 @@ export class PrivateReserveCache {
       )
         return null;
       // Validate the portable domain and its links before displaying local bytes.
-      parseBackup(JSON.stringify(backupSnapshot(value.snapshot)));
+      parseBackup(JSON.stringify(snapshotDomain(value.snapshot)));
       return { snapshot: value.snapshot, syncedAt: value.syncedAt };
     } catch {
       return null;
@@ -111,7 +117,7 @@ export class PrivateReserveCache {
   write(userId: string, snapshot: ReserveSnapshot, syncedAt: number) {
     if (this.storage.getItem(this.prefix + 'owner') !== userId) return;
     // Detect an unreadable/unsupported copy before claiming it was saved.
-    parseBackup(JSON.stringify(backupSnapshot(snapshot)));
+    parseBackup(JSON.stringify(snapshotDomain(snapshot)));
     const previous = this.read(userId, snapshot.reserve.id);
     if (previous && previous.snapshot.reserve.revision > snapshot.reserve.revision) return;
     this.storage.setItem(this.prefix + userId, JSON.stringify({ version: 1, snapshot, syncedAt }));

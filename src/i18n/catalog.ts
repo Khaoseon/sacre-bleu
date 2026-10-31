@@ -1,5 +1,96 @@
 /** French source keys are stable presentation IDs, never stored business values. */
 export const catalog = {
+  ' · Photo OFF ': { fr: ' · Photo OFF ', en: ' · OFF photo ' },
+  'La fiche a été enregistrée, mais la photo n’a pas été modifiée par cette demande. Actualisez avant de réessayer.':
+    {
+      fr: 'La fiche a été enregistrée, mais la photo n’a pas été modifiée par cette demande. Actualisez avant de réessayer.',
+      en: 'The product was saved, but this request did not change the photo. Refresh before trying again.',
+    },
+  'Les images OFF restent en ligne. Le JSON ne sauvegarde pas les photos privées : export et restauration JSON sont bloqués tant que la réserve en contient. Utilisez la sauvegarde administrative ou retirez les photos.':
+    {
+      fr: 'Les images OFF restent en ligne. Le JSON ne sauvegarde pas les photos privées : export et restauration JSON sont bloqués tant que la réserve en contient. Utilisez la sauvegarde administrative ou retirez les photos.',
+      en: 'OFF images remain online. JSON does not back up private photos: JSON export and restore are blocked while the pantry contains any. Use an administrative backup or remove the photos.',
+    },
+  'JPG, PNG ou WebP · 20 Mo max.': {
+    fr: 'JPG, PNG ou WebP · 20 Mo max.',
+    en: 'JPG, PNG or WebP · max. 20 MB',
+  },
+  'Photo privée partagée avec la réserve, en ligne uniquement. Le JSON ne contient pas les photos privées.':
+    {
+      fr: 'Photo privée partagée avec la réserve, en ligne uniquement. Le JSON ne contient pas les photos privées.',
+      en: 'Private photo shared with this pantry, online only. JSON does not include private photos.',
+    },
+  'Format non pris en charge. Convertissez la photo en JPG, PNG ou WebP.': {
+    fr: 'Format non pris en charge. Convertissez la photo en JPG, PNG ou WebP.',
+    en: 'Unsupported format. Convert the photo to JPG, PNG or WebP.',
+  },
+  'Choisissez une photo de moins de 20 Mo et 50 mégapixels.': {
+    fr: 'Choisissez une photo de moins de 20 Mo et 50 mégapixels.',
+    en: 'Choose a photo smaller than 20 MB and 50 megapixels.',
+  },
+  'Photo non enregistrée. Sélectionnez-la à nouveau.': {
+    fr: 'Photo non enregistrée. Sélectionnez-la à nouveau.',
+    en: 'Photo was not saved. Select it again.',
+  },
+  'Photo personnelle indisponible. Image OFF ou catégorie affichée.': {
+    fr: 'Photo personnelle indisponible. Image OFF ou catégorie affichée.',
+    en: 'Personal photo unavailable. Showing the OFF image or category.',
+  },
+  'Créer sans retrait': { fr: 'Créer sans retrait', en: 'Create without removal' },
+  'Rechercher ou ajouter un article': {
+    fr: 'Rechercher ou ajouter un article',
+    en: 'Search or add an item',
+  },
+  'Ajouter comme article libre': {
+    fr: 'Ajouter comme article libre',
+    en: 'Add as a free-text item',
+  },
+  Parcourir: { fr: 'Parcourir', en: 'Browse' },
+  'Suggestions du catalogue': { fr: 'Suggestions du catalogue', en: 'Catalogue suggestions' },
+  'Ajouter un exemplaire': { fr: 'Ajouter un exemplaire', en: 'Add one package' },
+  'Associer ce produit': { fr: 'Associer ce produit', en: 'Link this product' },
+  'Voir plus': { fr: 'Voir plus', en: 'Show more' },
+  'Ajouter « {0} » comme article libre': {
+    fr: 'Ajouter « {0} » comme article libre',
+    en: 'Add “{0}” as a free-text item',
+  },
+  'Quantité et options de {0}': {
+    fr: 'Quantité et options de {0}',
+    en: 'Quantity and options for {0}',
+  },
+  'Déjà dans les courses': { fr: 'Déjà dans les courses', en: 'Already on the shopping list' },
+  'Aucun produit sous son seuil.': {
+    fr: 'Aucun produit sous son seuil.',
+    en: 'No product below its minimum.',
+  },
+  'Épuisés sans seuil': { fr: 'Épuisés sans seuil', en: 'Zero stock, no minimum' },
+  'Aucune quantité suggérée sans minimum défini.': {
+    fr: 'Aucune quantité suggérée sans minimum défini.',
+    en: 'No suggested quantity without a defined minimum.',
+  },
+  'Continuer à scanner': { fr: 'Continuer à scanner', en: 'Continue scanning' },
+  'Code détecté · enregistrement en cours…': {
+    fr: 'Code détecté · enregistrement en cours…',
+    en: 'Code detected · saving…',
+  },
+  'Lecture non enregistrée': { fr: 'Lecture non enregistrée', en: 'Scan not saved' },
+  'Prêt à scanner · Ajouter': { fr: 'Prêt à scanner · Ajouter', en: 'Ready to scan · Add' },
+  'Prêt à scanner · Retirer': { fr: 'Prêt à scanner · Retirer', en: 'Ready to scan · Remove' },
+  'Résultat confirmé': { fr: 'Résultat confirmé', en: 'Confirmed result' },
+  'Fiche créée · aucun retrait effectué.': {
+    fr: 'Fiche créée · aucun retrait effectué.',
+    en: 'Product created · no removal made.',
+  },
+  'Abandonner les modifications': { fr: 'Abandonner les modifications', en: 'Discard changes' },
+  'Continuer la saisie': { fr: 'Continuer la saisie', en: 'Continue editing' },
+  'Modifications non enregistrées': { fr: 'Modifications non enregistrées', en: 'Unsaved changes' },
+  'Informations produit': { fr: 'Informations produit', en: 'Product information' },
+  'Source et crédits': { fr: 'Source et crédits', en: 'Source and credits' },
+  'Ajouter aux courses': { fr: 'Ajouter aux courses', en: 'Add to shopping' },
+  Épuisé: { fr: 'Épuisé', en: 'Out of stock' },
+  'Vue photographique': { fr: 'Vue photographique', en: 'Photographic view' },
+  'Vue compacte': { fr: 'Vue compacte', en: 'Compact view' },
+  'Détails de {0}': { fr: 'Détails de {0}', en: 'Details of {0}' },
   'La sauvegarde locale ne peut pas être lue. Vos données n’ont pas été remplacées. Exportez-les avant de réinitialiser.':
     {
       fr: 'La sauvegarde locale ne peut pas être lue. Vos données n’ont pas été remplacées. Exportez-les avant de réinitialiser.',

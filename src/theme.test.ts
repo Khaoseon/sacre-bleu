@@ -190,6 +190,40 @@ describe('Contrastes des palettes', () => {
     const [min, max] = [luminance(a), luminance(b)].sort((a, b) => a - b);
     return (max + 0.05) / (min + 0.05);
   }
+  const foundations = readFileSync('src/ui/foundations.css', 'utf8');
+  const semanticBlocks = [...foundations.matchAll(/\{([^}]+)\}/g)].map((match) =>
+    Object.fromEntries(
+      [...match[1].matchAll(/--sb-color-([\w-]+):\s*(#[a-f\d]{6}|var\(--[\w-]+\))/gi)].map(
+        (value) => [value[1], value[2]],
+      ),
+    ),
+  );
+  blocks.forEach((legacy, index) => {
+    it(`semantic foundation palette ${index}: readable text, controls and focus`, () => {
+      const roles = { ...semanticBlocks[0], ...(index === 0 ? semanticBlocks[1] : {}) };
+      const color = (role: string) => {
+        const value = roles[role];
+        return value.startsWith('var(') ? legacy[value.slice(6, -1)] : value;
+      };
+      for (const [fg, bg] of [
+        ['text', 'surface'],
+        ['text', 'canvas'],
+        ['muted', 'inset'],
+        ['muted', 'surface'],
+        ['on-brand', 'brand'],
+        ['warning', 'surface'],
+        ['warning', 'warning-surface'],
+        ['success', 'success-surface'],
+        ['danger', 'danger-surface'],
+        ['disabled', 'disabled-surface'],
+      ]) {
+        expect(contrast(color(fg), color(bg)), `${fg}/${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
+      for (const role of ['control-border', 'focus']) {
+        expect(contrast(color(role), color('surface')), role).toBeGreaterThanOrEqual(3);
+      }
+    });
+  });
   blocks.forEach((palette, index) => {
     it(`${index === 0 ? 'Clair' : 'Sombre'} : textes et statuts à au moins 4,5:1`, () => {
       for (const [foreground, background] of [
