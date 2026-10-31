@@ -20,6 +20,10 @@ npm run notices:check
 
 The generator uses a reviewed list of 25 browser/worker packages and emitted-helper sources, not every tool in `node_modules`. On dependency or PWA changes, review the actual output/runtime imports and adjust that list; the check detects version/text drift, not new unlisted imports. The unused ZXing text-encoding dependency and workbox-window are not in the emitted bundles and are excluded. Build/test/CLI tools such as Vite, TypeScript, Vitest, Playwright and Supabase CLI are not deployed site code; they retain their package licenses when installed through npm. No extra license-scanner dependency or build service is required.
 
+## Production fonts
+
+The application also distributes local Fraunces regular and Manrope regular/semibold WOFF2 files under SIL OFL 1.1. Their complete copyright and licence notices ship at `public/fonts/Fraunces-OFL.txt` and `public/fonts/Manrope-OFL.txt`. See [font provenance and conversion](src/assets/fonts/README.md). These are independent of the generated software dependency notices above.
+
 ## Open Food Facts
 
 Open Food Facts and its contributors provide optional metadata and external images, not bundled project assets. The [official reuse guide](https://openfoodfacts.github.io/openfoodfacts-server/api/tutorials/license-be-on-the-legal-side/) identifies these separate terms:

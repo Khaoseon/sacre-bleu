@@ -1,0 +1,168 @@
+/* Opt-in production foundations. Existing screens retain their own typography/layout. */
+@import './fonts.css';
+
+:root {
+  --sb-font-body: Manrope, 'Segoe UI', Arial, sans-serif;
+  --sb-font-display: Fraunces, Georgia, serif;
+  --sb-text-small: 0.875rem;
+  --sb-text-body: 1rem;
+  --sb-text-input: max(16px, 1rem);
+  --sb-text-title: clamp(1.75rem, 5vw, 2.5rem);
+  --sb-leading-body: 1.5;
+  --sb-leading-title: 1.15;
+  --sb-space-1: 4px;
+  --sb-space-2: 8px;
+  --sb-space-3: 12px;
+  --sb-space-4: 16px;
+  --sb-space-5: 24px;
+  --sb-space-6: 32px;
+  --sb-space-7: 48px;
+  --sb-radius-control: 11px;
+  --sb-radius-surface: 18px;
+  --sb-radius-pill: 999px;
+  --sb-target: var(--touch-target);
+  --sb-focus-width: 3px;
+  --sb-focus-offset: 2px;
+  --sb-motion-press: 110ms;
+  --sb-motion-settle: 280ms;
+  --sb-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* Compatibility adapter: every existing/custom palette inherits semantic roles. */
+  --sb-color-canvas: var(--canvas);
+  --sb-color-surface: var(--paper);
+  --sb-color-inset: var(--surface-soft);
+  --sb-color-text: var(--text);
+  --sb-color-muted: var(--muted);
+  --sb-color-brand: var(--green);
+  --sb-color-on-brand: var(--on-primary);
+  --sb-color-selected: var(--selected-surface);
+  --sb-color-border: var(--border);
+  --sb-color-control-border: var(--control-border);
+  --sb-color-focus: var(--focus);
+  --sb-color-warning: var(--warning-text);
+  --sb-color-warning-surface: var(--surface-soft);
+  --sb-color-success: var(--accent-text);
+  --sb-color-success-surface: var(--accent-soft);
+  --sb-color-danger: var(--danger-text);
+  --sb-color-danger-surface: var(--danger-surface);
+  --sb-color-disabled: var(--disabled-text);
+  --sb-color-disabled-surface: var(--disabled-surface);
+  --sb-color-overlay: var(--overlay);
+  --sb-shadow-surface: 0 12px 60px var(--shadow);
+}
+
+/* Approved warm paper / blue palette, only consumed by opt-in primitives. */
+:root:not([data-theme]),
+:root[data-theme='light'] {
+  --sb-color-canvas: #faf9f5;
+  --sb-color-surface: #fffefa;
+  --sb-color-inset: #f0eee8;
+  --sb-color-text: #1d314d;
+  --sb-color-muted: #5d6773;
+  --sb-color-brand: #233f8c;
+  --sb-color-on-brand: #ffffff;
+  --sb-color-selected: #e9edf7;
+  --sb-color-border: #dedfd8;
+  --sb-color-control-border: #7a8490;
+  --sb-color-focus: #3562c1;
+  --sb-color-warning: #80571d;
+  --sb-color-warning-surface: #f6e8cc;
+  --sb-color-success: #356451;
+  --sb-color-success-surface: #e9f1eb;
+  --sb-color-danger: #a33b31;
+}
+
+.sb-foundation {
+  font-family: var(--sb-font-body);
+  font-size: var(--sb-text-body);
+  line-height: var(--sb-leading-body);
+  font-synthesis: none;
+  color: var(--sb-color-text);
+}
+
+.sb-title {
+  font-family: var(--sb-font-display);
+  font-size: var(--sb-text-title);
+  font-weight: 400;
+  line-height: var(--sb-leading-title);
+  overflow-wrap: anywhere;
+}
+
+.sb-surface {
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  border: 1px solid var(--sb-color-border);
+  border-radius: var(--sb-radius-surface);
+  padding: var(--sb-space-4);
+}
+
+/* Native button semantics; callers own labels, pending state and receipt handling. */
+.sb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sb-space-2);
+  min-height: var(--sb-target);
+  min-width: var(--sb-target);
+  padding: var(--sb-space-2) var(--sb-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--sb-radius-control);
+  background: var(--sb-color-brand);
+  color: var(--sb-color-on-brand);
+  font: 600 var(--sb-text-body) / var(--sb-leading-body) var(--sb-font-body);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  transition:
+    background-color var(--sb-motion-press) var(--sb-motion-ease),
+    opacity var(--sb-motion-press) var(--sb-motion-ease);
+}
+
+.sb-button[data-variant='secondary'] {
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  border-color: var(--sb-color-control-border);
+}
+
+.sb-button:disabled {
+  opacity: 1;
+  color: var(--sb-color-disabled);
+  background: var(--sb-color-disabled-surface);
+}
+
+.sb-button:focus-visible,
+.sb-focus:focus-visible {
+  outline: var(--sb-focus-width) solid var(--sb-color-focus);
+  outline-offset: var(--sb-focus-offset);
+}
+
+/* Neutral contain-fit frame: no blending, recolouring or source-dependent crop. */
+.sb-product-media {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sb-image-size, 100%);
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--sb-color-inset);
+  color: var(--sb-color-muted);
+  border-radius: var(--sb-radius-control);
+}
+
+.sb-product-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.sb-product-media > span {
+  display: grid;
+  place-items: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sb-motion-press: 0ms;
+    --sb-motion-settle: 0ms;
+  }
+}

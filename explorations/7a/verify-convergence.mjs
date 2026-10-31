@@ -820,19 +820,19 @@ try {
     await page.evaluate(() => navigator.serviceWorker.getRegistrations().then((r) => r.length)),
     0,
   );
+  // V1.1 production foundations intentionally include Fraunces/Manrope fonts.
+  // Continue rejecting prototype-only UI text and image fixtures from dist.
   const files = await readdir(resolve('dist/assets'));
   for (const file of files.filter((f) => /\.(js|css)$/.test(f)))
     assert.equal(
-      /Atelier 7A|prototype-ribbon|Maison Bleue|Fraunces|Manrope|Variation proposée/.test(
+      /Atelier 7A|prototype-ribbon|Maison Bleue|Variation proposée/.test(
         await readFile(resolve('dist/assets', file), 'utf8'),
       ),
       false,
       `Production isolation ${file}`,
     );
   assert.equal(
-    files.some((f) =>
-      /pasta|chickpea|tomato|Manrope|Fraunces|3017620422003|personal-lentils/.test(f),
-    ),
+    files.some((f) => /pasta|chickpea|tomato|3017620422003|personal-lentils/.test(f)),
     false,
   );
   console.log(
