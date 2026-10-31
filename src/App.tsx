@@ -7,7 +7,6 @@ import {
   number,
   plural,
   restock,
-  shoppingCount,
   scanSummary,
   useLanguage,
 } from './i18n';
@@ -53,7 +52,6 @@ import {
   categories,
   changeStock,
   deleteProduct,
-  MAX_QUANTITY,
   saveProduct,
   selectProducts,
   scanQuantityLimit,
@@ -77,6 +75,7 @@ import type { ProductProvider } from './productInfo';
 import { usePageSwipe, type Page } from './usePageSwipe';
 import { useUpdateBlocker } from './AppUpdates';
 import { LookupIndicator } from './LookupIndicator';
+import { Shopping, Replenishment } from './Shopping';
 
 function initial() {
   try {
@@ -175,19 +174,62 @@ export default function App({
   const [recognition] = useState(() => new ScanRecognition());
   const scanInFlight = useRef(false);
   const [scanning, setScanning] = useState(false);
+  const [scanHeld, setScanHeld] = useState(false);
+  const held = useRef(false);
+  const [scanPhase, setScanPhase] = useState<'ready' | 'pending' | 'failed' | 'done'>('ready');
+  const [detectedName, setDetectedName] = useState('');
+  const [createdWithoutRemoval, setCreatedWithoutRemoval] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState<{
+    name: string;
+    mode: 1 | -1;
+    quantity: number;
+    stock: number;
+  } | null>(null);
+  // Announce each confirmed intention once; corrections update its visible total.
+  useEffect(() => {
+    if (!lastScan) {
+      setAnnouncement(null);
+      return;
+    }
+    const product = state.products.find(
+      (p) => p.id === (shared ? shared.view.lastProductId : localScan?.productId),
+    );
+    if (product)
+      setAnnouncement({
+        name: product.name,
+        mode: lastScan.mode,
+        quantity: lastScan.quantity,
+        stock: product.quantity,
+      });
+  }, [lastScan?.id]);
+  const continueButton = useRef<HTMLButtonElement>(null);
+  const readyLabel = useRef<HTMLParagraphElement>(null);
+  function finishManualEntry() {
+    setManualOpen(false);
+    requestAnimationFrame(() => continueButton.current?.focus({ preventScroll: true }));
+  }
+  function continueScanning() {
+    if (locked || scanning || lookupInFlight.current) return;
+    recognition.suspend();
+    held.current = false;
+    setScanHeld(false);
+    setScanPhase('ready');
+    setAnnouncement(null);
+    setFeedback(null);
+    requestAnimationFrame(() => readyLabel.current?.focus({ preventScroll: true }));
+  }
   const input = useRef<HTMLInputElement>(null);
   const [shoppingName, setShoppingName] = useState('');
-  const [shoppingProduct, setShoppingProduct] = useState('');
-  const [shoppingQuantity, setShoppingQuantity] = useState(1);
+  const [replenishment, setReplenishment] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   useUpdateBlocker(() => {
     const view = shared?.store.getSnapshot();
     if (scanInFlight.current || lookupInFlight.current || scanning || view?.busy || view?.pending)
       return 'Terminez ou vérifiez l’opération en cours avant d’actualiser.';
-    if (editor || detailId || deleting || resetting)
+    if (editor || detailId || deleting || resetting || replenishment)
       return 'Terminez ou fermez le formulaire ouvert avant d’actualiser.';
-    if (shoppingName || shoppingProduct || shoppingQuantity !== 1)
-      return 'Terminez ou effacez la saisie dans À acheter avant d’actualiser.';
+    if (shoppingName) return 'Terminez ou effacez la saisie dans À acheter avant d’actualiser.';
     if (code) return 'Terminez ou effacez le code-barres saisi dans Scanner avant d’actualiser.';
     if (page === 'scanner') return 'Revenez à Stock ou À acheter avant d’actualiser.';
     return null;
@@ -201,8 +243,9 @@ export default function App({
     },
     !!editor ||
       !!detailId ||
+      replenishment ||
       (page === 'scanner' && !!code) ||
-      (page === 'shopping' && !!(shoppingName || shoppingProduct || shoppingQuantity !== 1)) ||
+      (page === 'shopping' && !!shoppingName) ||
       !!deleting ||
       settings ||
       resetting ||
@@ -237,10 +280,17 @@ export default function App({
         (product) => product.id === view.lastProductId,
       );
       if (view.scan) {
+        held.current = true;
+        setScanHeld(true);
+        setScanPhase('done');
         if (completedProduct?.barcode) recognition.hold(completedProduct.barcode);
         navigator.vibrate?.(45);
       }
       if (view.completionLabel === 'Produit enregistré.') {
+        if (held.current) {
+          setScanPhase('done');
+          if (editor?.fromScan) setCreatedWithoutRemoval(editor.mode === -1);
+        }
         setEditor(null);
         setCode('');
       }
@@ -338,6 +388,11 @@ export default function App({
       return false;
     }
   }
+  async function addShoppingItem(name: string, quantity: number, productId?: string) {
+    return shared
+      ? shared.store.addShopping(name, quantity, productId)
+      : commit((s) => addShopping(s, name, quantity, productId), 'Article ajouté aux courses.');
+  }
   function change(p: Product, delta: 1 | -1) {
     if (shared) {
       void shared.store.changeStock(p, delta);
@@ -351,6 +406,7 @@ export default function App({
   async function scan(raw: string, repeat = false, fromCamera = false) {
     if (
       scanInFlight.current ||
+      (fromCamera && held.current) ||
       lookupInFlight.current ||
       editor ||
       settings ||
@@ -373,6 +429,12 @@ export default function App({
       });
       return;
     }
+    held.current = true;
+    setScanHeld(true);
+    setScanPhase('pending');
+    setCreatedWithoutRemoval(false);
+    setAnnouncement(null);
+    setDetectedName(barcode);
     recognition.hold(barcode);
     const resolution = productSearch.start(current.current.products, barcode);
     if (resolution.status === 'loading') {
@@ -393,16 +455,18 @@ export default function App({
       return;
     }
     const p = resolution.product;
+    setDetectedName(p.name);
+    let confirmed = false;
     scanInFlight.current = true;
     setScanning(true);
     if (fromCamera) setCode(barcode);
     try {
       if (shared) {
         if (await shared.store.scanProduct(p.id, mode)) {
+          confirmed = true;
           lastRead.current = { code: barcode, time: Date.now() };
           setLastCode(barcode);
           setCode('');
-          if (!fromCamera && !repeat) input.current?.focus();
         }
         return;
       }
@@ -418,17 +482,19 @@ export default function App({
           true,
         )
       ) {
+        confirmed = true;
         publishScan(operation!);
         lastRead.current = { code: barcode, time: Date.now() };
         setLastCode(barcode);
         setLastProductId(p.id);
         setCode('');
         navigator.vibrate?.(45);
-        if (!fromCamera && !repeat) input.current?.focus();
       }
     } finally {
       scanInFlight.current = false;
       setScanning(false);
+      setScanPhase(confirmed ? 'done' : 'failed');
+      if (confirmed) finishManualEntry();
     }
   }
   function adjustLastScan(delta: 1 | -1) {
@@ -495,7 +561,6 @@ export default function App({
   const empty = visible.filter((p) => p.quantity === 0);
   const low = suggestions(state);
   const remaining = state.shopping.filter((i) => !i.checked);
-  const checked = state.shopping.filter((i) => i.checked);
   const lastProduct = state.products.find(
     (p) => p.id === (shared ? shared.view.lastProductId : lastProductId),
   );
@@ -769,7 +834,7 @@ export default function App({
                         <strong>{restock(low.length)} </strong>
                         <span>{t('Un petit tour dans la liste de courses ?')}</span>
                       </div>
-                      <button onClick={() => setPage('shopping')}>
+                      <button onClick={() => setReplenishment(true)}>
                         {t('Voir')} <ArrowRight size={17} />
                       </button>
                     </div>
@@ -904,194 +969,278 @@ export default function App({
                 inert={page !== 'scanner'}
                 aria-label={t('Scanner')}
               >
-                <>
-                  <div className="scanner-layout">
-                    <section
-                      className={`scanner-card ${mode === -1 ? 'removing' : ''}`}
-                      aria-label={t('Scanner de codes-barres')}
+                <div className={'scanner-layout scanner-session' + (scanHeld ? ' has-result' : '')}>
+                  <section
+                    className={'scanner-card ' + (mode === -1 ? 'removing' : '')}
+                    aria-label={t('Scanner de codes-barres')}
+                  >
+                    <div className="mode-toggle">
+                      <button
+                        className={mode === 1 ? 'active' : ''}
+                        aria-pressed={mode === 1}
+                        disabled={locked || scanning}
+                        onClick={() => {
+                          recognition.suspend();
+                          setMode(1);
+                        }}
+                      >
+                        <Plus size={19} />
+                        {t('Ajouter')}
+                      </button>
+                      <button
+                        className={mode === -1 ? 'active danger' : ''}
+                        aria-pressed={mode === -1}
+                        disabled={locked || scanning}
+                        onClick={() => {
+                          recognition.suspend();
+                          setMode(-1);
+                        }}
+                      >
+                        <Minus size={19} />
+                        {t('Retirer')}
+                      </button>
+                    </div>
+                    {page === 'scanner' && (
+                      <CameraScanner
+                        settingsTarget={cameraSettingsTarget}
+                        recognition={recognition}
+                        paused={
+                          locked ||
+                          scanning ||
+                          scanHeld ||
+                          manualOpen ||
+                          !!bootError ||
+                          !!editor ||
+                          settings
+                        }
+                        onCode={(barcode) => void scan(barcode, false, true)}
+                      />
+                    )}
+                    <p className="sr-only" role="status">
+                      {announcement
+                        ? announcement.name +
+                          ' · ' +
+                          (announcement.mode === 1 ? '+' : '−') +
+                          number(announcement.quantity) +
+                          ' · ' +
+                          scanSummary(announcement.quantity, announcement.mode, announcement.stock)
+                        : ''}
+                    </p>
+                    {shared?.view.busy && !scanning && scanPhase === 'done' && (
+                      <p role="status">{t('Enregistrement en cours…')}</p>
+                    )}
+                    {feedback?.error && scanHeld && (
+                      <p className="form-error" role="alert">
+                        {message(feedback.text)}
+                      </p>
+                    )}
+                    <div
+                      className="scan-session-result"
+                      aria-busy={scanning || !!shared?.view.busy}
                     >
-                      <div className="mode-toggle">
-                        <button
-                          className={mode === 1 ? 'active' : ''}
-                          aria-pressed={mode === 1}
-                          onClick={() => {
-                            recognition.suspend();
-                            setMode(1);
-                          }}
-                        >
-                          <Plus size={19} /> {t('Ajouter')}
-                        </button>
-                        <button
-                          className={mode === -1 ? 'active danger' : ''}
-                          aria-pressed={mode === -1}
-                          onClick={() => {
-                            recognition.suspend();
-                            setMode(-1);
-                          }}
-                        >
-                          <Minus size={19} /> {t('Retirer')}
-                        </button>
-                      </div>
-                      <LookupIndicator provider={productProvider} />
-                      {shared && (
-                        <details className="scanner-diagnostics">
-                          <summary>{t('Diagnostic du scanner')}</summary>
-                          <p>
-                            {t('Version')} {__APP_BUILD_INFO__.revision}{' '}
-                            {t('· révision synchronisée')} {state.revision}.
-                          </p>
-                          <p>
-                            {t('Actions locales confirmées :')} {shared.view.completed}
-                            {t('. Dernière lecture locale :')}{' '}
-                            {shared.view.lastProductId ? t('présente') : t('aucune')}.
-                          </p>
-                          <p>
-                            {t('Ajustement :')} {lastScan ? t('possible') : t('désactivé')}
-                            {t('. Demande locale :')}{' '}
-                            {shared.view.busy
-                              ? t('en cours')
-                              : shared.view.pending
-                                ? t('à vérifier')
-                                : t('aucune')}
-                            .
-                          </p>
-                        </details>
-                      )}
-                      {page === 'scanner' && (
-                        <CameraScanner
-                          settingsTarget={cameraSettingsTarget}
-                          recognition={recognition}
-                          paused={locked || scanning || !!bootError || !!editor || settings}
-                          onCode={(barcode) => void scan(barcode, false, true)}
-                        />
-                      )}
-                      <details className="manual-code">
-                        <summary>{t('Saisir un code-barres')}</summary>
-                        <form
-                          className="scan-form"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            scan(code);
-                          }}
-                        >
-                          <label htmlFor="barcode">{t('Code-barres')}</label>
-                          <div>
-                            <input
-                              id="barcode"
-                              ref={input}
-                              inputMode="numeric"
-                              autoComplete="off"
-                              value={code}
-                              onChange={(e) => setCode(e.target.value)}
-                              placeholder={t('Ex. 8076802085738')}
-                              maxLength={32}
-                              required
-                            />
-                            <button
-                              className={mode === 1 ? 'primary-button' : 'primary-button red'}
-                              type="submit"
-                              disabled={locked || scanning}
-                            >
-                              <ScanLine size={19} /> {t('Valider')}
-                            </button>
-                          </div>
-                        </form>
-                      </details>
-                    </section>
-                    <aside className="scanner-aside">
-                      {lastProduct ? (
+                      {scanning ||
+                      (shared?.view.busy && scanPhase !== 'done') ||
+                      shared?.view.pending ? (
+                        <p role="status">
+                          {shared?.view.pending && !shared.view.busy
+                            ? t('Dernier stock connu · actualisation nécessaire.')
+                            : scanning
+                              ? t('Code détecté · enregistrement en cours…')
+                              : t('Enregistrement en cours…')}{' '}
+                          {detectedName}
+                        </p>
+                      ) : scanHeld && scanPhase === 'failed' ? (
+                        <p role="status">
+                          {t('Lecture non enregistrée')} · {detectedName}
+                        </p>
+                      ) : scanHeld && scanPhase === 'done' && lastProduct ? (
                         <section className="last-product">
-                          <div className="section-eyebrow">{t('DERNIER PRODUIT')}</div>
-                          <ProductImage product={lastProduct} />
-                          {lastProduct.external && (
-                            <ProductAttribution
-                              barcode={lastProduct.external.barcode}
-                              image={!!lastProduct.external.imageUrl}
-                            />
+                          <div className="scan-identity">
+                            <ProductImage product={lastProduct} />
+                            <div>
+                              <small>
+                                {lastScan ? t('Résultat confirmé') : t('DERNIER PRODUIT')}
+                              </small>
+                              <h2>{lastProduct.name}</h2>
+                              <p>
+                                {[lastProduct.brand, packageLabel(lastProduct)]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </p>
+                            </div>
+                          </div>
+                          {lastScan && (
+                            <>
+                              <div className="scan-correction">
+                                <strong>
+                                  {lastScan.mode === 1 ? '+' : '−'}
+                                  {number(lastScan.quantity)}
+                                </strong>
+                                <Quantity
+                                  name={lastProduct.name}
+                                  value={lastScan.quantity}
+                                  zeroAllowed={false}
+                                  max={
+                                    shared
+                                      ? (shared.view.scan?.limit ?? 0)
+                                      : localScan
+                                        ? scanQuantityLimit(localScan)
+                                        : 0
+                                  }
+                                  locked={locked}
+                                  increaseLabel={t('Augmenter la quantité du dernier scan')}
+                                  decreaseLabel={t('Réduire la quantité du dernier scan')}
+                                  onChange={adjustLastScan}
+                                />
+                                <button
+                                  className="text-button"
+                                  aria-label={t('Annuler la dernière opération')}
+                                  disabled={locked}
+                                  onClick={undoScan}
+                                >
+                                  <Undo2 size={16} />
+                                  {t('Annuler')}
+                                </button>
+                              </div>
+                              <span className="muted">
+                                {scanSummary(
+                                  lastScan.quantity,
+                                  lastScan.mode,
+                                  lastProduct.quantity,
+                                )}
+                              </span>
+                            </>
                           )}
-                          <h2>{lastProduct.name}</h2>
-                          <p>
-                            {[lastProduct.brand, packageLabel(lastProduct)]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </p>
-                          <Quantity
-                            name={lastProduct.name}
-                            value={lastScan?.quantity ?? 0}
-                            zeroAllowed={false}
-                            max={
-                              shared
-                                ? (shared.view.scan?.limit ?? 0)
-                                : localScan
-                                  ? scanQuantityLimit(localScan)
-                                  : 0
-                            }
-                            disabled={!lastScan}
-                            locked={locked}
-                            increaseLabel={t('Augmenter la quantité du dernier scan')}
-                            decreaseLabel={t('Réduire la quantité du dernier scan')}
-                            onChange={adjustLastScan}
-                          />
-                          <span className="muted">
-                            {lastScan
-                              ? scanSummary(lastScan.quantity, lastScan.mode, lastProduct.quantity)
-                              : t('{0} en stock', { 0: number(lastProduct.quantity) })}
-                          </span>
                           {!lastScan && (
                             <p role="status">
-                              {message(scanInvalidation) ||
-                                t(
-                                  'Produit créé sans mouvement. Scannez à nouveau pour ajuster une quantité traitée.',
-                                )}
+                              {createdWithoutRemoval
+                                ? t('Fiche créée · aucun retrait effectué.') +
+                                  ' ' +
+                                  t('{0} en stock', { 0: number(lastProduct.quantity) })
+                                : message(scanInvalidation) ||
+                                  t('{0} en stock', { 0: number(lastProduct.quantity) })}
                             </p>
-                          )}
-                          <button
-                            className="secondary-button"
-                            disabled={locked || scanning}
-                            onClick={() => scan(lastProduct.barcode ?? lastCode, true)}
-                          >
-                            <ScanLine size={17} /> {t('Scanner à nouveau')}
-                          </button>
-                          {canUndo && (
-                            <button className="text-button" disabled={locked} onClick={undoScan}>
-                              <Undo2 size={16} /> {t('Annuler la dernière opération')}
-                            </button>
                           )}
                         </section>
                       ) : (
-                        <section className="last-product no-product">
-                          <Package size={30} strokeWidth={1.3} />
-                          <h2>{t('Prêt pour le premier article')}</h2>
-                          <p>{t('Son stock actualisé apparaîtra ici après validation.')}</p>
-                        </section>
+                        <p className="scan-ready" ref={readyLabel} tabIndex={-1}>
+                          {mode === 1
+                            ? t('Prêt à scanner · Ajouter')
+                            : t('Prêt à scanner · Retirer')}
+                        </p>
                       )}
-                      {!shared && (
-                        <section className="demo-codes">
-                          <div className="section-eyebrow">{t('ESSAYER AVEC LA DÉMO')}</div>
-                          {[
-                            { name: 'Penne rigate', code: '8076802085738' },
-                            { name: 'Thon au naturel', code: '3019081234567' },
-                            { name: t('Produit inconnu'), code: '1234567890128' },
-                          ].map((c) => (
-                            <button
-                              key={c.code}
-                              onClick={() => {
-                                setCode(c.code);
-                                input.current?.focus();
-                              }}
-                            >
-                              <span>
-                                {c.name}
-                                <small>{c.code}</small>
-                              </span>
-                              <ArrowLeft size={16} />
-                            </button>
-                          ))}
-                        </section>
-                      )}
-                    </aside>
-                  </div>
-                </>
+                    </div>
+                    {scanHeld && (
+                      <div className="scan-next-actions">
+                        <button
+                          className="secondary-button"
+                          disabled={locked || scanning}
+                          ref={continueButton}
+                          onClick={continueScanning}
+                        >
+                          {t('Continuer à scanner')}
+                        </button>
+                        {lastProduct && scanPhase === 'done' && (
+                          <button
+                            className="text-button"
+                            disabled={locked || scanning}
+                            onClick={() => void scan(lastProduct.barcode ?? lastCode, true)}
+                          >
+                            <ScanLine size={17} />
+                            {t('Scanner à nouveau')}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    <details
+                      className="manual-code"
+                      open={manualOpen}
+                      onToggle={(event) => {
+                        setManualOpen(event.currentTarget.open);
+                        if (event.currentTarget.open) input.current?.focus();
+                      }}
+                    >
+                      <summary>{t('Saisir un code-barres')}</summary>
+                      <form
+                        className="scan-form"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void scan(code);
+                        }}
+                      >
+                        <label htmlFor="barcode">{t('Code-barres')}</label>
+                        <div>
+                          <input
+                            id="barcode"
+                            ref={input}
+                            inputMode="numeric"
+                            autoComplete="off"
+                            value={code}
+                            onChange={(event) => setCode(event.target.value)}
+                            placeholder={t('Ex. 8076802085738')}
+                            maxLength={32}
+                            required
+                          />
+                          <button
+                            className={mode === 1 ? 'primary-button' : 'primary-button red'}
+                            type="submit"
+                            disabled={locked || scanning}
+                          >
+                            <ScanLine size={19} />
+                            {t('Valider')}
+                          </button>
+                        </div>
+                      </form>
+                    </details>
+                    {scanHeld && scanPhase === 'done' && lastProduct?.external && (
+                      <details className="image-attribution">
+                        <summary>{t('Source et crédits')}</summary>
+                        <ProductAttribution
+                          barcode={lastProduct.external.barcode}
+                          image={!lastProduct.photo && !!lastProduct.external.imageUrl}
+                        />
+                      </details>
+                    )}
+                    <LookupIndicator provider={productProvider} />
+                    {shared && (
+                      <details className="scanner-diagnostics">
+                        <summary>{t('Diagnostic du scanner')}</summary>
+                        <p>
+                          {t('Version')} {__APP_BUILD_INFO__.revision} · {number(state.revision)}
+                        </p>
+                        <p>
+                          {t('Ajustement :')} {lastScan ? t('possible') : t('désactivé')}
+                        </p>
+                      </details>
+                    )}
+                    {!shared && (
+                      <details className="demo-codes">
+                        <summary>{t('ESSAYER AVEC LA DÉMO')}</summary>
+                        {[
+                          { name: 'Penne rigate', code: '8076802085738' },
+                          { name: 'Thon au naturel', code: '3019081234567' },
+                          { name: t('Produit inconnu'), code: '1234567890128' },
+                        ].map((item) => (
+                          <button
+                            key={item.code}
+                            onClick={() => {
+                              setCode(item.code);
+                              const details = input.current?.closest('details');
+                              if (details) setManualOpen(true);
+                              input.current?.focus();
+                            }}
+                          >
+                            <span>
+                              {item.name}
+                              <small>{item.code}</small>
+                            </span>
+                            <ArrowLeft size={16} />
+                          </button>
+                        ))}
+                      </details>
+                    )}
+                  </section>
+                </div>
               </section>
               <section
                 className="page-pane"
@@ -1099,251 +1248,50 @@ export default function App({
                 inert={page !== 'shopping'}
                 aria-label={t('À acheter')}
               >
-                <>
-                  <div className="page-heading">
-                    <div>
-                      <h1>
-                        {t('À acheter')}
-                        <span>.</span>
-                      </h1>
-                      <p>
-                        {remaining.length
-                          ? shoppingCount(remaining.length)
-                          : t('Tout est prêt pour les prochaines courses.')}
-                      </p>
-                    </div>
-                    <span className="heading-icon">
-                      <ShoppingBasket size={31} strokeWidth={1.4} />
-                    </span>
-                  </div>
-                  <form
-                    className="shopping-add"
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const p = state.products.find((p) => p.id === shoppingProduct);
-                      if (
-                        shared
-                          ? await shared.store.addShopping(
-                              p?.name ?? shoppingName,
-                              shoppingQuantity,
-                              p?.id,
-                            )
-                          : commit(
-                              (s) =>
-                                addShopping(s, p?.name ?? shoppingName, shoppingQuantity, p?.id),
-                              'Article ajouté aux courses.',
-                            )
-                      ) {
-                        setShoppingName('');
-                        setShoppingProduct('');
-                        setShoppingQuantity(1);
-                      }
-                    }}
-                  >
-                    <label>
-                      {t('Ajouter un article')}{' '}
-                      <select
-                        aria-label={t('Choisir un produit du catalogue ou un article libre')}
-                        value={shoppingProduct}
-                        onChange={(e) => setShoppingProduct(e.target.value)}
-                      >
-                        <option value="">{t('Article libre')}</option>
-                        {state.products.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} {[p.brand, packageLabel(p)].filter(Boolean).join(' · ')}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {!shoppingProduct && (
-                      <label className="shopping-name">
-                        {t('Nom')}{' '}
-                        <input
-                          aria-label={t('Nom de l’article libre')}
-                          required
-                          maxLength={120}
-                          placeholder={t('Ex. Éponges, sacs congélation…')}
-                          value={shoppingName}
-                          onChange={(e) => setShoppingName(e.target.value)}
-                        />
-                      </label>
-                    )}
-                    <label className="shopping-qty">
-                      {t('Quantité')}{' '}
-                      <input
-                        aria-label={t('Quantité à acheter')}
-                        type="number"
-                        required
-                        min="1"
-                        max={MAX_QUANTITY}
-                        value={shoppingQuantity}
-                        onChange={(e) => setShoppingQuantity(Number(e.target.value))}
-                      />
-                    </label>
-                    <button type="submit" className="primary-button" disabled={locked}>
-                      <Plus size={18} /> {t('Ajouter')}
-                    </button>
-                  </form>
-                  <section className="shopping-list" aria-label={t('Liste de courses')}>
-                    {[...remaining, ...checked].map((item) => {
-                      const product = state.products.find((p) => p.id === item.productId);
-                      return (
-                        <article
-                          key={item.id}
-                          className={`shopping-row ${item.checked ? 'checked' : ''}`}
-                        >
-                          <button
-                            className="check-item"
-                            aria-label={`${item.checked ? t('Décocher') : t('Cocher')} ${item.name}`}
-                            aria-pressed={item.checked}
-                            disabled={locked}
-                            onClick={() =>
-                              shared
-                                ? void shared.store.updateShopping(item.id, {
-                                    checked: !item.checked,
-                                  })
-                                : commit((s) => ({
-                                    ...s,
-                                    shopping: s.shopping.map((i) =>
-                                      i.id === item.id
-                                        ? {
-                                            ...i,
-                                            checked: !i.checked,
-                                            quantity: !i.checked
-                                              ? i.quantity
-                                              : Math.max(1, i.quantity),
-                                          }
-                                        : i,
-                                    ),
-                                  }))
-                            }
-                          >
-                            {item.checked && <Check size={17} />}
-                          </button>
-                          <div className="shopping-item-name">
-                            <strong>{item.name}</strong>
-                            <span>
-                              {product
-                                ? [product.brand, packageLabel(product)]
-                                    .filter(Boolean)
-                                    .join(' · ') || t('Produit du catalogue')
-                                : t('Article libre')}
-                            </span>
-                          </div>
-                          <Quantity
-                            name={item.name}
-                            value={item.quantity}
-                            zeroAllowed={false}
-                            locked={locked}
-                            onChange={(delta) =>
-                              shared
-                                ? void shared.store.updateShopping(item.id, {
-                                    quantity: Math.max(1, item.quantity + delta),
-                                    checked: false,
-                                  })
-                                : commit((s) => ({
-                                    ...s,
-                                    shopping: s.shopping.map((i) =>
-                                      i.id === item.id
-                                        ? {
-                                            ...i,
-                                            quantity: Math.max(1, i.quantity + delta),
-                                            checked: false,
-                                          }
-                                        : i,
-                                    ),
-                                  }))
-                            }
-                          />
-                          <button
-                            className="icon-button remove-item"
-                            aria-label={t('Supprimer {0} des courses', { 0: item.name })}
-                            disabled={locked}
-                            onClick={() =>
-                              shared
-                                ? void shared.store.deleteShopping(item.id)
-                                : commit((s) => ({
-                                    ...s,
-                                    shopping: s.shopping.filter((i) => i.id !== item.id),
-                                  }))
-                            }
-                          >
-                            <Trash2 size={17} />
-                          </button>
-                        </article>
-                      );
-                    })}
-                    {state.shopping.length === 0 && (
-                      <div className="empty-state">
-                        <ShoppingBasket size={32} />
-                        <h2>{t('Une liste toute légère')}</h2>
-                        <p>{t('Ajoutez un article ou choisissez une suggestion.')}</p>
-                      </div>
-                    )}
-                  </section>
-                  {checked.length > 0 && (
-                    <button
-                      className="text-button clear-checked"
-                      disabled={locked}
-                      onClick={() =>
-                        shared
-                          ? void shared.store.clearChecked()
-                          : commit(
-                              (s) => ({ ...s, shopping: s.shopping.filter((i) => !i.checked) }),
-                              'Articles cochés supprimés.',
-                            )
-                      }
-                    >
-                      <CheckCheck size={17} /> {t('Effacer les articles cochés (')}
-                      {number(checked.length)})
-                    </button>
-                  )}
-                  {low.length > 0 && (
-                    <section className="suggestions">
-                      <div className="suggestions-title">
-                        <span className="suggestion-icon">
-                          <ShoppingCart size={20} />
-                        </span>
-                        <div>
-                          <h2>{t('À réapprovisionner')}</h2>
-                          <p>{t('D’après les seuils que vous avez choisis.')}</p>
-                        </div>
-                      </div>
-                      {low.map(({ product: p, quantity }) => (
-                        <article className="suggestion-row" key={p.id}>
-                          <ProductImage product={p} />
-                          <div>
-                            <strong>{p.name}</strong>
-                            <span>
-                              {number(p.quantity)} {t('en stock · minimum')}{' '}
-                              {number(p.minimum ?? 0)}
-                            </span>
-                          </div>
-                          <button
-                            className="secondary-button"
-                            disabled={locked}
-                            onClick={() =>
-                              shared
-                                ? void shared.store.addShopping(p.name, quantity, p.id)
-                                : commit(
-                                    (s) => addShopping(s, p.name, quantity, p.id),
-                                    deferred('{0} ajouté aux courses.', { 0: p.name }),
-                                  )
-                            }
-                          >
-                            <Plus size={16} /> {t('Ajouter')} {number(quantity)}
-                          </button>
-                        </article>
-                      ))}
-                    </section>
-                  )}
-                  <p className="shopping-hint">
-                    <ScanLine size={17} />{' '}
-                    {t(
-                      'Un scan en mode Ajouter réduit les quantités à acheter des produits associés.',
-                    )}
-                  </p>
-                </>
+                <Shopping
+                  state={state}
+                  locked={locked}
+                  draft={shoppingName}
+                  setDraft={setShoppingName}
+                  add={addShoppingItem}
+                  replenish={() => setReplenishment(true)}
+                  update={(id, patch) =>
+                    shared
+                      ? void shared.store.updateShopping(id, patch)
+                      : void commit((s) => ({
+                          ...s,
+                          shopping: s.shopping.map((item) =>
+                            item.id === id
+                              ? {
+                                  ...item,
+                                  ...patch,
+                                  quantity:
+                                    patch.quantity ??
+                                    (patch.checked === false
+                                      ? Math.max(1, item.quantity)
+                                      : item.quantity),
+                                }
+                              : item,
+                          ),
+                        }))
+                  }
+                  remove={(id) =>
+                    shared
+                      ? void shared.store.deleteShopping(id)
+                      : void commit((s) => ({
+                          ...s,
+                          shopping: s.shopping.filter((item) => item.id !== id),
+                        }))
+                  }
+                  clear={() =>
+                    shared
+                      ? void shared.store.clearChecked()
+                      : void commit(
+                          (s) => ({ ...s, shopping: s.shopping.filter((item) => !item.checked) }),
+                          'Articles cochés supprimés.',
+                        )
+                  }
+                />
               </section>
             </div>
           </div>
@@ -1400,7 +1348,7 @@ export default function App({
           </button>
         ))}
       </nav>
-      {feedback && (
+      {feedback && !(page === 'scanner' && scanHeld) && (
         <div
           className={`toast ${feedback.error ? 'error' : ''}`}
           role={feedback.error ? 'alert' : 'status'}
@@ -1416,6 +1364,21 @@ export default function App({
             <X size={17} />
           </button>
         </div>
+      )}
+      {replenishment && (
+        <Replenishment
+          state={state}
+          locked={locked}
+          add={addShoppingItem}
+          close={() => setReplenishment(false)}
+          recovery={
+            shared ? (
+              recovery
+            ) : feedback?.error ? (
+              <p role="alert">{message(feedback.text)}</p>
+            ) : undefined
+          }
+        />
       )}
       {detail && !editor && !deleting && (
         <Modal title={detail.name} close={() => setDetailId(null)}>
@@ -1524,6 +1487,9 @@ export default function App({
               );
               if (!success) throw new Error(shared.store.getSnapshot().error);
               if (editor.fromScan) {
+                setScanPhase('done');
+                setCreatedWithoutRemoval(editor.mode === -1);
+                finishManualEntry();
                 lastRead.current = { code: product.barcode ?? '', time: Date.now() };
                 setLastCode(product.barcode ?? '');
               }
@@ -1566,6 +1532,8 @@ export default function App({
             ) {
               setEditor(null);
               if (fromScan) {
+                setScanPhase('done');
+                finishManualEntry();
                 if (operation) publishScan(operation);
                 else
                   setScanInvalidation(

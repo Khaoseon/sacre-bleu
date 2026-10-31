@@ -40,6 +40,13 @@ let reserve, server, browser;
 const origin = 'http://127.0.0.1:5190';
 const codes = ['3017620422003', '3274080005003'];
 const names = ['Produit A local', 'Produit B local'];
+async function present(page, code) {
+  const next = page.getByRole('button', { name: 'Continuer à scanner', exact: true });
+  if (await next.isVisible()) await next.click();
+  await page.evaluate((value) => {
+    window.fixtureBarcode = value;
+  }, code);
+}
 async function rpc(client, name, args) {
   const result = await client.rpc(name, args);
   if (result.error) throw new Error(`Local RPC failed: ${name}`);
@@ -195,13 +202,7 @@ try {
     await page.getByRole('button', { name: 'Activer la caméra', exact: true }).click();
     await page.waitForFunction(() => window.fixtureReads > 0);
   }
-  await Promise.all(
-    pages.map((page, index) =>
-      page.evaluate((code) => {
-        window.fixtureBarcode = code;
-      }, codes[index]),
-    ),
-  );
+  await Promise.all(pages.map((page, index) => present(page, codes[index])));
   await Promise.all(
     pages.map((page, index) =>
       page.locator('.last-product h2').filter({ hasText: names[index] }).waitFor(),
@@ -232,16 +233,7 @@ try {
   for (const product of snapshot.products) assert.equal(product.quantity, 1);
   for (const item of snapshot.shopping) assert.equal(item.quantity, 4);
   // A distinct new presentation on each camera works after the remote revision.
-  await Promise.all(
-    pages.map((page, index) =>
-      page.evaluate(
-        (code) => {
-          window.fixtureBarcode = code;
-        },
-        codes[1 - index],
-      ),
-    ),
-  );
+  await Promise.all(pages.map((page, index) => present(page, codes[1 - index])));
   await Promise.all(
     pages.map((page, index) =>
       page
@@ -255,15 +247,11 @@ try {
   for (const product of snapshot.products) assert.equal(product.quantity, 2);
   for (const item of snapshot.shopping) assert.equal(item.quantity, 3);
   // Unknown: internal wait opens a manual form, preserving the live camera.
-  await pages[0].evaluate(() => {
-    window.fixtureBarcode = '7613034626844';
-  });
+  await present(pages[0], '7613034626844');
   const form = pages[0].getByRole('dialog', { name: 'Nouveau code-barres' });
   await form.getByText(/Le créneau partagé OFF est occupé/).waitFor();
   await form.getByRole('button', { name: 'Fermer', exact: true }).click();
-  await pages[0].evaluate(() => {
-    window.fixtureBarcode = '3017620422003';
-  });
+  await present(pages[0], '3017620422003');
   await pages[0].locator('.last-product h2').filter({ hasText: names[0] }).waitFor();
   assert.equal(offRequests, 1);
   await pages[0]
@@ -280,9 +268,7 @@ try {
   await pages[0].screenshot({ path: '.tmp/scanner-off-cooldown-dark.png' });
   await pages[0].setViewportSize({ width: 390, height: 844 });
   dropMutation = true;
-  await pages[0].evaluate(() => {
-    window.fixtureBarcode = '3274080005003';
-  });
+  await present(pages[0], '3274080005003');
   await pages[0].getByRole('button', { name: 'Reprendre la demande', exact: true }).waitFor();
   const committed = await rpc(clients[0], 'get_reserve_snapshot', { p_reserve_id: reserve });
   const committedQuantity = committed.products.find((p) => p.id === ids[1]).quantity;
@@ -294,9 +280,7 @@ try {
     ).quantity,
     committedQuantity,
   );
-  await pages[0].evaluate(() => {
-    window.fixtureBarcode = '3017620422003';
-  });
+  await present(pages[0], '3017620422003');
   await pages[0].locator('.last-product h2').filter({ hasText: names[0] }).waitFor();
   assert.equal(offRequests, 1);
   assert.deepEqual(external, []);

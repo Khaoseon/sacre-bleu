@@ -129,11 +129,11 @@ try {
   );
   const nav = page.getByRole('navigation', { name: 'Navigation mobile' });
   await nav.getByRole('button', { name: 'À acheter' }).click();
-  await page.getByLabel('Nom de l’article libre').fill('Ma saisie en cours');
+  await page.getByLabel('Rechercher ou ajouter un article').fill('Ma saisie en cours');
   await page.getByRole('button', { name: 'Réglages', exact: true }).click();
   await lang().selectOption('en');
   await page.getByRole('button', { name: 'Close', exact: true }).click();
-  assert.equal(await page.getByLabel('Free-text item name').inputValue(), 'Ma saisie en cours');
+  assert.equal(await page.getByLabel('Search or add an item').inputValue(), 'Ma saisie en cours');
   await fits();
   await page
     .getByRole('navigation', { name: 'Mobile navigation' })

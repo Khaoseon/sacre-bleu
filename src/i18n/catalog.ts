@@ -1,5 +1,50 @@
 /** French source keys are stable presentation IDs, never stored business values. */
 export const catalog = {
+  'Créer sans retrait': { fr: 'Créer sans retrait', en: 'Create without removal' },
+  'Rechercher ou ajouter un article': {
+    fr: 'Rechercher ou ajouter un article',
+    en: 'Search or add an item',
+  },
+  'Ajouter comme article libre': {
+    fr: 'Ajouter comme article libre',
+    en: 'Add as a free-text item',
+  },
+  Parcourir: { fr: 'Parcourir', en: 'Browse' },
+  'Suggestions du catalogue': { fr: 'Suggestions du catalogue', en: 'Catalogue suggestions' },
+  'Ajouter un exemplaire': { fr: 'Ajouter un exemplaire', en: 'Add one package' },
+  'Associer ce produit': { fr: 'Associer ce produit', en: 'Link this product' },
+  'Voir plus': { fr: 'Voir plus', en: 'Show more' },
+  'Ajouter « {0} » comme article libre': {
+    fr: 'Ajouter « {0} » comme article libre',
+    en: 'Add “{0}” as a free-text item',
+  },
+  'Quantité et options de {0}': {
+    fr: 'Quantité et options de {0}',
+    en: 'Quantity and options for {0}',
+  },
+  'Déjà dans les courses': { fr: 'Déjà dans les courses', en: 'Already on the shopping list' },
+  'Aucun produit sous son seuil.': {
+    fr: 'Aucun produit sous son seuil.',
+    en: 'No product below its minimum.',
+  },
+  'Épuisés sans seuil': { fr: 'Épuisés sans seuil', en: 'Zero stock, no minimum' },
+  'Aucune quantité suggérée sans minimum défini.': {
+    fr: 'Aucune quantité suggérée sans minimum défini.',
+    en: 'No suggested quantity without a defined minimum.',
+  },
+  'Continuer à scanner': { fr: 'Continuer à scanner', en: 'Continue scanning' },
+  'Code détecté · enregistrement en cours…': {
+    fr: 'Code détecté · enregistrement en cours…',
+    en: 'Code detected · saving…',
+  },
+  'Lecture non enregistrée': { fr: 'Lecture non enregistrée', en: 'Scan not saved' },
+  'Prêt à scanner · Ajouter': { fr: 'Prêt à scanner · Ajouter', en: 'Ready to scan · Add' },
+  'Prêt à scanner · Retirer': { fr: 'Prêt à scanner · Retirer', en: 'Ready to scan · Remove' },
+  'Résultat confirmé': { fr: 'Résultat confirmé', en: 'Confirmed result' },
+  'Fiche créée · aucun retrait effectué.': {
+    fr: 'Fiche créée · aucun retrait effectué.',
+    en: 'Product created · no removal made.',
+  },
   'Abandonner les modifications': { fr: 'Abandonner les modifications', en: 'Discard changes' },
   'Continuer la saisie': { fr: 'Continuer la saisie', en: 'Continue editing' },
   'Modifications non enregistrées': { fr: 'Modifications non enregistrées', en: 'Unsaved changes' },
