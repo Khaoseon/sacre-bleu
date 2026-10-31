@@ -1,3 +1,7 @@
+# Phase 7A.2 · current verification
+
+[Current validation, defect regression map and limits](convergence/VALIDATION.md) · [Interactive comparisons and decision record](convergence/README.md) · [All actual captures](convergence/SCREENS.md). The dated 7A / 7A.1 results below remain historical evidence.
+
 # Phase 7A verification · 30 October 2026
 
 ## Phase 7A.1 refinement

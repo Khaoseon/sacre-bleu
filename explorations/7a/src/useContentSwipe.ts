@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { swipeDestination } from './gesture';
 
 // Local exploration only. Keep V1's hook untouched; device calibration follows review.
@@ -10,8 +10,12 @@ export function useContentSwipe(
   const ref = useRef<HTMLElement>(null);
   const latest = useRef({ index, navigate, blocked });
   latest.current = { index, navigate, blocked };
-  const [offset, setOffset] = useState(0);
-  const [dragging, setDragging] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const track = trackRef.current!;
+    track.classList.remove('dragging');
+    track.style.transform = `translate3d(${-index * 100}%,0,0)`;
+  }, [index]);
   const suppressUntil = useRef(0);
   useEffect(() => {
     const root = ref.current!;
@@ -24,10 +28,24 @@ export function useContentSwipe(
       locked: boolean;
       time: number;
     } | null = null;
+    let frame = 0,
+      offset = 0;
+    const paint = () => {
+      frame = 0;
+      const track = trackRef.current;
+      if (track)
+        track.style.transform = `translate3d(calc(${-latest.current.index * 100}% + ${offset}px),0,0)`;
+    };
     const reset = () => {
       g = null;
-      setOffset(0);
-      setDragging(false);
+      cancelAnimationFrame(frame);
+      frame = 0;
+      offset = 0;
+      const track = trackRef.current;
+      if (track) {
+        track.classList.remove('dragging');
+        track.style.transform = `translate3d(${-latest.current.index * 100}%,0,0)`;
+      }
     };
     const unavailable = () => latest.current.blocked || !!document.querySelector('dialog[open]');
     const start = (e: TouchEvent) => {
@@ -72,14 +90,15 @@ export function useContentSwipe(
       if (t.identifier !== g.id || (!g.locked && dy > 10 && dy >= Math.abs(dx))) return reset();
       if (!g.locked && Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.8) {
         g.locked = true;
-        setDragging(true);
+        trackRef.current?.classList.add('dragging');
       }
       if (!g.locked) return;
       if (!e.cancelable) return reset();
       e.preventDefault();
       suppressUntil.current = performance.now() + 450;
       const next = g.index + (dx < 0 ? 1 : -1);
-      setOffset(Math.max(-g.width, Math.min(g.width, dx * (next < 0 || next > 2 ? 0.18 : 1))));
+      offset = Math.max(-g.width, Math.min(g.width, dx * (next < 0 || next > 2 ? 0.18 : 1)));
+      if (!frame) frame = requestAnimationFrame(paint);
     };
     const end = (e: TouchEvent) => {
       const done = g;
@@ -107,6 +126,7 @@ export function useContentSwipe(
     window.addEventListener('resize', reset);
     document.addEventListener('visibilitychange', reset);
     return () => {
+      cancelAnimationFrame(frame);
       root.removeEventListener('touchstart', start);
       root.removeEventListener('touchmove', move);
       root.removeEventListener('touchend', end);
@@ -116,5 +136,5 @@ export function useContentSwipe(
       document.removeEventListener('visibilitychange', reset);
     };
   }, []);
-  return { ref, offset, dragging, suppressClick: () => performance.now() < suppressUntil.current };
+  return { ref, trackRef, suppressClick: () => performance.now() < suppressUntil.current };
 }

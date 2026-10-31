@@ -1,5 +1,7 @@
 # Sacré bleu V1.1 · Phase 7A / 7A.1
 
+**Latest review: [7A.2 convergence — interactive comparisons, recommendations and walkthrough](convergence/README.md). Launch the existing local server and open `/compare.html`. The 7A.1 text/captures below are retained as historical evidence.**
+
 **Current review: [Phase 7A.1 refinement, before/after and full screen matrix](REFINEMENT.md). No design approval, integration or deployment is implied.**
 
 The direction is **L’épicerie bleue**: an ivory canvas, ink-blue typography, restrained cobalt actions and generous product photographs. A pantry should feel like a carefully arranged cupboard. Its navigation still has exactly three destinations: Stock, Scanner and À acheter.

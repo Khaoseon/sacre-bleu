@@ -1,5 +1,15 @@
 # Private household product photos · proposal only
 
+## 7A.2 local selection experiment (31 October 2026)
+
+The new editor accepts **JPEG/PNG/WebP up to 20 MB and 50 megapixels**, decodes with the browser's orientation handling, draws at most 1600 px on its longest side and re-encodes a JPEG preview in memory. The 2.47 MB fictional kitchen fixture exercises an ordinary file larger than the old 500 KB limit. Choosing, replacing and removing are preview operations until Save confirms. Contain/fill is remembered **only in tab memory after confirmation**, not in production metadata or a persistent crop preference. Removing a personal override reveals the retained provider image/attribution. No image bytes leave the browser, enter storage or enter exported JSON.
+
+HEIC/HEIF is offered in the picker so an iPhone photograph produces an explicit supported-format explanation rather than disappearing silently. The local prototype **does not decode HEIC/HEIF**: it asks for JPEG conversion. The browser test uses deliberately invalid HEIC bytes to verify this failure path; it is not a real HEIC conversion test.
+
+For a future photo feature, replace the earlier 5 MB input hypothesis below with an evaluated large-phone input budget (initial proposal: 20 MB/50 MP). Investigate an approved local or trusted server HEIC/HEIF converter with explicit unsupported-format recovery; normalize EXIF orientation before reduction, preserve colour intentionally, strip EXIF/GPS and other metadata by bounded re-encoding, and impose output dimensions/bytes independently. Decode failures must retain the existing image and the rest of the draft. Browser orientation/canvas behavior and peak decode memory still need physical-device tests. A successful local preview is neither server validation nor a shared photo receipt.
+
+The authorization, immutable-object lifecycle, secure server validation, membership checks, private downloads and backup/restore proposal below remains unimplemented. Server validation must decode and inspect the actual bytes even when the client reports a sanitized JPEG. Do not add personal-photo paths to V1 JSON without the separately approved archive/versioning plan. No Storage bucket, migration or hosted service is part of 7A.2.
+
 No bucket, hosted migration, function, account or policy was created or changed in 7A. The prototype accepts a small local file into React memory only. This document proposes future architecture; it is not deployable configuration or a security certification.
 
 ## Contract and authorization

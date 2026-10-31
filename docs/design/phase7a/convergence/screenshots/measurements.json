@@ -1,0 +1,65 @@
+[
+  {
+    "viewport": "320x568",
+    "shelf": {
+      "firstTop": 290,
+      "fullProducts": 0,
+      "recognisableProducts": 2
+    },
+    "compactFullProducts": 1
+  },
+  {
+    "viewport": "320x812",
+    "shelf": {
+      "firstTop": 305,
+      "fullProducts": 2,
+      "recognisableProducts": 4
+    },
+    "compactFullProducts": 3
+  },
+  {
+    "viewport": "375x667",
+    "shelf": {
+      "firstTop": 307,
+      "fullProducts": 2,
+      "recognisableProducts": 2
+    },
+    "compactFullProducts": 2
+  },
+  {
+    "viewport": "375x812",
+    "shelf": {
+      "firstTop": 307,
+      "fullProducts": 2,
+      "recognisableProducts": 2
+    },
+    "compactFullProducts": 3
+  },
+  {
+    "viewport": "390x844",
+    "shelf": {
+      "firstTop": 307,
+      "fullProducts": 2,
+      "recognisableProducts": 4
+    },
+    "compactFullProducts": 4
+  },
+  {
+    "viewport": "430x932",
+    "shelf": {
+      "firstTop": 307,
+      "fullProducts": 2,
+      "recognisableProducts": 4
+    },
+    "compactFullProducts": 4
+  },
+  {
+    "viewport": "900x932",
+    "shelf": {
+      "firstTop": 320,
+      "fullProducts": 3,
+      "recognisableProducts": 3
+    },
+    "compactFullProducts": 4
+  }
+]

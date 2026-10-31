@@ -1,0 +1,14 @@
+[
+  {
+    "count": 100,
+    "filterMs": 33,
+    "touchScriptMs": 43,
+    "layoutMs": 0
+  },
+  {
+    "count": 300,
+    "filterMs": 72,
+    "touchScriptMs": 96,
+    "layoutMs": 0
+  }
+]

@@ -1,8 +1,10 @@
 /** Isolated exploration catalogue. The production entry point never imports it. */
 import { catalog } from './catalog';
+import { phase7a2Catalog } from './phase7a2';
 
 export const phase7aCatalog = {
   ...catalog,
+  ...phase7a2Catalog,
   'Cadrage de test': { fr: 'Cadrage de test', en: 'Crop test' },
   'Visuels synthétiques et images OFF locales. Aucun appel distant.': {
     fr: 'Visuels synthétiques et images OFF locales. Aucun appel distant.',

@@ -16,6 +16,7 @@ export const sampleImages: Record<string, string> = {
   cola,
   crop: spread,
   personal,
+  long: pasta,
 };
 export const imageConditions: Record<string, string> = {
   crop: 'poor-crop',
@@ -62,6 +63,17 @@ export function realityFixtures(): State {
         updatedAt,
       },
       ...state.products,
+      {
+        id: 'long',
+        name: 'Rigatoni au blé dur complet, fabrication artisanale et séchage lent — grand format familial',
+        brand: 'Maison Bleue',
+        category: 'Féculents',
+        size: 1500,
+        unit: 'g',
+        quantity: 9999,
+        updatedAt,
+      },
+      { id: 'salt', name: 'Sel de mer', category: 'Épicerie', quantity: 0, updatedAt },
       {
         id: 'broken',
         name: 'Image indisponible',
@@ -142,5 +154,26 @@ export function fixtures(): State {
       { id: 's2', name: 'Riz basmati', productId: 'rice', quantity: 1, checked: false },
       { id: 's3', name: 'Pain au levain', quantity: 1, checked: false },
     ],
+  };
+}
+
+/** Public/synthetic catalogue only; deterministic, bounded, never persisted. */
+export function largeFixtures(count: number): State {
+  const base = fixtures(),
+    size = Math.max(5, Math.min(1000, Number.isFinite(count) ? Math.floor(count) : 5));
+  return {
+    ...base,
+    shopping: [],
+    products: Array.from({ length: size }, (_, i) => {
+      const p = base.products[i % base.products.length];
+      if (i >= 5 && sampleImages[p.id]) sampleImages[`sample-${i}`] = sampleImages[p.id];
+      return {
+        ...p,
+        id: i < 5 ? p.id : `sample-${i}`,
+        barcode: i < 5 ? p.barcode : undefined,
+        name: i < 5 ? p.name : `${p.name} · ${String(i + 1).padStart(3, '0')}`,
+        quantity: i % 7 === 0 ? 0 : p.quantity,
+      };
+    }),
   };
 }
