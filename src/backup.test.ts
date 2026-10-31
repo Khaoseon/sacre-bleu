@@ -215,6 +215,40 @@ describe('portable user backup', () => {
   });
 });
 describe('private offline copy', () => {
+  it.each(['r/p/private.jpg', 'legacy/photo.webp'])(
+    'keeps current stock offline with opaque photo reference %s without allowing portable export',
+    async (path) => {
+      const storage = storageFixture();
+      const cache = new PrivateReserveCache(storage, 'photos');
+      cache.activate('u');
+      cache.write('u', snapshotFixture(), Date.now());
+      const latest = snapshotFixture();
+      latest.reserve.revision = 4;
+      latest.products[0].quantity = 7;
+      latest.products[0].photo_path = path;
+      latest.products[0].photo_version = 2;
+      const backend = { getSnapshot: async () => latest } as unknown as ReserveBackend;
+      const online = new SharedPantryStore(backend, 'u', 'r', storage, () => true, 100, cache);
+      await online.refresh();
+      expect(online.getSnapshot().cacheError).toBe('');
+      online.dispose();
+      cache.write('u', snapshotFixture(), Date.now());
+      const offline = new SharedPantryStore(backend, 'u', 'r', storage, () => false, 100, cache);
+      expect(offline.getSnapshot().status).toBe('offline');
+      expect(offline.getSnapshot().snapshot).toEqual(latest);
+      expect(offline.writable).toBe(false);
+      expect(() => backupSnapshot(latest)).toThrow(/photo privée/);
+      const broken = structuredClone(latest);
+      broken.shopping[0].product_id = 'missing';
+      expect(() => cache.write('u', broken, Date.now())).toThrow();
+      expect(cache.read('u')?.snapshot).toEqual(latest);
+      offline.dispose();
+      cache.activate('other');
+      expect(cache.read('u')).toBeNull();
+      cache.clear();
+      expect(Object.keys(storage)).toHaveLength(0);
+    },
+  );
   it('never sends an anonymous RPC when an expired session is temporarily unavailable', async () => {
     const rpc = vi.fn();
     const client = {

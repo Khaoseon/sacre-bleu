@@ -80,6 +80,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chrome
       - run: npm run test:photos:browser
+      - run: npm run test:release:browser
       - run: npm run test:phase5:browser
       - run: npm run test:scanners:browser
       - if: always()

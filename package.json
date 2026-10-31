@@ -42,6 +42,7 @@
     "test:db:api": "node --test scripts/backend/auth-api.integration.mjs",
     "test:photos:api": "node --test scripts/backend/photos.integration.mjs",
     "test:photos:browser": "node scripts/browser/photos.integration.mjs",
+    "test:release:browser": "node scripts/browser/release.integration.mjs",
     "db:lint": "supabase db lint --local --fail-on error",
     "backup:restore:local": "node scripts/backend/restore-local.mjs",
     "instance:config": "node scripts/backend/instance-config.mjs",

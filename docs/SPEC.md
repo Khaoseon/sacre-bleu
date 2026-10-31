@@ -40,7 +40,7 @@ The last confirmed private snapshot is cached separately by backend project/acco
 
 App-shell resources are cached by the service worker; private API responses are not. Camera decoding is a separate lazy-loaded same-origin chunk. Updates offer Actualiser/Plus tard and activate/reload only after the user's action and checks for forms, pending/uncertain work, scanner activity and other windows. No automatic clearing of Auth/demo/private storage to force an update.
 
-Mobile edge swipes navigate Stock → Scanner → À acheter without wrapping; buttons remain available. Interactive fields, vertical/multi-touch gestures and busy/modal states are protected. Android requests fullscreen; actual behavior and icon refresh depend on the browser/OS. Installed-device acceptance is separate from responsive/browser testing.
+Mobile content swipes navigate Stock → Scanner → À acheter without wrapping; the outer 24px remain reserved for system gestures and buttons remain available. Interactive fields, vertical/multi-touch gestures and busy/modal states are protected. Android requests fullscreen; actual behavior and icon refresh depend on the browser/OS. Installed-device acceptance is separate from responsive/browser testing.
 
 ## Interface language
 

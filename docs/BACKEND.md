@@ -18,7 +18,7 @@ Current architecture and invariants, consolidated from the [French backend recor
 
 Composite foreign keys prevent cross-reserve links. RLS is enabled on application tables. Exposed tables grant authenticated clients SELECT with membership policies; direct client INSERT/UPDATE/DELETE is not the write path. `private` is not an API schema and its tables have no direct client access. Anonymous clients cannot read pantry data or execute application RPCs.
 
-Mutating RPCs check non-anonymous authentication, confirmed email and membership; privileged actions also require ownership. Privileged functions use `search_path = ''`, qualified names and explicit execution grants, revoking default public execution. User-supplied role metadata grants no authority. The Edge Function uses a user's JWT and public project key, not a service-role key.
+Mutating RPCs check non-anonymous authentication, confirmed email and membership; privileged actions also require ownership. Privileged functions use `search_path = ''`, qualified names and explicit execution grants, revoking default public execution. User-supplied role metadata grants no authority. The OFF lookup Edge Function uses a user's JWT and public project key, not a service-role key. The private-photo processor has the separate server-only privilege described below.
 
 ## Public functions and typed client
 
