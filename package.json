@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "dev:7a": "vite --config explorations/7a/vite.config.ts",
+    "typecheck:7a": "tsc --project explorations/7a/tsconfig.json --noEmit",
+    "build:7a": "npm run typecheck:7a && vite build --config explorations/7a/vite.config.ts",
+    "test:7a:browser": "node explorations/7a/verify.mjs",
     "dev": "vite --host 127.0.0.1",
     "dev:cloud": "vite --mode cloud --host 127.0.0.1",
     "build": "tsc -b && vite build",
