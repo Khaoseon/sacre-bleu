@@ -1,5 +1,7 @@
 # Private household product photos · proposal only
 
+**7B-D implementation:** [the implementation and authorized rollout runbook](../PHASE7BD.md) supersedes this Storage proposal for the bounded V1.1 feature. Photos are transactional private PostgreSQL binaries, not Storage objects. The proposal below remains design history; its portable-photo archive is not implemented.
+
 ## 7A.2 local selection experiment (31 October 2026)
 
 The new editor accepts **JPEG/PNG/WebP up to 20 MB and 50 megapixels**, decodes with the browser's orientation handling, draws at most 1600 px on its longest side and re-encodes a JPEG preview in memory. The 2.47 MB fictional kitchen fixture exercises an ordinary file larger than the old 500 KB limit. Choosing, replacing and removing are preview operations until Save confirms. Contain/fill is remembered **only in tab memory after confirmation**, not in production metadata or a persistent crop preference. Removing a personal override reveals the retained provider image/attribution. No image bytes leave the browser, enter storage or enter exported JSON.

@@ -30,12 +30,28 @@ test('isolated administrative restore accepts only the verified historical prefi
   );
   assert.throws(() =>
     validateRestoreHistory(
-      [...all, '20261031000100'],
-      [...all, '20261031000100'].map((v) => v + '_example.sql'),
+      [...all, '20261101000100'],
+      [...all, '20261101000100'].map((v) => v + '_example.sql'),
     ),
   );
 });
 const versions = ['20261026000100', '20261026000200', '20261026000300', '20261028000100'];
+test('photo-aware backup and restore include private binaries only after the eighth migration', () => {
+  const all = [...versions, '20261029000100', '20261029000200', '20261030000100', '20261031000100'];
+  const names = all.map((v) => v + '_example.sql');
+  const rows = all.map((local) => ({ local, remote: local }));
+  const plan = backupPlan(rows, names);
+  assert(plan.tables.includes('private.product_photos'));
+  assert(plan.tables.includes('private.photo_rate'));
+  assert.match(fingerprintSQL(plan.tables), /private.product_photos/);
+  assert.doesNotThrow(() => validateRestoreHistory(all, names));
+  rows[7].remote = '';
+  assert.throws(() => backupPlan(rows, names));
+  const before = backupPlan(rows, names, false, false, false, false, true);
+  assert.equal(before.pendingVersion, '20261031000100');
+  assert(!before.tables.includes('private.product_photos'));
+  assert.equal(before.files.length, 7);
+});
 const files = versions.map((version) => `${version}_example.sql`);
 const applied = versions.map((version) => ({ local: version, remote: version }));
 const pending = applied.map((row, i) => ({ ...row, remote: i === 3 ? '' : row.remote }));

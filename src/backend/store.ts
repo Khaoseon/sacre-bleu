@@ -3,6 +3,7 @@ import { backendError, BackendError } from './errors';
 import { MAX_QUANTITY, type Product, type Sort, type State } from '../model';
 import type { PrivateReserveCache } from '../storage';
 import { validateBackup, type UserBackup } from '../model';
+import { stagePhoto, clearPhotoDrafts } from '../photos';
 
 export const PENDING_PREFIX = 'app-reserve.pending.v1:';
 export interface PendingIntent {
@@ -54,6 +55,8 @@ export function snapshotState(snapshot: ReserveSnapshot, sort: Sort): State {
       quantity: p.quantity,
       minimum: p.minimum ?? undefined,
       updatedAt: p.updated_at,
+      privatePhotoPath: p.photo_path ?? undefined,
+      privatePhotoVersion: p.photo_version ?? 0,
       external: p.off_barcode
         ? {
             provider: 'open-food-facts',
@@ -256,6 +259,7 @@ export class SharedPantryStore {
   offline = () =>
     this.publish({ status: 'offline', error: 'Hors ligne. Les modifications sont suspendues.' });
   dispose() {
+    clearPhotoDrafts(this.userId, this.reserveId);
     this.disposed = true;
     this.listeners.clear();
     this.view = { ...this.view, snapshot: null, scan: null, pending: null };
@@ -393,9 +397,12 @@ export class SharedPantryStore {
       if (failure.kind === 'rejected') {
         const message =
           (this.view.pending?.index ?? 0) > 0 &&
-          pending.steps[0].command.action === 'create_product'
-            ? `${failure.message} La fiche créée est conservée. Fermez ce formulaire puis scannez son code pour réessayer le mouvement.`
-            : failure.message;
+          pending.steps[this.view.pending?.index ?? 0]?.command.action === 'photo'
+            ? 'La fiche a été enregistrée, mais la photo n’a pas été modifiée par cette demande. Actualisez avant de réessayer.'
+            : (this.view.pending?.index ?? 0) > 0 &&
+                pending.steps[0].command.action === 'create_product'
+              ? `${failure.message} La fiche créée est conservée. Fermez ce formulaire puis scannez son code pour réessayer le mouvement.`
+              : failure.message;
         try {
           this.savePending(null);
         } catch {
@@ -460,7 +467,16 @@ export class SharedPantryStore {
       { productId: this.view.lastProductId ?? undefined },
     );
   }
-  saveProduct(product: Product, existing: boolean, fromScan = false, mode: 1 | -1 = 1) {
+  async saveProduct(product: Product, existing: boolean, fromScan = false, mode: 1 | -1 = 1) {
+    if (!this.writable) return false;
+    // Retrying a form after a rejected photo must not recreate or rescan the
+    // product whose earlier metadata/scan steps have already committed.
+    existing = existing || !!this.view.snapshot?.products.some((p) => p.id === product.id);
+    const photoHash =
+      typeof product.photoChange === 'string'
+        ? await stagePhoto(this.userId, this.reserveId, product.photoChange)
+        : null;
+    if (!this.writable) return false;
     const fields = {
       name: product.name.trim(),
       barcode: product.barcode ?? null,
@@ -493,6 +509,16 @@ export class SharedPantryStore {
       commands.push({
         action: 'scan',
         payload: { product_id: product.id, delta: product.quantity },
+      });
+    if (product.photoChange !== undefined)
+      commands.push({
+        action: 'photo',
+        payload: {
+          product_id: product.id,
+          expected_path: product.privatePhotoPath ?? null,
+          expected_version: product.privatePhotoVersion ?? 0,
+          hash: photoHash,
+        },
       });
     return this.mutate(commands, 'Produit enregistré.', {
       productId: product.id,

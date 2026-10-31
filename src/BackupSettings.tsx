@@ -40,7 +40,7 @@ export function BackupSettings({ store }: { store: SharedPantryStore }) {
       </p>
       <p>
         {t(
-          'Les images Open Food Facts restent des références en ligne ; aucune copie d’image n’est incluse. Les photos privées ne sont pas encore disponibles.',
+          'Les images OFF restent en ligne. Le JSON ne sauvegarde pas les photos privées : export et restauration JSON sont bloqués tant que la réserve en contient. Utilisez la sauvegarde administrative ou retirez les photos.',
         )}
       </p>
       <button

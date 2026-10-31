@@ -23,7 +23,7 @@ The authoritative validator is [model.ts](../src/model.ts), mirrored by the seve
 
 Lowercase UUIDs link rows within the file only. Names: 1–120 characters; brands: 1–80 or null; codes: 4–32 digit strings. Quantities/minimum: integers 0–9999. Package size: positive and at most 99999, paired with a supported unit or both null. Categories/units match the model. Timestamps are UTC ISO with milliseconds. Zero shopping quantity requires checked status. Reject duplicate IDs/barcodes, orphan links or a second unchecked linked entry for the same product. Maximum 2,000 products, 2,000 shopping rows and 2,000,000 bytes, enforced for the file/server representation.
 
-OFF references/provenance survive; images remain external URLs, not embedded files or guaranteed future downloads. Non-null private `photo_path` prevents export/restore rather than claiming an incomplete image backup. Demo photos and its older raw export are not this shared format.
+OFF references/provenance survive; images remain external URLs, not embedded files or guaranteed future downloads. Non-null private `photo_path` prevents export/restore rather than claiming an incomplete image backup. This guard remains unchanged with [7B-D private photos](design/PHASE7BD.md): remove the personal photos first or use the photo-aware administrative backup. No portable photo archive is introduced. Demo photos and its older raw export are not this shared format.
 
 Excluded: accounts, emails, password hashes, sessions/tokens, memberships/rights, invitations, reserve name/UUID, secrets, server versions, receipts and scan history. A user JSON export cannot recreate Auth.
 

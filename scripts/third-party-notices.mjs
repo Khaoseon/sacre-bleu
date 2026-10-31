@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Reviewed browser runtime closure, plus Workbox code emitted by generateSW.
+// Reviewed browser runtime closure, Workbox output, and the Edge JPEG processor.
 // Do not include build/test tools or type-only packages in deployed notices.
 const packages = [
   '@babel/helpers',
@@ -18,6 +18,7 @@ const packages = [
   '@zxing/library',
   'iceberg-js',
   'idb',
+  'jpeg-js',
   'lucide-react',
   'react',
   'react-dom',
@@ -33,7 +34,11 @@ const packages = [
 ];
 const root = fileURLToPath(new URL('../', import.meta.url));
 const lock = JSON.parse(readFileSync(resolve(root, 'package-lock.json'), 'utf8'));
-const normalize = (value) => value.replaceAll('\r\n', '\n').trim();
+const normalize = (value) =>
+  value
+    .replaceAll('\r\n', '\n')
+    .replace(/[ \t]+$/gm, '')
+    .trim();
 const sections = packages.map((name) => {
   const folder = resolve(root, 'node_modules', name);
   const metadata = JSON.parse(readFileSync(resolve(folder, 'package.json'), 'utf8'));
@@ -47,6 +52,17 @@ const sections = packages.map((name) => {
     throw new Error(`Review missing license for ${name}`);
   return [
     `${name}@${metadata.version} (${metadata.license})`,
+    ...(name === 'jpeg-js'
+      ? [
+          'Decoder/encoder attribution and licence notices (Apache-2.0 decoder; Adobe encoder):',
+          normalize(
+            readFileSync(resolve(folder, 'README.md'), 'utf8').match(
+              /## License([\s\S]*?)## Contributing/,
+            )[1],
+          ),
+          'The complete Apache License 2.0 text is reproduced elsewhere in this document.',
+        ]
+      : []),
     ...(name === '@trickfilm400/rollup-plugin-off-main-thread'
       ? [
           'The emitted AMD loader is generated/minified from loader.ejs; its source notice follows.',

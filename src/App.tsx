@@ -1407,7 +1407,7 @@ export default function App({
         <Modal title={detail.name} close={() => setDetailId(null)}>
           {shared && recovery}
           <div className="object-detail">
-            <ProductImage product={detail} />
+            <ProductImage product={detail} describe />
             <p>
               {[detail.brand, packageLabel(detail), detail.category && label(detail.category)]
                 .filter(Boolean)

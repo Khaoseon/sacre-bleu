@@ -8,6 +8,7 @@ export function validateRestoreHistory(versions, migrationFiles) {
     '20261029000100',
     '20261029000200',
     '20261030000100',
+    '20261031000100',
   ];
   if (
     !Array.isArray(versions) ||

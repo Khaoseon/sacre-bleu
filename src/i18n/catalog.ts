@@ -1,5 +1,41 @@
 /** French source keys are stable presentation IDs, never stored business values. */
 export const catalog = {
+  ' · Photo OFF ': { fr: ' · Photo OFF ', en: ' · OFF photo ' },
+  'La fiche a été enregistrée, mais la photo n’a pas été modifiée par cette demande. Actualisez avant de réessayer.':
+    {
+      fr: 'La fiche a été enregistrée, mais la photo n’a pas été modifiée par cette demande. Actualisez avant de réessayer.',
+      en: 'The product was saved, but this request did not change the photo. Refresh before trying again.',
+    },
+  'Les images OFF restent en ligne. Le JSON ne sauvegarde pas les photos privées : export et restauration JSON sont bloqués tant que la réserve en contient. Utilisez la sauvegarde administrative ou retirez les photos.':
+    {
+      fr: 'Les images OFF restent en ligne. Le JSON ne sauvegarde pas les photos privées : export et restauration JSON sont bloqués tant que la réserve en contient. Utilisez la sauvegarde administrative ou retirez les photos.',
+      en: 'OFF images remain online. JSON does not back up private photos: JSON export and restore are blocked while the pantry contains any. Use an administrative backup or remove the photos.',
+    },
+  'JPG, PNG ou WebP · 20 Mo max.': {
+    fr: 'JPG, PNG ou WebP · 20 Mo max.',
+    en: 'JPG, PNG or WebP · max. 20 MB',
+  },
+  'Photo privée partagée avec la réserve, en ligne uniquement. Le JSON ne contient pas les photos privées.':
+    {
+      fr: 'Photo privée partagée avec la réserve, en ligne uniquement. Le JSON ne contient pas les photos privées.',
+      en: 'Private photo shared with this pantry, online only. JSON does not include private photos.',
+    },
+  'Format non pris en charge. Convertissez la photo en JPG, PNG ou WebP.': {
+    fr: 'Format non pris en charge. Convertissez la photo en JPG, PNG ou WebP.',
+    en: 'Unsupported format. Convert the photo to JPG, PNG or WebP.',
+  },
+  'Choisissez une photo de moins de 20 Mo et 50 mégapixels.': {
+    fr: 'Choisissez une photo de moins de 20 Mo et 50 mégapixels.',
+    en: 'Choose a photo smaller than 20 MB and 50 megapixels.',
+  },
+  'Photo non enregistrée. Sélectionnez-la à nouveau.': {
+    fr: 'Photo non enregistrée. Sélectionnez-la à nouveau.',
+    en: 'Photo was not saved. Select it again.',
+  },
+  'Photo personnelle indisponible. Image OFF ou catégorie affichée.': {
+    fr: 'Photo personnelle indisponible. Image OFF ou catégorie affichée.',
+    en: 'Personal photo unavailable. Showing the OFF image or category.',
+  },
   'Créer sans retrait': { fr: 'Créer sans retrait', en: 'Create without removal' },
   'Rechercher ou ajouter un article': {
     fr: 'Rechercher ou ajouter un article',

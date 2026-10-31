@@ -10,6 +10,11 @@ export interface Product {
   size?: number;
   unit?: Unit;
   photo?: string;
+  /** Opaque shared locator; never treated as an image URL. */
+  privatePhotoPath?: string;
+  privatePhotoVersion?: number;
+  /** Editor-only intent: undefined preserves, null removes, JPEG data URL replaces. */
+  photoChange?: string | null;
   external?: ExternalReference;
   category?: Category;
   quantity: number;

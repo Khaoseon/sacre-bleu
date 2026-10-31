@@ -19,6 +19,7 @@ import { consumeLink, invitationLink, type Invitation, type IncomingLink } from 
 import { clearPrivateIntents, PENDING_PREFIX, SharedPantryStore } from './backend/store';
 import { usePantry } from './backend/usePantry';
 import { EdgeProductProvider } from './productLookupClient';
+import { PrivatePhotos } from './ui/PrivatePhotos';
 
 const backend = client ? new SupabaseBackend(client) : null;
 const auth = client ? new ReserveAuth(client) : null;
@@ -676,12 +677,21 @@ function PantryScreen({
       </Gate>
     );
   return (
-    <App
-      theme={theme}
-      shared={{ store, view }}
-      productProvider={productProvider}
-      accountSettings={<SharingSettings session={session} store={store} logout={logout} />}
-    />
+    <PrivatePhotos
+      scope={{
+        client: client!,
+        account: session.user.id,
+        reserve: store.reserveId,
+        online: view.status === 'ready',
+      }}
+    >
+      <App
+        theme={theme}
+        shared={{ store, view }}
+        productProvider={productProvider}
+        accountSettings={<SharingSettings session={session} store={store} logout={logout} />}
+      />
+    </PrivatePhotos>
   );
 }
 function SharedScope({

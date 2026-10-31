@@ -3,6 +3,7 @@ const phase4Version = '20261028000100';
 const lookupBudgetVersion = '20261029000100';
 const scanConflictVersion = '20261029000200';
 const userRestoreVersion = '20261030000100';
+const photoVersion = '20261031000100';
 const baselineTables = [
   'auth.users',
   'auth.identities',
@@ -24,9 +25,12 @@ export function backupPlan(
   beforeLookupBudget = false,
   beforeV1Conflicts = false,
   beforePhase5 = false,
+  beforePhotos = false,
 ) {
   if (
-    [beforePhase4, beforeLookupBudget, beforeV1Conflicts, beforePhase5].filter(Boolean).length > 1
+    [beforePhase4, beforeLookupBudget, beforeV1Conflicts, beforePhase5, beforePhotos].filter(
+      Boolean,
+    ).length > 1
   )
     throw new Error('Choisir un seul précontrôle de migration.');
   if (
@@ -48,7 +52,8 @@ export function backupPlan(
     ...(rows.length >= 4 ? [phase4Version] : []),
     ...(rows.length >= 5 ? [lookupBudgetVersion] : []),
     ...(rows.length >= 6 ? [scanConflictVersion] : []),
-    ...(rows.length === 7 ? [userRestoreVersion] : []),
+    ...(rows.length >= 7 ? [userRestoreVersion] : []),
+    ...(rows.length === 8 ? [photoVersion] : []),
   ];
   if (
     local.length !== supported.length ||
@@ -100,6 +105,16 @@ export function backupPlan(
       throw new Error(
         'Le précontrôle phase 5 exige exactement six migrations appliquées et la seule restauration utilisateur en attente.',
       );
+  } else if (beforePhotos) {
+    if (
+      rows.length !== 8 ||
+      applied.length !== 7 ||
+      rows.slice(0, 7).some((r) => r.local !== r.remote) ||
+      rows[7].remote
+    )
+      throw new Error(
+        'Le précontrôle photo exige sept migrations appliquées et la seule migration photo en attente.',
+      );
   } else if (applied.length !== rows.length) {
     throw new Error(
       'Migration en attente : utiliser un mode de précontrôle explicite après examen.',
@@ -115,11 +130,16 @@ export function backupPlan(
           ? scanConflictVersion
           : beforePhase5
             ? userRestoreVersion
-            : null,
+            : beforePhotos
+              ? photoVersion
+              : null,
     pendingVersions: rows.filter((row) => !row.remote).map((row) => row.local),
     files: names.filter((name) => applied.some((row) => name.startsWith(row.remote + '_'))),
     tables: [
       ...baselineTables,
+      ...(applied.some((row) => row.remote === photoVersion)
+        ? ['private.product_photos', 'private.photo_rate']
+        : []),
       ...(applied.some((row) => row.remote === phase4Version)
         ? ['private.product_lookup_gate']
         : []),
@@ -133,7 +153,15 @@ export function fingerprintSQL(tables) {
     !Array.isArray(tables) ||
     !tables.length ||
     new Set(tables).size !== tables.length ||
-    tables.some((name) => ![...baselineTables, 'private.product_lookup_gate'].includes(name))
+    tables.some(
+      (name) =>
+        ![
+          ...baselineTables,
+          'private.product_lookup_gate',
+          'private.product_photos',
+          'private.photo_rate',
+        ].includes(name),
+    )
   )
     throw new Error('Table hors du périmètre de sauvegarde.');
   return `select jsonb_build_object(${tables.map((name) => `'${name}',(select encode(extensions.digest(coalesce(string_agg(to_jsonb(t)::text,E'\\n' order by to_jsonb(t)::text collate "C"),''),'sha256'),'hex') from ${name} t)`).join(',')}) as fingerprint`;

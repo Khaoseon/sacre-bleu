@@ -9,6 +9,7 @@ import type {
 import { backendError, BackendError } from './errors';
 import { categories, units } from '../model';
 import { imageUrl, isLookupBarcode } from '../productInfo';
+import { photoDraft, clearPhotoDrafts } from '../photos';
 
 function object(value: Json): Record<string, Json | undefined> {
   if (!value || typeof value !== 'object' || Array.isArray(value))
@@ -146,6 +147,49 @@ export class SupabaseBackend implements ReserveBackend {
     reserveId: string,
     command: Parameters<ReserveBackend['execute']>[2],
   ): Promise<MutationReceipt> {
+    if (command.action === 'photo') {
+      const session = (await this.client.auth.getSession()).data.session;
+      if (!session) throw new BackendError('Vous n’avez pas accès à cette action.', 'rejected');
+      const bytes = command.payload.hash
+        ? photoDraft(session.user.id, reserveId, command.payload.hash)
+        : undefined;
+      const body = bytes ? new Blob([new Uint8Array(bytes)], { type: 'image/jpeg' }) : undefined;
+      // Once dispatched, retries resolve/fence this UUID without re-uploading.
+      // This also keeps recovery independent of the decoder's hourly budget.
+      clearPhotoDrafts(session.user.id, reserveId);
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/product-photo`,
+          {
+            method: 'POST',
+            cache: 'no-store',
+            redirect: 'error',
+            signal: AbortSignal.timeout(10000),
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              'Content-Type': 'image/jpeg',
+              'X-Photo-Intent': JSON.stringify({
+                request_id: requestId,
+                reserve_id: reserveId,
+                ...command.payload,
+              }),
+            },
+            body,
+          },
+        );
+        const data = await response.json();
+        if (!response.ok) throw backendError(data, response.status >= 500);
+        if (data.aborted)
+          throw new BackendError('Photo non enregistrée. Sélectionnez-la à nouveau.', 'rejected');
+        if (!Number.isSafeInteger(data.revision))
+          throw new BackendError('Résultat à vérifier par une reprise.', 'uncertain');
+        clearPhotoDrafts(session.user.id, reserveId);
+        return data as MutationReceipt;
+      } catch (error) {
+        throw backendError(error, true);
+      }
+    }
     const row = object(
       command.action === 'restore'
         ? await this.rpc('restore_reserve', {
