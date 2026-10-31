@@ -227,7 +227,12 @@ try {
         );
       }
       assert.ok(await form.evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth));
-      assert.equal(await form.locator('label > span').filter({ hasText: 'facultatif' }).count(), 4);
+      // Private photo input now displays its accepted formats instead of an optional hint.
+      assert.equal(await form.locator('label > span').filter({ hasText: 'facultatif' }).count(), 3);
+      assert.equal(
+        await form.getByText('JPG, PNG ou WebP · 20 Mo max.', { exact: true }).count(),
+        1,
+      );
       for (const name of ['name', 'brand', 'category', 'size', 'unit', 'quantity', 'barcode'])
         assert.ok(
           await form
