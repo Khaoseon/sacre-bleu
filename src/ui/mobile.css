@@ -90,6 +90,7 @@
 }
 .sb-foundation.sb-foundation .quantity > span {
   min-width: 36px;
+  flex-shrink: 0;
   font-weight: 600;
   color: var(--sb-color-text);
 }
@@ -360,7 +361,12 @@
     margin: 0 0 2px;
   }
   .sb-foundation.sb-foundation .inventory-shelf {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Retain two cards normally; enlarged text needs room for a four-digit
+       quantity and both 44px controls, so allow one column when necessary. */
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(100%, max(calc((100% - 18px) / 2), calc(92px + 4ch))), 1fr)
+    );
     gap: 8px 18px;
   }
   .sb-foundation.sb-foundation .inventory-shelf .product-image {

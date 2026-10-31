@@ -25,16 +25,26 @@ const port = Number(
   readFileSync('supabase/config.toml', 'utf8').match(/\[db\]\s*\nport\s*=\s*(\d+)/)?.[1],
 );
 const hash = (b) => createHash('sha256').update(b).digest('hex');
-// Wait only for this disposable local processor to boot, never for GitHub CI.
-for (let attempt = 0; ; attempt++) {
+// Wait for this disposable local processor, not for GitHub CI. Cold-starting
+// the Edge runtime can exceed the former eight-second window on shared runners.
+const startupDeadline = Date.now() + 45_000;
+let lastStartupStatus = 'no response';
+for (;;) {
   try {
-    if ((await fetch(new URL('/functions/v1/product-photo', api), { method: 'OPTIONS' })).ok) break;
-  } catch {}
-  if (attempt >= 80)
+    const response = await fetch(new URL('/functions/v1/product-photo', api), {
+      method: 'OPTIONS',
+      signal: AbortSignal.timeout(1500),
+    });
+    if (response.ok) break;
+    lastStartupStatus = `HTTP ${response.status}`;
+  } catch (error) {
+    lastStartupStatus = error instanceof Error ? error.name : 'request failed';
+  }
+  if (Date.now() >= startupDeadline)
     throw Error(
-      'Local photo Edge runtime unavailable; run supabase functions serve product-photo --no-verify-jwt',
+      `Local photo Edge runtime unavailable after 45s (${lastStartupStatus}); run supabase functions serve product-photo --no-verify-jwt`,
     );
-  await new Promise((r) => setTimeout(r, 100));
+  await new Promise((r) => setTimeout(r, 200));
 }
 const makeImage = (value = 200) =>
   jpeg.encode(

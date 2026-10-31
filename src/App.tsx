@@ -274,6 +274,7 @@ export default function App({
     if (view.busy) setFeedback(null);
     else if (view.error) setFeedback({ text: view.error, error: true });
     else if (view.notice) setFeedback({ text: view.notice });
+    else setFeedback(null);
     if (view.completed !== completion.current) {
       completion.current = view.completed;
       const completedProduct = view.snapshot?.products.find(
