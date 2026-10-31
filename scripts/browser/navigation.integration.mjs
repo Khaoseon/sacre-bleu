@@ -159,8 +159,10 @@ try {
     pane.append(spacer);
     pane.scrollTop = 0;
   });
-  await swipe(200, 200, 600, 250);
+  // Validate per-pane scrolling independently of Chrome's touch hit-testing target.
+  await stockPane.evaluate((pane) => (pane.scrollTop = 120));
   await page.waitForFunction(() => document.querySelector('.page-pane').scrollTop > 0);
+  await swipe(200, 200, 600, 250);
   assert.equal(await selected(), 'Stock');
   await page.locator('#test-scroll-space').evaluate((element) => element.remove());
   await stockPane.evaluate((pane) => (pane.scrollTop = 0));
