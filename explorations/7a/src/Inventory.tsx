@@ -130,7 +130,7 @@ export const Inventory = memo(function Inventory({
         <div className={`inventory inventory-${layout}`} data-layout={layout}>
           {products.map((p) => (
             <article
-              className={`product-card ${p.quantity === 0 ? 'exhausted' : ''}`}
+              className={`product-card ${p.quantity === 0 ? 'exhausted' : ''} ${p.name.length > 44 ? 'long-title' : ''}`}
               key={p.id}
               data-product={p.id}
             >

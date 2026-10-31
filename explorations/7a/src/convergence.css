@@ -1759,3 +1759,20 @@ main {
     opacity: 1;
   }
 }
+
+/* Long user/provider names retain reading width; ordinary rows stay compact. */
+@media (max-width: 599px) {
+  .inventory-compact .long-title .card-copy {
+    grid-column: 2/4;
+    grid-row: 1;
+  }
+  .inventory-compact .long-title .product-object {
+    grid-row: 1/3;
+  }
+  .inventory-compact .long-title .stepper {
+    grid-column: 2/4;
+    grid-row: 2;
+    justify-self: end;
+    margin-top: 8px;
+  }
+}

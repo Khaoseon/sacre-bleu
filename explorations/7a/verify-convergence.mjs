@@ -132,20 +132,33 @@ try {
     await done();
   }
   const cdp = await context.newCDPSession(page);
-  async function swipe(x, endX, y = 120, endY = y, { cancel = false, steps = 8, delay = 18 } = {}) {
+  async function swipe(
+    x,
+    endX,
+    y = 120,
+    endY = y,
+    { cancel = false, steps = 8, delay = 18, duration } = {},
+  ) {
+    // A recorded flick has event-time duration independent of runner/CDP scheduling.
+    const base = (Date.now() - 1000) / 1000;
     await cdp.send('Input.dispatchTouchEvent', {
       type: 'touchStart',
+      ...(duration === undefined ? {} : { timestamp: base }),
       touchPoints: [{ x, y, id: 1 }],
     });
     for (let i = 1; i <= steps; i++) {
       await cdp.send('Input.dispatchTouchEvent', {
         type: 'touchMove',
+        ...(duration === undefined
+          ? {}
+          : { timestamp: base + (duration * i) / (steps + 1) / 1000 }),
         touchPoints: [{ x: x + ((endX - x) * i) / steps, y: y + ((endY - y) * i) / steps, id: 1 }],
       });
       if (delay) await new Promise((r) => setTimeout(r, delay));
     }
     await cdp.send('Input.dispatchTouchEvent', {
       type: cancel ? 'touchCancel' : 'touchEnd',
+      ...(duration === undefined ? {} : { timestamp: base + duration / 1000 }),
       touchPoints: [],
     });
     await settle();
@@ -624,7 +637,7 @@ try {
   });
   assert.equal(edgeIgnored, true, 'App leaves system-edge events uncaptured');
   assert.equal(await current(), 'Stock');
-  await swipe(260, 215, 120, 120, { steps: 2, delay: 0 });
+  await swipe(260, 215, 120, 120, { steps: 2, delay: 0, duration: 60 });
   assert.equal(await current(), 'Scanner', 'Fast flick');
   await go('Stock');
   await active.getByRole('button', { name: 'Détails Huile d’olive', exact: true }).tap();

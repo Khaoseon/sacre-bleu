@@ -72,7 +72,7 @@ export function useContentSwipe(
         width: root.clientWidth,
         index: latest.current.index,
         locked: false,
-        time: performance.now(),
+        time: e.timeStamp,
       };
     };
     const move = (e: TouchEvent) => {
@@ -115,7 +115,7 @@ export function useContentSwipe(
       if (!t || root.clientWidth !== done.width) return;
       const dx = t.clientX - done.x,
         dy = Math.abs(t.clientY - done.y);
-      const next = swipeDestination(done.index, dx, dy, done.width, performance.now() - done.time);
+      const next = swipeDestination(done.index, dx, dy, done.width, e.timeStamp - done.time);
       if (next !== null) latest.current.navigate(next);
     };
     root.addEventListener('touchstart', start, { passive: true });
