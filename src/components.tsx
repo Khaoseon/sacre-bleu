@@ -1,4 +1,5 @@
 import type { DisplayMessage } from './i18n';
+import { ProductMedia } from './ui/ProductMedia';
 import { t, message, label, locale, number, packages } from './i18n';
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
@@ -47,21 +48,13 @@ const productIcons = {
 export function ProductImage({ product }: { product: Product }) {
   const Icon = product.id === 'thon' ? Fish : productIcons[product.category ?? 'Autres'];
   const src = product.photo ?? imageUrl(product.external?.imageUrl);
-  const [failed, setFailed] = useState<string>();
   return (
-    <span className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}>
-      {src && failed !== src ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={() => setFailed(src)}
-        />
-      ) : (
-        <Icon aria-hidden="true" size={28} strokeWidth={1.5} />
-      )}
-    </span>
+    <ProductMedia
+      src={src}
+      alt=""
+      className={`product-image image-${categories.indexOf(product.category ?? 'Autres')}`}
+      fallback={<Icon aria-hidden="true" size={28} strokeWidth={1.5} />}
+    />
   );
 }
 export function ProductAttribution({
