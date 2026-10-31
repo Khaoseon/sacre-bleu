@@ -832,9 +832,7 @@ try {
       `Production isolation ${file}`,
     );
   assert.equal(
-    files.some((f) =>
-      /pasta|chickpea|tomato|3017620422003|personal-lentils/.test(f),
-    ),
+    files.some((f) => /pasta|chickpea|tomato|3017620422003|personal-lentils/.test(f)),
     false,
   );
   console.log(
