@@ -105,6 +105,8 @@ try {
   await page.getByLabel('Product name', { exact: true }).fill(' ');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.getByText('Give the product a name.', { exact: true }).last().waitFor();
+  // Optional fields are intentionally collapsed in the V1.1 progressive editor.
+  await page.getByText('Product information', { exact: true }).click();
   await page.locator('[name="brand"]').fill('Ma marque');
   await page.locator('[name="category"]').selectOption('Légumineuses');
   await page.locator('[name="unit"]').selectOption('pièce');
@@ -118,6 +120,8 @@ try {
   assert.equal(await page.locator('[name="unit"]').inputValue(), 'pièce');
   await fits();
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+  // Switching language must retain the dirty draft until an explicit discard.
+  await page.getByRole('button', { name: 'Abandonner les modifications' }).click();
   assert.equal(
     await page.evaluate(() => localStorage.getItem('app-reserve.local.v1')),
     before,

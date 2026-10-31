@@ -149,8 +149,12 @@ try {
   assert.equal(await banner.count(), 0);
   await page.getByRole('button', { name: 'Essayer la démonstration sur cet appareil' }).click();
   await page
-    .getByRole('button', { name: /^Modifier / })
+    .getByRole('button', { name: /^Détails de / })
     .first()
+    .click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Modifier le produit', exact: true })
     .click();
   const editor = page.getByRole('dialog', { name: 'Modifier le produit' });
   await editor.locator('input[name="name"]').fill('Brouillon fictif à conserver');
@@ -164,6 +168,8 @@ try {
     'Brouillon fictif à conserver',
   );
   await editor.getByRole('button', { name: 'Fermer', exact: true }).click();
+  // The V1.1 editor requires an explicit decision before losing a dirty draft.
+  await editor.getByRole('button', { name: 'Abandonner les modifications' }).click();
   controls = await settings(true);
   await page.getByText('Données de démonstration', { exact: true }).click();
   await page.getByText(/La recherche Open Food Facts est désactivée/).waitFor();
