@@ -1,6 +1,7 @@
 @import './theme.css';
 @import './ui/foundations.css';
 @import './ui/mobile.css';
+@import './ui/finishing.css';
 
 :root {
   font-family: Inter, 'Segoe UI', Arial, sans-serif;

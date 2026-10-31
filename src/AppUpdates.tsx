@@ -47,7 +47,10 @@ export function AppUpdateHost() {
   return (
     <>
       {state.available && !state.deferred && !state.applying && (
-        <aside className="app-update-banner" aria-label={t('Mise à jour de l’application')}>
+        <aside
+          className="app-update-banner sb-foundation"
+          aria-label={t('Mise à jour de l’application')}
+        >
           <p role="status">{message(state.message) || t('Nouvelle version disponible.')}</p>
           <div>
             <button
@@ -65,7 +68,7 @@ export function AppUpdateHost() {
       )}
       <dialog
         ref={progress}
-        className="modal update-progress"
+        className="modal update-progress sb-foundation"
         aria-label={t('Actualisation de l’application')}
         onCancel={(event) => event.preventDefault()}
       >

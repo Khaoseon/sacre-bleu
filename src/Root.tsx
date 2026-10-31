@@ -53,7 +53,7 @@ function Gate({
 }) {
   const [settings, setSettings] = useState(false);
   return (
-    <main className="account-shell">
+    <main className="account-shell sb-foundation">
       <section className="account-card">
         <header>
           <a className="brand" href="/" aria-label="Sacré bleu">
@@ -83,8 +83,10 @@ function Gate({
       </section>
       {settings && (
         <Modal title={t('Paramètres')} close={() => setSettings(false)}>
-          <AppearanceSettings theme={theme} />
-          <AppInformation />
+          <div className="settings-content">
+            <AppearanceSettings theme={theme} />
+            <AppInformation />
+          </div>
         </Modal>
       )}
     </main>
