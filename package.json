@@ -19,6 +19,7 @@
     "test:phone": "node --test scripts/phone-serve.test.mjs",
     "test:off:browser": "node scripts/browser/off.integration.mjs",
     "test:ui:browser": "node scripts/browser/navigation.integration.mjs",
+    "test:polish:browser": "node scripts/browser/polish.integration.mjs",
     "test:pwa:browser": "node scripts/browser/updates.integration.mjs",
     "test:phase5:browser": "node scripts/browser/phase5.integration.mjs",
     "test:scanners:browser": "node scripts/browser/two-scanners.integration.mjs",

@@ -42,6 +42,7 @@ describe('shared saving feedback without moving the page content', () => {
     f.execute.mockImplementationOnce(() => new Promise((resolve) => (receipt = resolve)));
     f.getSnapshot.mockImplementationOnce(() => new Promise((resolve) => (snapshot = resolve)));
     expect(f.render()).not.toContain('sync-message');
+    expect(f.render()).not.toContain('Dernière synchronisation :');
     const saving = f.store.scanProduct('p', 1);
     const during = f.render();
     expect(during).toContain('<span role="status">Enregistrement…</span>');
@@ -76,5 +77,24 @@ describe('shared saving feedback without moving the page content', () => {
     expect(html).toContain('Reprendre la demande');
     expect(f.store.writable).toBe(false);
     expect(f.store.getSnapshot().completed).toBe(0);
+  });
+  it('keeps offline and cache errors visible without a permanent successful sync date', async () => {
+    const f = await setup();
+    const view = {
+      ...f.store.getSnapshot(),
+      status: 'offline' as const,
+      cacheError: 'La copie hors ligne n’a pas pu être conservée sur cet appareil.',
+    };
+    const html = renderToStaticMarkup(
+      <App
+        theme={{ preference: 'auto', chooseTheme: () => {}, error: '' }}
+        shared={{ store: f.store, view }}
+      />,
+    );
+    expect(html).toContain('Hors ligne · lecture seule');
+    expect(html).toContain('consultation uniquement');
+    expect(html).toContain('La copie hors ligne');
+    expect(html).toContain('sync-message');
+    expect(html).not.toContain('Dernière synchronisation :');
   });
 });

@@ -1,8 +1,11 @@
-import { useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronDown, Plus, ScanLine, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { Check, ChevronDown, Plus, ScanLine, Trash2, X } from 'lucide-react';
 import { Modal, Quantity, packageLabel } from './components';
-import { MAX_QUANTITY, selectProducts, type State } from './model';
+import { MAX_QUANTITY, selectProducts, type State, type ShoppingItem } from './model';
 import { number, shoppingCount, t } from './i18n';
+import { actionLabel } from './i18n/actions';
+import { ShoppingSwipeRow } from './ui/ShoppingSwipeRow';
 
 type ShoppingActions = {
   state: State;
@@ -20,14 +23,63 @@ export function Shopping({
   remove,
   clear,
   replenish,
+  active,
+  noticeBlocked,
+  restore,
 }: ShoppingActions & {
   draft: string;
   setDraft: (value: string) => void;
   update: (id: string, patch: { quantity?: number; checked?: boolean }) => void;
-  remove: (id: string) => void;
+  remove: (id: string) => Promise<boolean>;
   clear: () => void;
   replenish: () => void;
+  active: boolean;
+  noticeBlocked: boolean;
+  restore: (item: ShoppingItem) => Promise<boolean | 'pending'>;
 }) {
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [removed, setRemoved] = useState<ShoppingItem | null>(null);
+  const [noticeHeld, setNoticeHeld] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const mutation = useRef(false);
+  const focusAfterRemove = useRef(false);
+  useEffect(() => {
+    if (!removed || noticeHeld || removing || noticeBlocked) return;
+    const timer = window.setTimeout(() => setRemoved(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [removed, noticeHeld, removing, noticeBlocked]);
+  async function deleteItem(item: ShoppingItem) {
+    if (locked || mutation.current) return;
+    mutation.current = true;
+    setRemoving(true);
+    focusAfterRemove.current =
+      document.activeElement instanceof Element &&
+      !!document.activeElement.closest('.shopping-swipe');
+    try {
+      if (await remove(item.id)) {
+        setRemoved(item);
+        setRevealed(null);
+      }
+    } finally {
+      mutation.current = false;
+      setRemoving(false);
+    }
+  }
+  async function undoDelete() {
+    if (!removed || locked || mutation.current) return;
+    mutation.current = true;
+    setRemoving(true);
+    // Consume before sending: an uncertain RPC must be resumed, never recreated.
+    const item = removed;
+    setRemoved(null);
+    try {
+      if ((await restore(item)) === false) setRemoved(item);
+    } finally {
+      mutation.current = false;
+      setRemoving(false);
+      input.current?.focus({ preventScroll: true });
+    }
+  }
   const [browsing, setBrowsing] = useState(false);
   const [limit, setLimit] = useState(6);
   const [busy, setBusy] = useState(false);
@@ -155,59 +207,71 @@ export function Shopping({
         {[...remaining, ...checked].map((item) => {
           const product = state.products.find((p) => p.id === item.productId);
           return (
-            <article
-              className={`shopping-row essential-row ${item.checked ? 'checked' : ''}`}
+            <ShoppingSwipeRow
               key={item.id}
+              checked={item.checked}
+              locked={locked || removing}
+              active={active}
+              open={revealed === item.id}
+              reveal={(open) => setRevealed(open ? item.id : null)}
+              remove={() => void deleteItem(item)}
+              name={item.name}
             >
-              <button
-                className="shopping-check"
-                aria-label={`${item.checked ? t('Décocher') : t('Cocher')} ${item.name}`}
-                aria-pressed={item.checked}
-                disabled={locked}
-                onClick={() => update(item.id, { checked: !item.checked })}
+              <article
+                className={`shopping-row essential-row ${item.checked ? 'checked' : ''}`}
+                key={item.id}
               >
-                <span className="check-item" aria-hidden="true">
-                  {item.checked && <Check size={18} />}
-                </span>
-                <span className="shopping-item-name">
-                  <strong>{item.name}</strong>
-                  <span>
-                    {product
-                      ? [product.brand, packageLabel(product)].filter(Boolean).join(' · ') ||
-                        t('Produit du catalogue')
-                      : t('Article libre')}
+                <button
+                  className="shopping-check"
+                  aria-label={`${item.checked ? t('Décocher') : t('Cocher')} ${item.name}`}
+                  role="checkbox"
+                  aria-checked={item.checked}
+                  disabled={locked || removing}
+                  onClick={() => update(item.id, { checked: !item.checked })}
+                >
+                  <span className="check-item" aria-hidden="true">
+                    {item.checked && <Check size={18} />}
                   </span>
-                </span>
-              </button>
-              <details className="shopping-options">
-                <summary aria-label={t('Quantité et options de {0}', { 0: item.name })}>
-                  {number(item.quantity)} <ChevronDown size={16} />
-                </summary>
-                <div className="shopping-options-content">
-                  <Quantity
-                    name={item.name}
-                    value={item.quantity}
-                    zeroAllowed={false}
-                    max={MAX_QUANTITY}
-                    locked={locked}
-                    onChange={(delta) =>
-                      update(item.id, {
-                        quantity: Math.max(1, item.quantity + delta),
-                        checked: false,
-                      })
-                    }
-                  />
-                  <button
-                    className="icon-button"
-                    disabled={locked}
-                    aria-label={t('Supprimer {0} des courses', { 0: item.name })}
-                    onClick={() => remove(item.id)}
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </details>
-            </article>
+                  <span className="shopping-item-name">
+                    <strong>{item.name}</strong>
+                    <span>
+                      {product
+                        ? [product.brand, packageLabel(product)].filter(Boolean).join(' · ') ||
+                          t('Produit du catalogue')
+                        : t('Article libre')}
+                    </span>
+                  </span>
+                </button>
+                <details className="shopping-options">
+                  <summary aria-label={t('Quantité et options de {0}', { 0: item.name })}>
+                    {number(item.quantity)} <ChevronDown size={16} />
+                  </summary>
+                  <div className="shopping-options-content">
+                    <Quantity
+                      name={item.name}
+                      value={item.quantity}
+                      zeroAllowed={false}
+                      max={MAX_QUANTITY}
+                      locked={locked || removing}
+                      onChange={(delta) =>
+                        update(item.id, {
+                          quantity: Math.max(1, item.quantity + delta),
+                          checked: false,
+                        })
+                      }
+                    />
+                    <button
+                      className="icon-button"
+                      disabled={locked || removing}
+                      aria-label={t('Supprimer {0} des courses', { 0: item.name })}
+                      onClick={() => void deleteItem(item)}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </details>
+              </article>
+            </ShoppingSwipeRow>
           );
         })}
         {!state.shopping.length && (
@@ -227,6 +291,48 @@ export function Shopping({
         <ScanLine size={17} />
         {t('Un scan en mode Ajouter réduit les quantités à acheter des produits associés.')}
       </p>
+      {removed &&
+        active &&
+        !noticeBlocked &&
+        createPortal(
+          <div
+            className="toast shopping-undo"
+            role="status"
+            onPointerEnter={() => setNoticeHeld(true)}
+            onPointerLeave={() => setNoticeHeld(false)}
+            onFocus={() => setNoticeHeld(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setNoticeHeld(false);
+            }}
+          >
+            <span>
+              {t('Article supprimé.')}
+              <small>{t('Annuler remet l’article dans la liste à acheter.')}</small>
+            </span>
+            <button
+              disabled={locked || removing}
+              onClick={() => void undoDelete()}
+              ref={(element) => {
+                if (element && focusAfterRemove.current) {
+                  focusAfterRemove.current = false;
+                  element.focus({ preventScroll: true });
+                }
+              }}
+            >
+              {actionLabel('undoShoppingDeletion')}
+            </button>
+            <button
+              aria-label={t('Fermer le message')}
+              onClick={() => {
+                setRemoved(null);
+                input.current?.focus({ preventScroll: true });
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>,
+          input.current?.closest('.app-shell') ?? document.body,
+        )}
     </div>
   );
 }

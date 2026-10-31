@@ -1,5 +1,17 @@
 /** French source keys are stable presentation IDs, never stored business values. */
 export const catalog = {
+  'Article remis dans la liste à acheter.': {
+    fr: 'Article remis dans la liste à acheter.',
+    en: 'Item put back on the shopping list.',
+  },
+  'Le produit associé n’existe plus. Impossible de remettre cet article dans la liste.': {
+    fr: 'Le produit associé n’existe plus. Impossible de remettre cet article dans la liste.',
+    en: 'The linked product no longer exists. This item cannot be put back on the list.',
+  },
+  'Annuler remet l’article dans la liste à acheter.': {
+    fr: 'Annuler remet l’article dans la liste à acheter.',
+    en: 'Undo puts this item back on the shopping list.',
+  },
   ' · Photo OFF ': { fr: ' · Photo OFF ', en: ' · OFF photo ' },
   'La fiche a été enregistrée, mais la photo n’a pas été modifiée par cette demande. Actualisez avant de réessayer.':
     {
