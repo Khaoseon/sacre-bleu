@@ -71,9 +71,9 @@ try {
   const linked = shopping
     .locator('.shopping-row')
     .filter({ has: page.getByText('Barilla · 500 g', { exact: true }) });
-  await linked.getByRole('button', { name: 'Cocher Penne rigate', exact: true }).click();
+  await linked.getByRole('checkbox', { name: 'Cocher Penne rigate', exact: true }).click();
   assert.equal((await state()).shopping.find((i) => i.productId === 'pates').quantity, 2);
-  await linked.getByRole('button', { name: 'Décocher Penne rigate', exact: true }).click();
+  await linked.getByRole('checkbox', { name: 'Décocher Penne rigate', exact: true }).click();
   await linked.locator('summary').click();
   await linked.getByRole('button', { name: 'Ajouter un Penne rigate', exact: true }).click();
   assert.equal((await state()).shopping.find((i) => i.productId === 'pates').quantity, 3);
@@ -87,14 +87,14 @@ try {
       return original.call(this, k, v);
     };
   });
-  await linked.getByRole('button', { name: 'Cocher Penne rigate', exact: true }).click();
+  await linked.getByRole('checkbox', { name: 'Cocher Penne rigate', exact: true }).click();
   assert.equal((await state()).shopping.find((i) => i.productId === 'pates').checked, false);
   await entry.fill('Échec conservé');
   await shopping.getByRole('button', { name: 'Ajouter comme article libre', exact: true }).click();
   assert.equal(await entry.inputValue(), 'Échec conservé');
   await page.evaluate(() => window.restoreStorage());
   await entry.fill('');
-  await linked.getByRole('button', { name: 'Cocher Penne rigate', exact: true }).click();
+  await linked.getByRole('checkbox', { name: 'Cocher Penne rigate', exact: true }).click();
   await shopping.getByRole('button', { name: /Effacer les articles cochés/ }).click();
   assert.equal((await state()).shopping.filter((i) => i.productId === 'pates').length, 0);
   await row('Éponges').locator('summary').click();

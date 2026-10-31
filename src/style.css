@@ -1914,21 +1914,6 @@ h1 > span {
     border: 0;
     position: relative;
   }
-  .check-item:before {
-    content: '';
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--muted);
-    border-radius: 6px;
-    z-index: -1;
-  }
-  .checked .check-item {
-    background: none;
-  }
-  .checked .check-item:before {
-    background: var(--selected-surface);
-  }
   .suggestions-title h2 {
     font-size: 13px;
   }
@@ -2236,9 +2221,6 @@ h1 > span {
     width: 33px;
   }
 }
-.check-item:before {
-  z-index: 0;
-}
 .check-item > svg {
   position: relative;
   z-index: 1;
@@ -2256,7 +2238,6 @@ h1 > span {
 
 /* Theme-aware controls. These rules leave the existing layout unchanged. */
 .primary-button,
-.primary-button svg,
 .mode-toggle .active,
 .danger-button.filled,
 .primary-button.red,
@@ -2266,6 +2247,13 @@ h1 > span {
 }
 .mobile-nav > .selected {
   color: var(--accent-text);
+}
+.danger-button.filled,
+.primary-button.red {
+  color: var(--on-destructive);
+}
+.toast {
+  color: var(--toast-ink);
 }
 .checkbox-label input {
   accent-color: var(--accent-text);
@@ -2286,8 +2274,7 @@ h1 > span {
 .product-form input,
 .product-form select,
 .secondary-button,
-.check-item,
-.check-item:before {
+.check-item {
   border-color: var(--control-border);
 }
 button:disabled {
@@ -2512,11 +2499,7 @@ input::file-selector-button {
   margin: 0;
   overflow-wrap: anywhere;
 }
-.search-input:focus-within,
-.sort-control:focus-within {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
-}
+/* Focus belongs to the interactive control, never its decorative wrapper. */
 @media (max-width: 365px) {
   .theme-options span {
     font-size: 11px;

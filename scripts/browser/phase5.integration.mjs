@@ -416,7 +416,7 @@ try {
     .click();
   await page.getByRole('heading', { name: /acheter/ }).waitFor();
   assert.equal(
-    await page.getByRole('button', { name: 'Cocher Riz fictif', exact: true }).isDisabled(),
+    await page.getByRole('checkbox', { name: 'Cocher Riz fictif', exact: true }).isDisabled(),
     true,
   );
   // An expired token must still permit cached consultation during an outage.
