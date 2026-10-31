@@ -16,8 +16,8 @@ const entries = {
   'Mêmes produits et quantités au chargement. Chaque aperçu est indépendant ; changer de proposition réinitialise sa simulation.':
     'Same initial products and quantities. Each preview is independent; changing proposals resets its simulation.',
   'Ouvrir en plein écran': 'Open full screen',
-  'Recommandation : liste par défaut, étagère à la demande ; fiche objet, saisie unifiée et scanner par session. À valider visuellement.':
-    'Recommendation: list by default, optional shelf; object detail, unified entry and scan session. Awaiting visual approval.',
+  'Recommandation : étagère par défaut, liste à la demande ; fiche objet, saisie unifiée et scanner par session. À valider visuellement.':
+    'Recommendation: shelf by default, optional list; object detail, unified entry and scan session. Awaiting visual approval.',
   Modifier: 'Edit',
   'Supprimer le produit': 'Delete product',
   'Quantité à ajouter': 'Quantity to add',

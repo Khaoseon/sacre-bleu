@@ -9,7 +9,13 @@ import {
   Rows3,
   Grid2X2,
 } from 'lucide-react';
-import { categories, selectProducts, type Product, type State } from '../../../src/model';
+import {
+  categories,
+  normalize,
+  selectProducts,
+  type Product,
+  type State,
+} from '../../../src/model';
 import { ImageArea, Quantity, StockStatus, useText } from './ui';
 import mascot from '../../../public/icon-192.png';
 import { metadata } from './operations';
@@ -50,7 +56,9 @@ export const Inventory = memo(function Inventory({
   create: () => void;
 }) {
   const t = useText();
-  const products = selectProducts(state, query, category);
+  const products = selectProducts(state, '', category).filter((p) =>
+    normalize([p.name, p.brand, p.barcode].join(' ')).includes(normalize(query)),
+  );
   if (sorted)
     products.sort(
       (a, b) =>
@@ -146,7 +154,13 @@ export const Inventory = memo(function Inventory({
                 <button className="product-name" data-swipe-surface onClick={() => open(p)}>
                   {p.name}
                 </button>
-                <span className="package-size">{metadata(p) || t(p.category ?? 'Autres')}</span>
+                <span className="package-size">
+                  {layout === 'shelf'
+                    ? p.size
+                      ? `${p.size} ${p.unit ?? ''}`
+                      : ''
+                    : metadata(p) || t(p.category ?? 'Autres')}
+                </span>
                 <StockStatus product={p} />
               </div>
               <Quantity

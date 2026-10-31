@@ -91,7 +91,7 @@ function Prototype({
     [category, setCategory] = useState('Tout'),
     [sorted, setSorted] = useState(false);
   const [layout, setLayout] = useState<'shelf' | 'compact'>(
-      params.get('layout') === 'shelf' ? 'shelf' : 'compact',
+      params.get('layout') === 'compact' ? 'compact' : 'shelf',
     ),
     [composition, setComposition] = useState<'object' | 'split'>(
       params.get('detail') === 'split' ? 'split' : 'object',
@@ -330,7 +330,7 @@ function Prototype({
     setNotice('Vérification locale terminée · aucune écriture à rejouer.');
   }
   return (
-    <div className="atelier">
+    <div className={`atelier ${params.get('shelf') === 'stacked' ? 'shelf-variant' : ''}`}>
       <div className="prototype-ribbon">
         <span>{t('Atelier 7A.2 · simulation')}</span>
         <a href="/compare.html">{t('Comparer')}</a>

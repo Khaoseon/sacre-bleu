@@ -172,6 +172,8 @@ export function SheetFrame({
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = ref.current!;
     dialog.showModal();
+    if (dialog.classList.contains('product-sheet'))
+      dialog.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
     const viewport = window.visualViewport;
     const fit = () => {
       if (!viewport) return;
@@ -210,7 +212,9 @@ export function SheetFrame({
     >
       <div className="sheet-grip" aria-hidden="true" />
       <header className="sheet-header">
-        <h2 id="sheet-title">{title}</h2>
+        <h2 id="sheet-title" tabIndex={-1}>
+          {title}
+        </h2>
         <button className="round" aria-label={t('Fermer')} disabled={busy} onClick={close}>
           <X size={21} />
         </button>

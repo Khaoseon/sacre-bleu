@@ -119,7 +119,7 @@ function Compare() {
       </div>
       <p className="compare-note">
         {t(
-          'Recommandation : liste par défaut, étagère à la demande ; fiche objet, saisie unifiée et scanner par session. À valider visuellement.',
+          'Recommandation : étagère par défaut, liste à la demande ; fiche objet, saisie unifiée et scanner par session. À valider visuellement.',
         )}
       </p>
     </div>
