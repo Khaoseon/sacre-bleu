@@ -181,16 +181,21 @@ test('two real confirmed accounts share a reserve through the frontend adapter a
       },
     };
     expect(await a.saveProduct(product, false)).toBe(true);
+    // Private photos now require the dedicated processor: legacy metadata must
+    // reject forged references. Actual photo preservation is covered by the
+    // separate authenticated Edge/API photo integration test.
     const photoPath = `${reserveId}/${product.id}/reserved.webp`;
-    await owner.backend.execute(crypto.randomUUID(), reserveId, {
-      action: 'update_product',
-      payload: { product_id: product.id, photo_path: photoPath },
-    });
+    await expect(
+      owner.backend.execute(crypto.randomUUID(), reserveId, {
+        action: 'update_product',
+        payload: { product_id: product.id, photo_path: photoPath },
+      }),
+    ).rejects.toMatchObject({ code: '42501' });
     await a.refresh();
     expect(await a.saveProduct({ ...product, brand: 'Marque test', quantity: 9999 }, true)).toBe(
       true,
     );
-    expect(a.getSnapshot().snapshot?.products[0].photo_path === photoPath).toBe(true);
+    expect(a.getSnapshot().snapshot?.products[0].photo_path).toBeNull();
     expect(a.getSnapshot().snapshot?.products[0].off_barcode).toBe(product.external.barcode);
     expect(a.getSnapshot().snapshot?.products[0].off_image_url).toBe(product.external.imageUrl);
     expect(a.getSnapshot().snapshot?.products[0].quantity).toBe(0);
