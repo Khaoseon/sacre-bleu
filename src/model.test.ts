@@ -12,6 +12,14 @@ import {
 } from './model';
 
 describe('Quantités et catalogue', () => {
+  it('recherche le nom, la marque et le code sans modifier les identifiants', () => {
+    const state = demo();
+    expect(selectProducts(state, 'barilla').map((p) => p.id)).toEqual(['pates']);
+    expect(selectProducts(state, '8076802085738').map((p) => p.id)).toEqual(['pates']);
+    expect(selectProducts(state, 'pelees').map((p) => p.id)).toEqual(['tomates']);
+    expect(selectProducts(state, 'barilla', 'Conserves')).toEqual([]);
+    expect(state.products[0].barcode).toBe('8076802085738');
+  });
   it('ajoute et retire un emballage sans modifier la source', () => {
     const before = demo();
     const after = changeStock(before, 'pates', 1);

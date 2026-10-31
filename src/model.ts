@@ -372,7 +372,9 @@ export function selectProducts(state: State, query: string, category = 'Tout') {
   return state.products
     .filter(
       (p) =>
-        normalize(p.name).includes(normalize(query)) &&
+        normalize([p.name, p.brand, p.barcode].filter(Boolean).join(' ')).includes(
+          normalize(query),
+        ) &&
         (category === 'Tout' || p.category === category),
     )
     .sort(

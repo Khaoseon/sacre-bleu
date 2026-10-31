@@ -1,5 +1,15 @@
 /** French source keys are stable presentation IDs, never stored business values. */
 export const catalog = {
+  'Abandonner les modifications': { fr: 'Abandonner les modifications', en: 'Discard changes' },
+  'Continuer la saisie': { fr: 'Continuer la saisie', en: 'Continue editing' },
+  'Modifications non enregistrées': { fr: 'Modifications non enregistrées', en: 'Unsaved changes' },
+  'Informations produit': { fr: 'Informations produit', en: 'Product information' },
+  'Source et crédits': { fr: 'Source et crédits', en: 'Source and credits' },
+  'Ajouter aux courses': { fr: 'Ajouter aux courses', en: 'Add to shopping' },
+  Épuisé: { fr: 'Épuisé', en: 'Out of stock' },
+  'Vue photographique': { fr: 'Vue photographique', en: 'Photographic view' },
+  'Vue compacte': { fr: 'Vue compacte', en: 'Compact view' },
+  'Détails de {0}': { fr: 'Détails de {0}', en: 'Details of {0}' },
   'La sauvegarde locale ne peut pas être lue. Vos données n’ont pas été remplacées. Exportez-les avant de réinitialiser.':
     {
       fr: 'La sauvegarde locale ne peut pas être lue. Vos données n’ont pas été remplacées. Exportez-les avant de réinitialiser.',
