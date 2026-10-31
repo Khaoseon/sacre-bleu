@@ -199,16 +199,13 @@ try {
     .getByRole('navigation', { name: 'Navigation mobile' })
     .getByRole('button', { name: /^À acheter/ })
     .click();
-  await page.locator('.shopping-name input').fill('Article fictif non enregistré');
+  await page.locator('#shopping-entry').fill('Article fictif non enregistré');
   await banner.getByRole('button', { name: 'Actualiser', exact: true }).click();
   await banner
     .getByText('Terminez ou effacez la saisie dans À acheter avant d’actualiser.', { exact: true })
     .waitFor();
-  assert.equal(
-    await page.locator('.shopping-name input').inputValue(),
-    'Article fictif non enregistré',
-  );
-  await page.locator('.shopping-name input').fill('');
+  assert.equal(await page.locator('#shopping-entry').inputValue(), 'Article fictif non enregistré');
+  await page.locator('#shopping-entry').fill('');
   await page
     .getByRole('navigation', { name: 'Navigation mobile' })
     .getByRole('button', { name: 'Scanner', exact: true })

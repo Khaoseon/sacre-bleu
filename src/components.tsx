@@ -564,7 +564,8 @@ export function ProductForm({
               disabled={reading || saving || blocked}
               type="submit"
             >
-              <Check size={18} /> {t('Enregistrer')}
+              <Check size={18} />{' '}
+              {editor.fromScan && editor.mode === -1 ? t('Créer sans retrait') : t('Enregistrer')}
             </button>
           </footer>
         </fieldset>
