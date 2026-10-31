@@ -151,7 +151,7 @@ export function Modal({
     const previous = document.activeElement;
     dialog.showModal();
     (
-      dialog.querySelector<HTMLElement>('input:not([type="hidden"])') ??
+      dialog.querySelector<HTMLElement>('input:not([type="hidden"]):not([type="radio"])') ??
       dialog.querySelector<HTMLElement>('h2')
     )?.focus();
     const viewport = window.visualViewport;

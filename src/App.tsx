@@ -715,7 +715,20 @@ export default function App({
             </span>
           </div>
           <div className="topbar-actions">
-            <span className="local-button">
+            <span
+              className="local-button"
+              data-state={
+                shared
+                  ? shared.view.busy
+                    ? 'busy'
+                    : shared.view.pending
+                      ? 'pending'
+                      : shared.view.status
+                  : online
+                    ? 'ready'
+                    : 'offline'
+              }
+            >
               <span className="status-dot" />
               <span role="status">
                 {shared
@@ -924,7 +937,17 @@ export default function App({
                     {empty.map(productRow)}
                     {visible.length === 0 && (
                       <div className="empty-state">
-                        <Search size={30} />
+                        {query || category !== 'Tout' ? (
+                          <Search size={30} />
+                        ) : (
+                          <img
+                            className="empty-mascot"
+                            src="/logo.png"
+                            width="80"
+                            height="80"
+                            alt=""
+                          />
+                        )}
                         <h2>
                           {query || category !== 'Tout'
                             ? t('Aucun produit trouvé')

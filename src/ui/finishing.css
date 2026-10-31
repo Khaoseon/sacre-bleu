@@ -1,0 +1,262 @@
+/* Secondary production surfaces share the approved V1.1 semantic palette.
+   Keep this scoped: product and scanner compositions remain in mobile.css. */
+.account-shell.sb-foundation {
+  background: var(--sb-color-canvas);
+}
+.account-shell.sb-foundation .account-card {
+  background: var(--sb-color-surface);
+  border-color: var(--sb-color-border);
+  border-radius: var(--sb-radius-surface);
+  box-shadow: var(--sb-shadow-surface);
+  gap: var(--sb-space-5);
+  min-width: 0;
+}
+.account-shell.sb-foundation h1 {
+  font-size: var(--sb-text-title);
+  line-height: var(--sb-leading-title);
+}
+.account-shell.sb-foundation .brand {
+  color: var(--sb-color-brand);
+  font-family: var(--sb-font-display);
+  font-weight: 400;
+  gap: 8px;
+}
+.account-shell.sb-foundation :is(p, small) {
+  color: var(--sb-color-muted);
+}
+.sb-foundation.sb-foundation :is(button, input, select, summary) {
+  font-family: inherit;
+}
+.sb-foundation.sb-foundation :is(.primary-button, .secondary-button, .danger-button, .text-button) {
+  min-height: var(--sb-target);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.sb-foundation.sb-foundation :is(.primary-button, .secondary-button, .danger-button) {
+  border-radius: var(--sb-radius-control);
+  font-size: var(--sb-text-small);
+}
+.sb-foundation.sb-foundation .primary-button {
+  background: var(--sb-color-brand);
+  color: var(--sb-color-on-brand);
+}
+.sb-foundation.sb-foundation .secondary-button {
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  border-color: var(--sb-color-control-border);
+}
+.sb-foundation.sb-foundation :is(.text-button, .icon-button) {
+  color: var(--sb-color-brand);
+}
+.sb-foundation.sb-foundation .danger-button {
+  color: var(--sb-color-danger);
+  border-color: var(--sb-color-danger);
+  background: var(--sb-color-danger-surface);
+}
+.sb-foundation.sb-foundation button:disabled {
+  opacity: 1;
+  color: var(--sb-color-disabled);
+  background: var(--sb-color-disabled-surface);
+}
+.sb-foundation.sb-foundation :is(button, input, select, summary, a):focus-visible {
+  outline: var(--sb-focus-width) solid var(--sb-color-focus);
+  outline-offset: var(--sb-focus-offset);
+}
+.sb-foundation.sb-foundation
+  :is(.product-form, .invitation-result)
+  input:not([type='checkbox']):not([type='radio']),
+.sb-foundation.sb-foundation .language-settings select {
+  min-height: var(--sb-target);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  border: 1px solid var(--sb-color-control-border);
+  border-radius: var(--sb-radius-control);
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  padding: 10px 12px;
+  font-size: var(--sb-text-input);
+}
+.sb-foundation.sb-foundation .product-form label {
+  color: var(--sb-color-text);
+  font-size: var(--sb-text-small);
+}
+.sb-foundation.sb-foundation
+  :is(.form-note, .form-error, .settings-content p, .settings-content small, .account-card small) {
+  font-size: var(--sb-text-small);
+  line-height: 1.65;
+}
+.sb-foundation.sb-foundation .form-error,
+.sb-foundation.sb-foundation .storage-error {
+  color: var(--sb-color-danger);
+  background: var(--sb-color-danger-surface);
+  border-inline-start: 3px solid var(--sb-color-danger);
+  border-radius: var(--sb-radius-control);
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.sb-foundation.sb-foundation .theme-settings legend {
+  font-size: var(--sb-text-small);
+  color: var(--sb-color-text);
+  margin-bottom: 12px;
+}
+.sb-foundation.sb-foundation .theme-options {
+  gap: 8px;
+}
+.sb-foundation.sb-foundation .theme-options span {
+  justify-content: flex-start;
+  font-size: var(--sb-text-small);
+  border-radius: var(--sb-radius-control);
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  border-color: var(--sb-color-control-border);
+  height: 100%;
+}
+.sb-foundation.sb-foundation .theme-options input:checked + span {
+  background: var(--sb-color-selected);
+  color: var(--sb-color-brand);
+  border-color: var(--sb-color-brand);
+}
+.sb-foundation.sb-foundation .theme-options input:focus-visible + span {
+  outline-color: var(--sb-color-focus);
+}
+.sb-foundation.sb-foundation .settings-more {
+  padding: 12px 16px;
+  border: 1px solid var(--sb-color-border);
+  border-radius: var(--sb-radius-surface);
+  background: var(--sb-color-inset);
+}
+.sb-foundation.sb-foundation :is(.settings-more, .restore-preview, .app-information) summary {
+  min-height: var(--sb-target);
+  align-content: center;
+  color: var(--sb-color-text);
+  font-size: var(--sb-text-small);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.sb-foundation.sb-foundation :is(.account-section, .app-information) {
+  border-color: var(--sb-color-border);
+}
+.sb-foundation.sb-foundation :is(.account-section h3, .restore-preview h4) {
+  font-family: var(--sb-font-display);
+  font-weight: 400;
+  font-size: 1.375rem;
+  color: var(--sb-color-text);
+}
+.sb-foundation.sb-foundation
+  :is(.app-information, .app-information .app-version, .update-controls p) {
+  font-size: var(--sb-text-small);
+  line-height: 1.6;
+  color: var(--sb-color-muted);
+}
+.sb-foundation.sb-foundation .app-information dl {
+  gap: 12px;
+}
+.sb-foundation.sb-foundation :is(.member-list li, .restore-preview) {
+  background: var(--sb-color-surface);
+  border: 1px solid var(--sb-color-border);
+  border-radius: var(--sb-radius-control);
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.sb-foundation.sb-foundation .member-list li {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sb-foundation.sb-foundation .backup-file {
+  padding: 16px;
+  border: 1px dashed var(--sb-color-control-border);
+  border-radius: var(--sb-radius-control);
+  color: var(--sb-color-text);
+}
+.sb-foundation.sb-foundation .backup-file input {
+  font-size: var(--sb-text-small);
+}
+.sb-foundation.sb-foundation .backup-file input::file-selector-button {
+  min-height: var(--sb-target);
+  max-width: 100%;
+  white-space: normal;
+  border: 1px solid var(--sb-color-control-border);
+  border-radius: var(--sb-radius-control);
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  padding: 8px;
+  font: inherit;
+}
+.sb-foundation.sb-foundation .restore-preview :is(th, td) {
+  border-bottom: 1px solid var(--sb-color-border);
+  vertical-align: top;
+}
+.sb-foundation.sb-foundation .restore-preview label {
+  padding-block: 12px;
+  min-height: var(--sb-target);
+  cursor: pointer;
+  font-size: var(--sb-text-small);
+}
+.sb-foundation.sb-foundation input[type='checkbox'] {
+  accent-color: var(--sb-color-brand);
+}
+.sb-foundation.sb-foundation .restore-preview [role='alert'],
+.sb-foundation.sb-foundation .sync-message {
+  padding: 12px 16px;
+  border: 1px solid var(--sb-color-warning);
+  border-radius: var(--sb-radius-control);
+  color: var(--sb-color-warning);
+  background: var(--sb-color-warning-surface);
+  font-size: var(--sb-text-small);
+  overflow-wrap: anywhere;
+}
+.sb-foundation.sb-foundation .sync-message {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sb-foundation.sb-foundation .sync-information {
+  color: var(--sb-color-muted);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.sb-foundation.sb-foundation .local-button:not([data-state='ready']) .status-dot {
+  background: var(--sb-color-warning);
+}
+.app-update-banner.sb-foundation.sb-foundation {
+  background: var(--sb-color-surface);
+  border-color: var(--sb-color-border);
+  color: var(--sb-color-text);
+  border-radius: var(--sb-radius-surface);
+  box-shadow: var(--sb-shadow-surface);
+  padding: 20px;
+  font-size: var(--sb-text-small);
+}
+.sb-foundation.sb-foundation .empty-mascot {
+  object-fit: contain;
+  margin-bottom: 16px;
+}
+.sb-foundation.sb-foundation .toast {
+  background: var(--sb-color-surface);
+  color: var(--sb-color-text);
+  border-color: var(--sb-color-control-border);
+  border-radius: var(--sb-radius-control);
+  font-size: var(--sb-text-small);
+  line-height: 1.5;
+}
+.sb-foundation.sb-foundation .toast.error {
+  background: var(--sb-color-danger-surface);
+  color: var(--sb-color-danger);
+  border-color: var(--sb-color-danger);
+}
+.sb-foundation.sb-foundation .toast > button {
+  color: inherit;
+  min-height: var(--sb-target);
+}
+.sb-foundation.sb-foundation .confirm-actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 365px) {
+  .sb-foundation.sb-foundation .theme-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sb-foundation.sb-foundation .settings-more {
+    padding-inline: 12px;
+  }
+}
