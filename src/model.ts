@@ -373,6 +373,18 @@ export function suggestions(state: State) {
     )
     .map((p) => ({ product: p, quantity: p.minimum! - p.quantity }));
 }
+
+/** Re-add to the current list, preserving the product link and accumulation rules. */
+export function relistShopping(state: State, item: ShoppingItem): State {
+  if (state.shopping.some((row) => row.id === item.id))
+    throw new StaleOperationError('Cette opération ne peut plus être annulée.');
+  integer(item.quantity);
+  if (item.productId && !state.products.some((product) => product.id === item.productId))
+    throw new StaleOperationError(
+      'Le produit associé n’existe plus. Impossible de remettre cet article dans la liste.',
+    );
+  return addShopping(state, item.name, Math.max(1, item.quantity), item.productId);
+}
 export function selectProducts(state: State, query: string, category = 'Tout') {
   return state.products
     .filter(

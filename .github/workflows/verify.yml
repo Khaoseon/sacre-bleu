@@ -42,6 +42,7 @@ jobs:
       - run: npm run test:ui:browser
       - run: npm run test:i18n:browser
       - run: node scripts/browser/shop-scanner.integration.mjs
+      - run: npm run test:polish:browser
       - run: npm run test:off:browser
       - run: npm run test:pwa:browser
         env:

@@ -1,14 +1,6 @@
 /* Production compositions built on the V1.1 semantic foundations.
    Repeated scope deliberately outranks the legacy screen selectors during migration. */
 .app-shell.sb-foundation.sb-foundation {
-  --canvas: var(--sb-color-canvas);
-  --paper: var(--sb-color-surface);
-  --text: var(--sb-color-text);
-  --text-strong: var(--sb-color-text);
-  --muted: var(--sb-color-muted);
-  --green: var(--sb-color-brand);
-  --accent-text: var(--sb-color-brand);
-  --selected-surface: var(--sb-color-selected);
   background: var(--sb-color-canvas);
 }
 .sb-foundation.sb-foundation h1,
@@ -149,6 +141,21 @@
   height: clamp(150px, 25dvh, 240px);
   background: transparent;
   filter: none;
+}
+.object-detail > .product-image:not(:has(img)) {
+  height: 96px;
+}
+.object-detail > .product-image:not(:has(img)) svg {
+  width: 44px;
+  height: 44px;
+}
+.object-detail > p {
+  margin: 0;
+  color: var(--sb-color-muted);
+  font-size: 0.875rem;
+}
+.object-detail > .stock-status {
+  color: var(--sb-color-text);
 }
 .object-detail > .quantity {
   justify-self: center;
@@ -337,7 +344,11 @@
     border-color: transparent;
   }
   .sb-foundation.sb-foundation .sort-control {
-    max-width: 100px;
+    max-width: 112px;
+    flex: 0 0 112px;
+  }
+  .sb-foundation.sb-foundation .sort-control > svg {
+    display: none;
   }
   .sb-foundation.sb-foundation .sort-control select {
     font-size: 0.875rem;
@@ -421,6 +432,18 @@
   .sb-foundation.sb-foundation .mobile-nav > button > span {
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+  .sb-foundation.sb-foundation .mobile-nav > button > small {
+    right: calc(50% - 30px);
+    top: 2px;
+    width: auto;
+    min-width: 20px;
+    height: 20px;
+    padding-inline: 4px;
+    font-size: 12px;
+    border-radius: var(--sb-radius-pill);
+    background: var(--sb-color-brand);
+    color: var(--sb-color-on-brand);
   }
   .sb-foundation.sb-foundation .toast {
     bottom: calc(var(--mobile-nav-height, 84px) + 12px);
@@ -612,6 +635,9 @@
   border: 1px solid var(--sb-color-control-border);
   border-radius: 50%;
 }
+.shopping-check .check-item::before {
+  content: none;
+}
 .shopping-check .shopping-item-name {
   min-width: 0;
 }
@@ -644,6 +670,15 @@
   gap: 8px;
   align-items: center;
   padding-block: 8px;
+}
+.shopping-options[open] {
+  flex: 1 0 100%;
+}
+.shopping-options[open] summary {
+  justify-content: flex-start;
+}
+.shopping-options[open] .shopping-options-content {
+  justify-content: flex-end;
 }
 .replenishment-row {
   display: flex;
@@ -688,7 +723,7 @@
 }
 .sb-foundation.sb-foundation .scanner-session .camera-preview {
   aspect-ratio: auto;
-  height: clamp(120px, 25dvh, 240px);
+  height: clamp(180px, 35dvh, 320px);
   min-height: 0;
   max-height: none;
 }
@@ -698,7 +733,7 @@
   font-size: 0.875rem;
 }
 .scanner-session .camera-placeholder > svg {
-  display: none;
+  color: var(--sb-color-muted);
 }
 .scanner-session .camera-actions {
   position: absolute;
@@ -710,10 +745,14 @@
   position: relative;
 }
 .scanner-session .camera-actions button {
-  color: #fff;
-  background: #111e;
+  color: var(--camera-ink);
+  background: var(--camera-overlay);
   padding: 4px 10px;
   border-radius: 8px;
+}
+.sb-foundation.sb-foundation .scanner-session .camera-actions button {
+  color: var(--camera-ink);
+  background: var(--camera-overlay);
 }
 .scan-session-result {
   min-height: 44px;
@@ -813,6 +852,155 @@
 .shopping-check .shopping-item-name {
   transition: opacity var(--sb-motion-settle) var(--sb-motion-ease);
 }
+
+/* Each row owns its gesture; page navigation never receives a checked-row drag. */
+.sb-foundation.sb-foundation .shopping-list {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.shopping-swipe {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--sb-color-border);
+  border-radius: var(--sb-radius-control);
+  touch-action: pan-y pinch-zoom;
+}
+.shopping-swipe-surface {
+  position: relative;
+  background: var(--sb-color-canvas);
+  transition: transform var(--sb-motion-settle) var(--sb-motion-ease);
+}
+.shopping-swipe.dragging .shopping-swipe-surface {
+  transition: none;
+}
+.sb-foundation.sb-foundation .essential-row {
+  border: 0;
+  padding: 12px 8px;
+  transition: background-color var(--sb-motion-press) var(--sb-motion-ease);
+}
+.sb-foundation.sb-foundation .essential-row.checked {
+  background: var(--completed-surface);
+  color: var(--sb-color-muted);
+}
+.essential-row.checked .shopping-check,
+.essential-row.checked .shopping-options summary {
+  color: var(--sb-color-muted);
+}
+.essential-row.checked .shopping-check .check-item {
+  background: var(--sb-color-inset);
+  border-color: var(--sb-color-muted);
+  color: var(--sb-color-muted);
+}
+.sb-foundation.sb-foundation .essential-row.checked .quantity-button {
+  background: var(--sb-color-inset);
+  color: var(--sb-color-muted);
+  border-color: var(--sb-color-control-border);
+}
+.sb-foundation.sb-foundation .swipe-delete {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 104px;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--destructive-fill);
+  color: var(--on-destructive);
+  font-size: 0.875rem;
+}
+.swipe-delete[aria-hidden='true'] {
+  pointer-events: none;
+  visibility: hidden;
+}
+.shopping-swipe.dragging .swipe-delete {
+  visibility: visible;
+}
+.shopping-check {
+  touch-action: pan-y pinch-zoom;
+}
+.sb-foundation.sb-foundation .shopping-hint {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  align-items: start;
+}
+.shopping-hint > svg {
+  flex: 0 0 17px;
+  margin-top: 3px;
+}
+.sb-foundation.sb-foundation .scanner-session .camera-preview {
+  background: var(--sb-color-inset);
+  border: 1px solid var(--sb-color-border);
+  border-radius: var(--sb-radius-surface);
+}
+.sb-foundation.sb-foundation .scanner-session .camera-preview.camera-active {
+  height: clamp(200px, 43dvh, 420px);
+  background: var(--camera-overlay);
+}
+.sb-foundation.sb-foundation .scanner-session.has-result .camera-preview.camera-active {
+  height: clamp(110px, 21dvh, 190px);
+}
+.sb-foundation.sb-foundation .scanner-session .mode-toggle {
+  background: var(--sb-color-inset);
+  border: 1px solid var(--sb-color-border);
+  border-radius: var(--sb-radius-control);
+  padding: 4px;
+}
+.sb-foundation.sb-foundation .scanner-session .mode-toggle > button {
+  border-radius: 8px;
+  color: var(--sb-color-muted);
+}
+.sb-foundation.sb-foundation .scanner-session .mode-toggle > .active {
+  background: var(--sb-color-brand);
+  color: var(--sb-color-on-brand);
+}
+.sb-foundation.sb-foundation .scanner-session .mode-toggle > .active.danger {
+  background: var(--destructive-fill);
+  color: var(--on-destructive);
+}
+.sb-foundation.sb-foundation .search-input input {
+  border-radius: inherit;
+}
+.sb-foundation.sb-foundation .sort-control {
+  border-radius: var(--sb-radius-control);
+}
+.sb-foundation.sb-foundation .sort-control select {
+  min-height: var(--sb-target);
+  border-radius: inherit;
+}
+.sb-foundation.sb-foundation .sync-details {
+  border-block: 1px solid var(--sb-color-border);
+  padding-block: 12px;
+}
+.shopping-undo small {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  color: var(--sb-color-muted);
+}
+.shopping-undo > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.shopping-undo > button {
+  flex-shrink: 0;
+}
+.app-shell.sb-foundation:has(.shopping-undo) > .toast:not(.shopping-undo):not(.error) {
+  display: none;
+}
+@media (max-height: 650px) {
+  .sb-foundation.sb-foundation .scanner-session .camera-preview.camera-active {
+    height: clamp(150px, 35dvh, 230px);
+  }
+  .sb-foundation.sb-foundation .scanner-session.has-result .camera-preview.camera-active {
+    height: 96px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shopping-swipe-surface,
+  .sb-foundation.sb-foundation .essential-row {
+    transition: none;
+  }
+}
 @media (max-width: 480px) {
   .shopping-essential .page-heading {
     flex-direction: column;
@@ -822,10 +1010,10 @@
     flex-wrap: wrap;
   }
   .sb-foundation.sb-foundation .scanner-session .camera-preview {
-    height: 120px;
+    height: clamp(160px, 34dvh, 300px);
   }
   .sb-foundation.sb-foundation .scanner-session.has-result .camera-preview {
-    height: 96px;
+    height: clamp(110px, 20dvh, 180px);
   }
   .scan-next-actions {
     gap: 4px;

@@ -58,6 +58,7 @@ import {
   startScan,
   StaleOperationError,
   suggestions,
+  relistShopping,
   undoOperation,
   ScanRecognition,
   type Product,
@@ -159,6 +160,12 @@ export default function App({
   const [cameraSettingsTarget, setCameraSettingsTarget] = useState<HTMLDivElement | null>(null);
   const [resetting, setResetting] = useState(false);
   const [feedback, setFeedback] = useState<{ text: DisplayMessage; error?: boolean } | null>(null);
+  const [feedbackHeld, setFeedbackHeld] = useState(false);
+  useEffect(() => {
+    if (!feedback || feedback.error || feedbackHeld) return;
+    const timer = window.setTimeout(() => setFeedback(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [feedback, feedbackHeld]);
   const lastError = useRef('');
   const [undo, setUndo] = useState<{ before: State; revision: number } | null>(null);
   const [localScan, setLastScan] = useState<ScanOperation | null>(null);
@@ -273,7 +280,8 @@ export default function App({
     const { view } = shared;
     if (view.busy) setFeedback(null);
     else if (view.error) setFeedback({ text: view.error, error: true });
-    else if (view.notice) setFeedback({ text: view.notice });
+    else if (view.notice && !(page === 'shopping' && view.notice === 'Article supprimé.'))
+      setFeedback({ text: view.notice });
     else setFeedback(null);
     if (view.completed !== completion.current) {
       completion.current = view.completed;
@@ -565,34 +573,31 @@ export default function App({
   const lastProduct = state.products.find(
     (p) => p.id === (shared ? shared.view.lastProductId : lastProductId),
   );
-  const recovery = shared && (
-    <div
-      className={`sync-message ${shared.view.error ? 'sync-error' : ''}`}
-      role={shared.view.error ? 'alert' : 'status'}
-    >
-      <span>
-        {shared.view.busy
-          ? t('Enregistrement en cours…')
-          : message(shared.view.error) ||
-            (shared.view.status === 'ready'
-              ? t('Réserve synchronisée.')
-              : t('Dernier stock connu · actualisation nécessaire.'))}
-        {shared.view.syncedAt && shared.view.status !== 'ready' && (
-          <small>
-            {t('Dernière lecture réussie à')}{' '}
-            {new Date(shared.view.syncedAt).toLocaleTimeString(locale())}.
-          </small>
-        )}
-      </span>
-      <button
-        className="text-button"
-        disabled={shared.view.busy || (!online && !navigator.onLine)}
-        onClick={() => void (shared.view.pending ? shared.store.resume() : shared.store.refresh())}
+  const recovery = shared &&
+    (shared.view.error || shared.view.pending || shared.view.status !== 'ready') && (
+      <div
+        className={`sync-message ${shared.view.error ? 'sync-error' : ''}`}
+        role={shared.view.error ? 'alert' : 'status'}
       >
-        {shared.view.pending ? t('Reprendre la demande') : t('Actualiser')}
-      </button>
-    </div>
-  );
+        <span>
+          {shared.view.busy
+            ? t('Enregistrement en cours…')
+            : message(shared.view.error) ||
+              (shared.view.pending
+                ? t('Demande à vérifier')
+                : t('Dernier stock connu · actualisation nécessaire.'))}
+        </span>
+        <button
+          className="text-button"
+          disabled={shared.view.busy || (!online && !navigator.onLine)}
+          onClick={() =>
+            void (shared.view.pending ? shared.store.resume() : shared.store.refresh())
+          }
+        >
+          {shared.view.pending ? t('Reprendre la demande') : t('Actualiser')}
+        </button>
+      </div>
+    );
   const nav = [
     { page: 'stock' as const, label: 'Stock', icon: Archive },
     { page: 'scanner' as const, label: 'Scanner', icon: ScanLine },
@@ -757,18 +762,13 @@ export default function App({
           </div>
         </header>
         <main id="main-content">
-          {shared && (
+          {shared && (shared.view.status !== 'ready' || shared.view.cacheError) && (
             <p className="sync-information" role="status">
               {shared.view.status === 'offline'
                 ? t('Hors ligne · consultation uniquement. ')
                 : shared.view.status !== 'ready'
                   ? t('Copie à actualiser · consultation uniquement. ')
-                  : ''}{' '}
-              {t('Dernière synchronisation :')}{' '}
-              {shared.view.syncedAt
-                ? new Date(shared.view.syncedAt).toLocaleString(locale())
-                : t('jamais')}
-              .
+                  : ''}
               {shared.view.cacheError && (
                 <span role="alert"> {message(shared.view.cacheError)}</span>
               )}
@@ -1273,11 +1273,30 @@ export default function App({
                 aria-label={t('À acheter')}
               >
                 <Shopping
+                  active={page === 'shopping'}
+                  noticeBlocked={!!feedback?.error}
                   state={state}
                   locked={locked}
                   draft={shoppingName}
                   setDraft={setShoppingName}
                   add={addShoppingItem}
+                  restore={async (item) => {
+                    if (!shared)
+                      return commit(
+                        (s) => relistShopping(s, item),
+                        'Article remis dans la liste à acheter.',
+                      );
+                    const restored = await shared.store.addShopping(
+                      item.name,
+                      Math.max(1, item.quantity),
+                      item.productId,
+                    );
+                    return restored === true
+                      ? true
+                      : shared.store.getSnapshot().pending
+                        ? 'pending'
+                        : false;
+                  }}
                   replenish={() => setReplenishment(true)}
                   update={(id, patch) =>
                     shared
@@ -1299,14 +1318,15 @@ export default function App({
                           ),
                         }))
                   }
-                  remove={(id) =>
-                    shared
-                      ? void shared.store.deleteShopping(id)
-                      : void commit((s) => ({
+                  remove={async (id) => {
+                    setFeedback(null);
+                    return shared
+                      ? shared.store.deleteShopping(id)
+                      : commit((s) => ({
                           ...s,
                           shopping: s.shopping.filter((item) => item.id !== id),
-                        }))
-                  }
+                        }));
+                  }}
                   clear={() =>
                     shared
                       ? void shared.store.clearChecked()
@@ -1376,6 +1396,12 @@ export default function App({
         <div
           className={`toast ${feedback.error ? 'error' : ''}`}
           role={feedback.error ? 'alert' : 'status'}
+          onPointerEnter={() => setFeedbackHeld(true)}
+          onPointerLeave={() => setFeedbackHeld(false)}
+          onFocus={() => setFeedbackHeld(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setFeedbackHeld(false);
+          }}
         >
           {feedback.error ? <CircleHelp size={18} /> : <Check size={18} />}
           <span>{message(feedback.text)}</span>
@@ -1627,6 +1653,29 @@ export default function App({
         >
           <div className="settings-content">
             <AppearanceSettings theme={theme} />
+            {shared && (
+              <section className="sync-details" aria-label={t('Réserve partagée')}>
+                <p>
+                  {t('Dernière synchronisation :')}{' '}
+                  {shared.view.syncedAt ? (
+                    <time dateTime={new Date(shared.view.syncedAt).toISOString()}>
+                      {new Date(shared.view.syncedAt).toLocaleString(locale())}
+                    </time>
+                  ) : (
+                    t('jamais')
+                  )}
+                </p>
+                {recovery || (
+                  <button
+                    className="text-button"
+                    disabled={shared.view.busy}
+                    onClick={() => void shared.store.refresh()}
+                  >
+                    {t('Actualiser')}
+                  </button>
+                )}
+              </section>
+            )}
             {page === 'scanner' && <div ref={setCameraSettingsTarget} />}
             {shared ? (
               <details className="settings-more">

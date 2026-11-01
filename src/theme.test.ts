@@ -198,9 +198,10 @@ describe('Contrastes des palettes', () => {
       ),
     ),
   );
-  blocks.forEach((legacy, index) => {
+  blocks.forEach((block, index) => {
+    const legacy = { ...blocks[0], ...block };
     it(`semantic foundation palette ${index}: readable text, controls and focus`, () => {
-      const roles = { ...semanticBlocks[0], ...(index === 0 ? semanticBlocks[1] : {}) };
+      const roles = semanticBlocks[0];
       const color = (role: string) => {
         const value = roles[role];
         return value.startsWith('var(') ? legacy[value.slice(6, -1)] : value;
@@ -224,7 +225,8 @@ describe('Contrastes des palettes', () => {
       }
     });
   });
-  blocks.forEach((palette, index) => {
+  blocks.forEach((block, index) => {
+    const palette = { ...blocks[0], ...block };
     it(`${index === 0 ? 'Clair' : 'Sombre'} : textes et statuts à au moins 4,5:1`, () => {
       for (const [foreground, background] of [
         ['text', 'paper'],
@@ -237,9 +239,11 @@ describe('Contrastes des palettes', () => {
         ['disabled-text', 'paper'],
         ['accent-text', 'selected-surface'],
         ['on-primary', 'green'],
-        ['on-primary', 'danger'],
-        ['on-primary', 'toast-surface'],
-        ['on-primary', 'error-toast'],
+        ['on-destructive', 'danger'],
+        ['on-destructive', 'destructive-fill'],
+        ['toast-ink', 'toast-surface'],
+        ['toast-ink', 'error-toast'],
+        ['muted', 'completed-surface'],
         ['danger-text', 'danger-surface'],
         ['warning-text', 'paper'],
       ])
