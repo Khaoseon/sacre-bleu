@@ -23,6 +23,24 @@ state.products.push({
   },
 });
 
+if (new URLSearchParams(location.search).has('mixed')) {
+  state.products.push({
+    id: 'off-spread',
+    name: 'Crème de noisettes et cacao',
+    brand: 'Nutella',
+    barcode: '3017620422003',
+    quantity: 4,
+    size: 400,
+    unit: 'g',
+    category: 'Épicerie',
+    updatedAt: '2026-10-30T12:00:00Z',
+    external: {
+      provider: 'open-food-facts',
+      barcode: '3017620422003',
+      imageUrl: 'https://images.openfoodfacts.org/images/products/3017620422003.jpg',
+    },
+  });
+}
 localStorage.setItem('app-reserve.local.v1', JSON.stringify(state));
 function Harness() {
   const theme = useThemePreference();

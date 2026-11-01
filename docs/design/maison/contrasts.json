@@ -13,6 +13,11 @@
         "minimum": 4.5
       },
       {
+        "pair": "nav-active-ink/nav-active-surface",
+        "ratio": 8.29253829101271,
+        "minimum": 4.5
+      },
+      {
         "pair": "muted/canvas",
         "ratio": 5.4566350152087955,
         "minimum": 4.5
@@ -69,32 +74,37 @@
     "pairs": [
       {
         "pair": "text/canvas",
-        "ratio": 10.191129970141404,
+        "ratio": 9.943099491093726,
         "minimum": 4.5
       },
       {
         "pair": "text/paper",
-        "ratio": 11.106542844103283,
+        "ratio": 11.110915848356775,
+        "minimum": 4.5
+      },
+      {
+        "pair": "nav-active-ink/nav-active-surface",
+        "ratio": 5.559801893145061,
         "minimum": 4.5
       },
       {
         "pair": "muted/canvas",
-        "ratio": 5.488214226240608,
+        "ratio": 5.416283488417145,
         "minimum": 4.5
       },
       {
         "pair": "muted/paper",
-        "ratio": 5.981190174195443,
+        "ratio": 6.052425614824808,
         "minimum": 4.5
       },
       {
         "pair": "green/selected-surface",
-        "ratio": 6.933634671838602,
+        "ratio": 6.462596154859208,
         "minimum": 4.5
       },
       {
         "pair": "on-primary/green",
-        "ratio": 8.259035498942293,
+        "ratio": 7.922679134685953,
         "minimum": 4.5
       },
       {
@@ -114,17 +124,17 @@
       },
       {
         "pair": "disabled-text/disabled-surface",
-        "ratio": 5.007487108408669,
+        "ratio": 5.1658113043459295,
         "minimum": 4.5
       },
       {
         "pair": "control-border/paper",
-        "ratio": 3.7451893810352264,
+        "ratio": 4.1166979082262785,
         "minimum": 3
       },
       {
         "pair": "focus/canvas",
-        "ratio": 6.174524467739464,
+        "ratio": 6.422805102428755,
         "minimum": 3
       }
     ]
@@ -134,27 +144,32 @@
     "pairs": [
       {
         "pair": "text/canvas",
-        "ratio": 12.27041484534634,
+        "ratio": 12.093508453557494,
         "minimum": 4.5
       },
       {
         "pair": "text/paper",
-        "ratio": 10.316493125968668,
+        "ratio": 9.385207356114146,
+        "minimum": 4.5
+      },
+      {
+        "pair": "nav-active-ink/nav-active-surface",
+        "ratio": 7.034876309479116,
         "minimum": 4.5
       },
       {
         "pair": "muted/canvas",
-        "ratio": 8.275030848164567,
+        "ratio": 8.606370890347629,
         "minimum": 4.5
       },
       {
         "pair": "muted/paper",
-        "ratio": 6.957327844106712,
+        "ratio": 6.679002681457315,
         "minimum": 4.5
       },
       {
         "pair": "green/selected-surface",
-        "ratio": 5.512080210326596,
+        "ratio": 5.492204478815934,
         "minimum": 4.5
       },
       {
@@ -184,12 +199,12 @@
       },
       {
         "pair": "control-border/paper",
-        "ratio": 4.18732717442179,
+        "ratio": 4.230372589011012,
         "minimum": 3
       },
       {
         "pair": "focus/canvas",
-        "ratio": 8.284508898652767,
+        "ratio": 8.16506855409432,
         "minimum": 3
       }
     ]

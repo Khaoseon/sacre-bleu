@@ -73,7 +73,7 @@
   width: 100%;
   border: 1px solid var(--sb-color-control-border);
   border-radius: var(--sb-radius-control);
-  background: var(--sb-color-surface);
+  background: var(--field-surface);
   color: var(--sb-color-text);
   padding: 10px 12px;
   font-size: var(--sb-text-input);

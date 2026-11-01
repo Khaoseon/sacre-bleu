@@ -1,37 +1,39 @@
-# Phase A — Maison Sacré bleu
+# Phase A.1 — Maison Sacré bleu
 
 Frontend visual identity, based on `main` at `ca23b0a` (2026-11-01). No business rule, backend, SQL, Auth flow, hosted configuration or dependency changes. No new motion design. The original mascot, bundled Fraunces/Manrope fonts and product image sources/attribution remain in place.
 
 ## Art direction
 
-The supplied flowing, multicoloured print references inform an original vector ribbon, warm paper surfaces and a restrained complementary palette. The ribbon has its own narrow space below the header and on account screens; it never sits behind a product or control. Rounded arch-like media frames recall grocery labels. Category backgrounds distinguish grain, preserves, legumes and groceries when no photograph exists. Real photographs use a neutral contain-fit frame, without blending, filtering or recolouring.
+The Phase A.1 revision removes BrandRibbon entirely: component, account/app usages, styles and signature tokens. No decorative banner, wave, multicolour gradient or substitute motif remains. The reference images now inform colour relationships only.
 
-Sauge clair preserves the established ivory/sage surfaces and royal blue actions. Maison Sacré bleu combines vanilla paper, petrol typography, historical blue actions, terracotta editorial punctuation and saffron details. Maison Nuit uses ink/petrol layers, warm ivory text, soft blue actions and warm gold/terracotta accents. Its pale photograph frame deliberately separates white-background package photos from the dark surroundings.
+Maison Sacré bleu uses a warm stone canvas, ivory product cards and sheets, eucalyptus fields and petrol actions. Terracotta is reserved for editorial punctuation and the active navigation destination; honey appears subtly in grain-category media. Functional success, warning and danger retain separate semantic pairs. Sauge keeps its palette; the common search/add/layout improvements apply to all three appearances.
 
-Fraunces supplies the wordmark and headings; Manrope supplies controls and body copy. Maison introduces an editorial stock eyebrow, more expressive media corners and a slightly larger stock title. The four-digit counter uses tabular body-sized numerals, with browser geometry assertions at 320px. Settings offer three descriptive, full-width native radio choices with visible keyboard focus. Primary-button icons now inherit their label colour, including in disabled states.
+Maison Nuit separates the ink canvas, deeper navigation, blue-green product cards, warm slate modals, recessed inputs and softly lit selections. A restrained warm brown/gold destination selection links it to Maison clair without spreading orange across the interface. Pale neutral photographic frames preserve white-background packaging and its original colours.
+
+The redundant mobile stock eyebrow is gone. Search occupies a full-width row with a shorter bilingual placeholder; sort and layout share the next row, leaving categories their full scrollable width. The short visible “Ajouter” / “Add” label keeps the full accessible name “Ajouter un produit” / “Add a product”. Fraunces headings, Manrope body text, consistent media height and bottom-aligned quantity controls establish the hierarchy for short and long names. No smaller text is used to fit the search.
 
 ## Palette and roles
 
-`src/theme.css` is the single palette source. Existing legacy names are retained as a compatibility boundary; `src/ui/foundations.css` maps them to semantic component roles without cycles. New status roles are independent of decorative accents. Layout/shape tokens are shared with small deliberate Maison variations; there is no additional theme override stylesheet.
+`src/theme.css` is the single palette source. Existing legacy names are retained as a compatibility boundary; `src/ui/foundations.css` maps them to semantic component roles without cycles. Status roles are independent of editorial and destination accents. Layout/shape tokens are shared with small deliberate Maison variations; there is no additional theme override stylesheet.
 
 | Role / source token               | Sauge clair | Maison Sacré bleu | Maison Nuit |
 | --------------------------------- | ----------- | ----------------- | ----------- |
-| Canvas / `--canvas`               | `#faf9f5`   | `#f8f0df`         | `#102c35`   |
-| Paper / `--paper`                 | `#fffefa`   | `#fffaf0`         | `#193942`   |
-| Inset / `--surface-soft`          | `#f0eee8`   | `#eee3cd`         | `#23444b`   |
-| Text / `--text`                   | `#1d314d`   | `#203d46`         | `#f5ead3`   |
-| Secondary / `--muted`             | `#5d6773`   | `#68604f`         | `#c1c4b9`   |
-| Primary / legacy `--green`        | `#233f8c`   | `#264c83`         | `#b8cdeb`   |
+| Canvas / `--canvas`               | `#faf9f5`   | `#f4f0e6`         | `#142d34`   |
+| Paper / `--paper`                 | `#fffefa`   | `#fffdf5`         | `#263f43`   |
+| Inset / `--surface-soft`          | `#f0eee8`   | `#e5ebe4`         | `#304c50`   |
+| Text / `--text`                   | `#1d314d`   | `#203f44`         | `#f5ead3`   |
+| Secondary / `--muted`             | `#5d6773`   | `#606353`         | `#c8c9ba`   |
+| Primary / legacy `--green`        | `#233f8c`   | `#28555d`         | `#b8cdeb`   |
 | On primary / `--on-primary`       | `#ffffff`   | `#fffaf0`         | `#142f44`   |
-| Selection / `--selected-surface`  | `#e9edf7`   | `#e0e9e4`         | `#304e57`   |
-| Control edge / `--control-border` | `#7a8490`   | `#8b8069`         | `#839b9d`   |
-| Focus / `--focus`                 | `#3562c1`   | `#285a97`         | `#e6bd70`   |
+| Selection / `--selected-surface`  | `#e9edf7`   | `#eee2d4`         | `#3d4d4b`   |
+| Control edge / `--control-border` | `#7a8490`   | `#807c6a`         | `#91a39d`   |
+| Focus / `--focus`                 | `#3562c1`   | `#295987`         | `#e6bd70`   |
 | Success / `--success-text`        | `#356145`   | `#2e604c`         | `#b0d4ba`   |
 | Warning / `--warning-text`        | `#80571d`   | `#7b5416`         | `#f0ce87`   |
 | Danger / `--danger-text`          | `#963e35`   | `#a0392c`         | `#ffb8a5`   |
 | Disabled / `--disabled-text`      | `#606d58`   | `#625c50`         | `#b6bdb5`   |
 
-Each status has a corresponding surface token. Destructive swipe actions retain their separate red fill/on-red pair. Camera overlays have explicit fixed contrast roles, independent of the palette; the actual stream is untouched. `--signature-*` colours are decorative and never carry state or body text.
+Each status has a corresponding surface token. Destructive swipe actions retain their separate red fill/on-red pair. Camera overlays have explicit fixed contrast roles, independent of the palette; the actual stream is untouched. `--shelf-card` and `--shelf-inset` define card composition; `--field-surface` defines recessed fields; `--nav-active-surface` / `--nav-active-ink` define the destination selection independently of primary buttons.
 
 ## Preference compatibility
 
@@ -49,7 +51,7 @@ The blocking head script performs migration before first paint. React uses the s
 
 ## Visual evidence
 
-All captures are actual local Chrome renders, with external requests blocked. The baseline captures come from an isolated checkout of `main` at `ca23b0a`, using the same production App, `polish-harness` demo inventory and 375×812 viewport as the new stock/scanner/shopping captures. No private pantry or account data appears. The photographed package is replayed from the existing licensed OFF fixture; see [fixture provenance](../phase7a/PHOTOS.md).
+All captures are actual local Chrome renders, with external requests blocked. The baseline captures come from an isolated checkout of `main` at `ca23b0a`, using the same production App, `polish-harness` demo inventory and 375×812 viewport as the new stock/scanner/shopping captures. No private pantry or account data appears. The can and spread jar are replayed from the existing licensed OFF fixtures (5449000000996.jpg and 3017620422003.jpg), without editing their bytes; see [fixture provenance](../phase7a/PHOTOS.md).
 
 ![Three appearances](screenshots/comparison.png)
 
@@ -62,6 +64,8 @@ All captures are actual local Chrome renders, with external requests blocked. Th
 | Preferences        | —                                       | [View](screenshots/light-preferences-375.png) | [View](screenshots/maison-preferences-375.png) | [View](screenshots/maison-night-preferences-375.png) |
 | Offline/read-only  | —                                       | [View](screenshots/light-offline-375.png)     | [View](screenshots/maison-offline-375.png)     | [View](screenshots/maison-night-offline-375.png)     |
 | Real photo fixture | —                                       | [View](screenshots/light-photo-375.png)       | [View](screenshots/maison-photo-375.png)       | [View](screenshots/maison-night-photo-375.png)       |
+
+Real mixed-photo stock and photographic detail sheets are also captured at all four widths, including white-background packages of different proportions alongside category fallbacks. The comparison sheet now uses that mixed-photo inventory, rather than icon-only samples.
 
 The same six main surfaces are captured at 320×568, 430×932 and 1100×900 for every appearance. Further captures cover checked shopping, empty search, English settings/editor, authentication, long product names without photos, compact lists and focus at 320px. Names follow `<theme>-<surface>-<width>.png` in [screenshots](screenshots). [Before dark stock](screenshots/before-dark.png) compares the former dark sage composition with Maison Nuit. [Additional regression captures](regression) include active synthetic camera, swipe deletion, Undo and uncertain-write recovery.
 

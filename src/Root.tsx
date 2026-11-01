@@ -1,4 +1,3 @@
-import { BrandRibbon } from './ui/BrandRibbon';
 import { t, message, useLanguage } from './i18n';
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
@@ -75,7 +74,6 @@ function Gate({
             <Settings2 size={22} />
           </button>
         </header>
-        <BrandRibbon />
         <h1>{title}</h1>
         {children}
         {onDemo && (

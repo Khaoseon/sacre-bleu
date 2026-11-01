@@ -48,6 +48,7 @@ try {
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('html').getAttribute('data-theme'), theme);
     assert.equal(await page.locator('.storage-error').count(), 0);
+    assert.equal(await page.locator('.brand-ribbon, .house-eyebrow').count(), 0);
   };
   const fits = async () => {
     assert(
@@ -130,6 +131,7 @@ try {
           const pairs = [
             ['text', 'canvas'],
             ['text', 'paper'],
+            ['nav-active-ink', 'nav-active-surface'],
             ['muted', 'canvas'],
             ['muted', 'paper'],
             ['green', 'selected-surface'],
@@ -246,14 +248,34 @@ try {
       contentType: 'image/jpeg',
     }),
   );
+  await context.route('https://images.openfoodfacts.org/images/products/3017620422003.jpg', (r) =>
+    r.fulfill({
+      path: 'explorations/7a/assets/reality/3017620422003.jpg',
+      contentType: 'image/jpeg',
+    }),
+  );
   for (const theme of themes) {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(origin + '/scripts/browser/core-mobile-harness.html');
-    await page.evaluate((value) => localStorage.setItem('app-reserve.theme.v1', value), theme);
-    await page.reload();
-    await page.locator('.product-row img').first().waitFor();
-    await page.evaluate(() => document.fonts.ready);
-    await shot(`${theme}-photo-375`);
+    for (const [width, height] of [
+      [320, 568],
+      [375, 812],
+      [430, 932],
+      [1100, 900],
+    ]) {
+      await page.setViewportSize({ width, height });
+      await page.goto(origin + '/scripts/browser/core-mobile-harness.html?mixed');
+      await page.evaluate((value) => localStorage.setItem('app-reserve.theme.v1', value), theme);
+      await page.reload();
+      await page.locator('.product-row img').first().waitFor();
+      await page.evaluate(() => document.fonts.ready);
+      await page
+        .locator('.product-row img')
+        .evaluateAll((imgs) => Promise.all(imgs.map((i) => i.decode())));
+      await shot(`${theme}-photo-${width}`);
+      await page
+        .getByRole('button', { name: 'Détails de Crème de noisettes et cacao', exact: true })
+        .click();
+      await shot(`${theme}-photo-detail-${width}`);
+    }
   }
   assert.deepEqual(errors, []);
   await writeFile(
@@ -263,7 +285,7 @@ try {
   // Contact sheet uses actual screenshots from above, not a reconstructed mockup.
   await page.setViewportSize({ width: 1200, height: 1060 });
   await page.setContent(
-    `<html lang="fr"><style>body{margin:0;padding:28px;background:#f8f0df;color:#203d46;font:16px Georgia}h1{font-size:32px;margin:0 0 10px}main{display:flex;gap:20px}article{width:368px}img{width:100%;border:1px solid #8b8069;border-radius:12px}h2{font-size:22px}p{font:14px Arial}</style><h1>Maison Sacré bleu · Trois interprétations</h1><p>Captures Chrome · Stock, 375 × 812 · Phase A</p><main>${themes.map((t, i) => `<article><h2>${['Sauge clair', 'Maison Sacré bleu', 'Maison Nuit'][i]}</h2><img src="${origin}/${output}/${t}-stock-375.png"><p>${['Papier doux · bleu intemporel', 'Vanille · pétrole · safran', 'Encre profonde · lumière dorée'][i]}</p></article>`).join('')}</main></html>`,
+    `<html lang="fr"><style>body{margin:0;padding:28px;background:#f8f0df;color:#203d46;font:16px Georgia}h1{font-size:32px;margin:0 0 10px}main{display:flex;gap:20px}article{width:368px}img{width:100%;border:1px solid #8b8069;border-radius:12px}h2{font-size:22px}p{font:14px Arial}</style><h1>Maison Sacré bleu · Trois interprétations</h1><p>Captures Chrome · Stock, 375 × 812 · Phase A.1 · photographies OFF locales</p><main>${themes.map((t, i) => `<article><h2>${['Sauge clair', 'Maison Sacré bleu', 'Maison Nuit'][i]}</h2><img src="${origin}/${output}/${t}-photo-375.png"><p>${['Papier doux · bleu intemporel', 'Vanille · pétrole · safran', 'Encre profonde · lumière dorée'][i]}</p></article>`).join('')}</main></html>`,
   );
   await page.locator('img').evaluateAll((imgs) => Promise.all(imgs.map((img) => img.decode())));
   await page.screenshot({ path: output + '/comparison.png', fullPage: true });

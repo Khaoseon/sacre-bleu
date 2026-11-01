@@ -207,9 +207,7 @@ describe.each(['fr', 'en'] as const)('French/English rendering (%s)', (language)
     choose(language);
     const html = renderToStaticMarkup(<App theme={theme} />);
     expect(html).toContain(language === 'en' ? 'Your stock' : 'Votre stock');
-    expect(html).toContain(
-      language === 'en' ? 'Search your pantry…' : 'Rechercher dans votre réserve…',
-    );
+    expect(html).toContain(language === 'en' ? 'Search for a product' : 'Rechercher un produit');
     const state: State = { version: 1, revision: 0, sort: 'name', products: [], shopping: [] };
     expect(saveProduct(state, product).products[0]).toMatchObject({
       name: product.name,
