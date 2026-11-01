@@ -1645,21 +1645,20 @@ export const catalog = {
     fr: 'Les données ont changé dans un autre onglet. Rechargez la page.',
     en: 'Data changed in another tab. Reload the page.',
   },
-  'Sauge claire': {
-    fr: 'Sauge claire',
-    en: 'Light sage',
+  'Sauge clair': { fr: 'Sauge clair', en: 'Light sage' },
+  'Maison Sacré bleu': { fr: 'Maison Sacré bleu', en: 'Maison Sacré bleu' },
+  'Maison Nuit': { fr: 'Maison Nuit', en: 'Maison Night' },
+  'Papier doux, bleu intemporel.': {
+    fr: 'Papier doux, bleu intemporel.',
+    en: 'Soft paper, timeless blue.',
   },
-  'Sauge sombre': {
-    fr: 'Sauge sombre',
-    en: 'Dark sage',
+  'Vanille, pétrole et safran.': {
+    fr: 'Vanille, pétrole et safran.',
+    en: 'Vanilla, petrol and saffron.',
   },
-  'Rétro crème': {
-    fr: 'Rétro crème',
-    en: 'Retro cream',
-  },
-  'Rétro pétrole': {
-    fr: 'Rétro pétrole',
-    en: 'Retro petrol',
+  'Encre profonde, lumière dorée.': {
+    fr: 'Encre profonde, lumière dorée.',
+    en: 'Deep ink, golden light.',
   },
   'Impossible de mémoriser le thème dans ce navigateur. La préférence n’a pas été modifiée.': {
     fr: 'Impossible de mémoriser le thème dans ce navigateur. La préférence n’a pas été modifiée.',
@@ -1916,14 +1915,7 @@ export const catalog = {
     fr: 'Autres',
     en: 'Other',
   },
-  Automatique: {
-    fr: 'Automatique',
-    en: 'Automatic',
-  },
-  Ardoise: {
-    fr: 'Ardoise',
-    en: 'Slate',
-  },
+
   Vous: {
     fr: 'Vous',
     en: 'You',

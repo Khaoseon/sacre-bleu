@@ -40,8 +40,8 @@
   --sb-color-focus: var(--focus);
   --sb-color-warning: var(--warning-text);
   --sb-color-warning-surface: var(--warning-surface);
-  --sb-color-success: var(--accent-text);
-  --sb-color-success-surface: var(--accent-soft);
+  --sb-color-success: var(--success-text);
+  --sb-color-success-surface: var(--success-surface);
   --sb-color-danger: var(--danger-text);
   --sb-color-danger-surface: var(--danger-surface);
   --sb-color-disabled: var(--disabled-text);

@@ -62,7 +62,10 @@
 .sb-foundation.sb-foundation .product-image {
   filter: none;
   opacity: 1;
-  background: transparent;
+  background: var(--product-surface, var(--grain-surface));
+}
+.sb-foundation.sb-foundation .product-image:has(img) {
+  background: var(--media-surface);
 }
 .sb-foundation.sb-foundation .product-image img {
   object-fit: contain;
@@ -83,6 +86,8 @@
 .sb-foundation.sb-foundation .quantity > span {
   min-width: 36px;
   flex-shrink: 0;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--sb-color-text);
 }
@@ -108,7 +113,7 @@
 .sb-foundation.sb-foundation .inventory-shelf .product-image {
   width: 100%;
   height: 148px;
-  border-radius: 0;
+  border-radius: var(--media-radius);
 }
 .sb-foundation.sb-foundation .inventory-shelf .product-details {
   display: flex;
@@ -139,7 +144,8 @@
 .object-detail > .product-image {
   width: 100%;
   height: clamp(150px, 25dvh, 240px);
-  background: transparent;
+  background: var(--surface-soft);
+  border-radius: var(--sb-radius-surface);
   filter: none;
 }
 .object-detail > .product-image:not(:has(img)) {
@@ -205,6 +211,7 @@
 .modal.sb-foundation.sb-foundation {
   background: var(--sb-color-surface);
   color: var(--sb-color-text);
+  border: var(--surface-edge) solid var(--sb-color-border);
   border-radius: 24px;
   padding: 20px;
 }
@@ -301,7 +308,7 @@
     gap: 10px;
   }
   .sb-foundation.sb-foundation h1 {
-    font-size: 32px;
+    font-size: var(--screen-title-size);
   }
   .sb-foundation.sb-foundation .page-heading > .primary-button {
     font-size: 0.875rem;
@@ -412,7 +419,7 @@
     height: auto;
     background: var(--sb-color-surface);
     border-top: 1px solid var(--sb-color-border);
-    box-shadow: 0 -8px 28px var(--shadow);
+    box-shadow: 0 -4px 20px var(--shadow);
     gap: 8px;
     z-index: 30;
   }
@@ -1027,4 +1034,51 @@
   .shopping-check .shopping-item-name {
     transition: none;
   }
+}
+
+/* The print signature occupies its own space, never a control. */
+.brand-ribbon {
+  display: var(--signature-display);
+  width: 100%;
+  height: 22px;
+  flex-shrink: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.brand-ribbon path {
+  fill: none;
+  stroke-width: 6px;
+}
+.ribbon-petrol {
+  stroke: var(--signature-petrol);
+}
+.ribbon-teal {
+  stroke: var(--signature-teal);
+}
+.ribbon-terra {
+  stroke: var(--signature-terra);
+}
+.ribbon-saffron {
+  stroke: var(--signature-saffron);
+}
+.sb-foundation .mobile-brand,
+.sb-foundation .sidebar .brand {
+  font-family: var(--sb-font-display);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  color: var(--text-strong);
+}
+.sb-foundation .mobile-brand {
+  font-size: 22px;
+}
+.sb-foundation .page-heading h1 > span {
+  color: var(--accent-text);
+}
+.house-eyebrow {
+  display: var(--signature-display);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  margin-bottom: 5px;
 }

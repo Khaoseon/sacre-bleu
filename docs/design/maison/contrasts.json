@@ -1,0 +1,197 @@
+[
+  {
+    "theme": "light",
+    "pairs": [
+      {
+        "pair": "text/canvas",
+        "ratio": 12.46837514753801,
+        "minimum": 4.5
+      },
+      {
+        "pair": "text/paper",
+        "ratio": 13.016036834121351,
+        "minimum": 4.5
+      },
+      {
+        "pair": "muted/canvas",
+        "ratio": 5.4566350152087955,
+        "minimum": 4.5
+      },
+      {
+        "pair": "muted/paper",
+        "ratio": 5.696312591487774,
+        "minimum": 4.5
+      },
+      {
+        "pair": "green/selected-surface",
+        "ratio": 8.29253829101271,
+        "minimum": 4.5
+      },
+      {
+        "pair": "on-primary/green",
+        "ratio": 9.717014482731177,
+        "minimum": 4.5
+      },
+      {
+        "pair": "warning-text/warning-surface",
+        "ratio": 5.254283450575265,
+        "minimum": 4.5
+      },
+      {
+        "pair": "danger-text/danger-surface",
+        "ratio": 6.270559197780739,
+        "minimum": 4.5
+      },
+      {
+        "pair": "success-text/success-surface",
+        "ratio": 6.1170372211413815,
+        "minimum": 4.5
+      },
+      {
+        "pair": "disabled-text/disabled-surface",
+        "ratio": 4.626224167505457,
+        "minimum": 4.5
+      },
+      {
+        "pair": "control-border/paper",
+        "ratio": 3.7624503996973377,
+        "minimum": 3
+      },
+      {
+        "pair": "focus/canvas",
+        "ratio": 5.433714290364787,
+        "minimum": 3
+      }
+    ]
+  },
+  {
+    "theme": "maison",
+    "pairs": [
+      {
+        "pair": "text/canvas",
+        "ratio": 10.191129970141404,
+        "minimum": 4.5
+      },
+      {
+        "pair": "text/paper",
+        "ratio": 11.106542844103283,
+        "minimum": 4.5
+      },
+      {
+        "pair": "muted/canvas",
+        "ratio": 5.488214226240608,
+        "minimum": 4.5
+      },
+      {
+        "pair": "muted/paper",
+        "ratio": 5.981190174195443,
+        "minimum": 4.5
+      },
+      {
+        "pair": "green/selected-surface",
+        "ratio": 6.933634671838602,
+        "minimum": 4.5
+      },
+      {
+        "pair": "on-primary/green",
+        "ratio": 8.259035498942293,
+        "minimum": 4.5
+      },
+      {
+        "pair": "warning-text/warning-surface",
+        "ratio": 5.25963845419073,
+        "minimum": 4.5
+      },
+      {
+        "pair": "danger-text/danger-surface",
+        "ratio": 5.68296409918581,
+        "minimum": 4.5
+      },
+      {
+        "pair": "success-text/success-surface",
+        "ratio": 5.83705931047593,
+        "minimum": 4.5
+      },
+      {
+        "pair": "disabled-text/disabled-surface",
+        "ratio": 5.007487108408669,
+        "minimum": 4.5
+      },
+      {
+        "pair": "control-border/paper",
+        "ratio": 3.7451893810352264,
+        "minimum": 3
+      },
+      {
+        "pair": "focus/canvas",
+        "ratio": 6.174524467739464,
+        "minimum": 3
+      }
+    ]
+  },
+  {
+    "theme": "maison-night",
+    "pairs": [
+      {
+        "pair": "text/canvas",
+        "ratio": 12.27041484534634,
+        "minimum": 4.5
+      },
+      {
+        "pair": "text/paper",
+        "ratio": 10.316493125968668,
+        "minimum": 4.5
+      },
+      {
+        "pair": "muted/canvas",
+        "ratio": 8.275030848164567,
+        "minimum": 4.5
+      },
+      {
+        "pair": "muted/paper",
+        "ratio": 6.957327844106712,
+        "minimum": 4.5
+      },
+      {
+        "pair": "green/selected-surface",
+        "ratio": 5.512080210326596,
+        "minimum": 4.5
+      },
+      {
+        "pair": "on-primary/green",
+        "ratio": 8.534047557539282,
+        "minimum": 4.5
+      },
+      {
+        "pair": "warning-text/warning-surface",
+        "ratio": 6.87723037271105,
+        "minimum": 4.5
+      },
+      {
+        "pair": "danger-text/danger-surface",
+        "ratio": 6.882666716249391,
+        "minimum": 4.5
+      },
+      {
+        "pair": "success-text/success-surface",
+        "ratio": 6.251273461913105,
+        "minimum": 4.5
+      },
+      {
+        "pair": "disabled-text/disabled-surface",
+        "ratio": 5.4023343770629975,
+        "minimum": 4.5
+      },
+      {
+        "pair": "control-border/paper",
+        "ratio": 4.18732717442179,
+        "minimum": 3
+      },
+      {
+        "pair": "focus/canvas",
+        "ratio": 8.284508898652767,
+        "minimum": 3
+      }
+    ]
+  }
+]

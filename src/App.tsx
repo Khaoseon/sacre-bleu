@@ -1,4 +1,5 @@
 import { deferred, type DisplayMessage } from './i18n';
+import { BrandRibbon } from './ui/BrandRibbon';
 import {
   t,
   message,
@@ -761,6 +762,7 @@ export default function App({
             </button>
           </div>
         </header>
+        <BrandRibbon />
         <main id="main-content">
           {shared && (shared.view.status !== 'ready' || shared.view.cacheError) && (
             <p className="sync-information" role="status">
@@ -795,6 +797,7 @@ export default function App({
                 <>
                   <div className="page-heading">
                     <div>
+                      <div className="house-eyebrow">{t('MON GARDE-MANGER')}</div>
                       <h1>
                         {t('Votre stock')}
                         <span>.</span>

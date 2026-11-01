@@ -110,7 +110,7 @@ try {
   await restore.waitFor();
   assert(await restore.isDisabled(), 'Restore requires backup and explicit confirmation');
   await fits();
-  for (const theme of ['light', 'dark', 'slate', 'retro-cream', 'retro-petrol']) {
+  for (const theme of ['light', 'maison', 'maison-night']) {
     await dialog.locator(`input[name=theme][value="${theme}"]`).check();
     await fits();
   }
@@ -151,7 +151,7 @@ try {
   await update.waitFor({ state: 'hidden' });
   assert.deepEqual(errors, []);
   console.log(
-    'Finishing: Auth drafts, keyboard/focus, EN settings, 320px restore guards, five palettes, offline and uncertain recovery passed. Four representative captures; no remote requests.',
+    'Finishing: Auth drafts, keyboard/focus, EN settings, 320px restore guards, three appearances, offline and uncertain recovery passed. Four representative captures; no remote requests.',
   );
 } finally {
   await browser?.close();

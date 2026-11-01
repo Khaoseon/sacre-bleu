@@ -39,7 +39,7 @@ afterEach(() => {
   memory.clear();
   choose('fr');
 });
-const theme = { preference: 'auto' as const, chooseTheme: () => {}, error: '' };
+const theme = { preference: 'light' as const, chooseTheme: () => {}, error: '' };
 const product: Product = {
   id: 'p',
   name: 'Paramètres',
@@ -191,7 +191,7 @@ describe.each(['fr', 'en'] as const)('French/English rendering (%s)', (language)
     const settings = renderToStaticMarkup(<AppearanceSettings theme={theme} />);
     expect(settings).toContain('Français');
     expect(settings).toContain('English');
-    expect(settings).toContain(language === 'en' ? 'Light sage' : 'Sauge claire');
+    expect(settings).toContain(language === 'en' ? 'Light sage' : 'Sauge clair');
     const scanner = renderToStaticMarkup(
       <CameraScanner recognition={new ScanRecognition()} paused={false} onCode={() => {}} />,
     );

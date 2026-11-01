@@ -330,7 +330,7 @@ h1 > span {
   color: var(--paper);
 }
 .primary-button svg {
-  color: var(--border);
+  color: inherit;
 }
 .secondary-button {
   background: var(--paper);
@@ -552,7 +552,7 @@ h1 > span {
   flex-shrink: 0;
   width: 52px;
   height: 55px;
-  background: var(--grain-surface);
+  background: var(--product-surface, var(--grain-surface));
   color: var(--grain-ink);
   border-radius: 9px;
   overflow: hidden;
@@ -574,19 +574,19 @@ h1 > span {
   margin-top: 20px;
 }
 .image-1 {
-  background: var(--can-surface);
+  --product-surface: var(--can-surface);
   color: var(--can-ink);
 }
 .image-2 {
-  background: var(--legume-surface);
+  --product-surface: var(--legume-surface);
   color: var(--legume-ink);
 }
 .image-3 {
-  background: var(--accent-soft);
+  --product-surface: var(--grocery-surface);
   color: var(--grocery-ink);
 }
 .image-4 {
-  background: var(--other-surface);
+  --product-surface: var(--other-surface);
   color: var(--other-ink);
 }
 .product-details {
@@ -780,8 +780,8 @@ h1 > span {
   object-position: center;
 }
 .camera-active {
-  background: #111;
-  color: #fff;
+  background: var(--camera-overlay);
+  color: var(--camera-ink);
 }
 .camera-placeholder {
   position: absolute;
@@ -800,20 +800,20 @@ h1 > span {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid #89ebac;
+  border: 2px solid var(--camera-target);
   border-radius: 8px;
   pointer-events: none;
 }
 .removing .camera-target {
-  border-color: #ffb2af;
+  border-color: var(--camera-target-danger);
 }
 .camera-status {
   position: absolute;
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: #111e;
-  color: #fff;
+  background: var(--camera-overlay);
+  color: var(--camera-ink);
   padding: 5px 9px;
   border-radius: 5px;
   white-space: nowrap;
@@ -2368,23 +2368,14 @@ input::file-selector-button {
   border: 1px solid currentColor;
   border-radius: 50%;
 }
-.swatch-auto {
-  background: var(--selected-surface);
-}
 .swatch-light {
-  background: #f8f9f6;
+  background: #f0f2eb;
 }
-.swatch-dark {
-  background: #141715;
+.swatch-maison {
+  background: #f8f0df;
 }
-.swatch-slate {
-  background: #dbe3ec;
-}
-.swatch-retro-cream {
-  background: #eed6a5;
-}
-.swatch-retro-petrol {
-  background: #174953;
+.swatch-maison-night {
+  background: #102c35;
 }
 .theme-options input:checked + span {
   background: var(--selected-surface);

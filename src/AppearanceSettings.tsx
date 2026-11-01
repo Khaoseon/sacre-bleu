@@ -3,6 +3,11 @@ import { LanguageSettings } from './LanguageSettings';
 
 import type { useThemePreference } from './theme';
 import { THEMES } from './theme';
+const descriptions = [
+  'Papier doux, bleu intemporel.',
+  'Vanille, pétrole et safran.',
+  'Encre profonde, lumière dorée.',
+] as const;
 export type ThemeController = ReturnType<typeof useThemePreference>;
 export function AppearanceSettings({ theme }: { theme: ThemeController }) {
   return (
@@ -11,7 +16,7 @@ export function AppearanceSettings({ theme }: { theme: ThemeController }) {
       <fieldset className="theme-settings">
         <legend>{t('Apparence')}</legend>
         <div className="theme-options">
-          {THEMES.map(([value, themeLabel]) => (
+          {THEMES.map(([value, themeLabel], index) => (
             <label key={value}>
               <input
                 type="radio"
@@ -22,7 +27,10 @@ export function AppearanceSettings({ theme }: { theme: ThemeController }) {
               />
               <span>
                 <i className={`theme-swatch swatch-${value}`} aria-hidden="true" />
-                {label(themeLabel)}
+                <b>
+                  {label(themeLabel)}
+                  <small>{t(descriptions[index])}</small>
+                </b>
               </span>
             </label>
           ))}

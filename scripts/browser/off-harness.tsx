@@ -55,7 +55,7 @@ const provider: ProductProvider = {
 };
 createRoot(document.getElementById('root')!).render(
   <App
-    theme={{ preference: 'auto', chooseTheme: () => {}, error: '' }}
+    theme={{ preference: 'light', chooseTheme: () => {}, error: '' }}
     productProvider={provider}
   />,
 );

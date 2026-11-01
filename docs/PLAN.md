@@ -1,5 +1,9 @@
 # Scope and validation plan
 
+## Phase A: Maison Sacré bleu visual identity
+
+Frontend-only identity work introduces exactly Sauge clair, Maison Sacré bleu and Maison Nuit, with deterministic migration of legacy device preferences. The explicitly requested delivery is a feature branch and PR to `main`, without merge or manual deployment. [Art direction, palette, migration and browser evidence](design/maison/README.md) document the result. Motion design remains a separate Phase B; backend, Auth behavior and hosted services remain unchanged.
+
 This is the current scope summary. The [French phase plan](history/PLAN_FR.md) preserves original milestones, approvals and earlier status text. For new installations, only [INSTALL.md](INSTALL.md) is authoritative.
 
 ## Implemented baseline
