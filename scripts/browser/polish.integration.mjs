@@ -76,6 +76,10 @@ try {
         type: cancel ? 'touchCancel' : 'touchEnd',
         touchPoints: [],
       });
+      // Wait for the native gesture and React reveal state to settle on slower runners.
+      await page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      );
     }
     await page.goto(`${origin}/scripts/browser/polish-harness.html`);
     await nav.locator('button').nth(2).click();
@@ -99,12 +103,14 @@ try {
     assert.equal(await shopping.locator('.revealed').count(), 0);
     await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 });
     await page.evaluate(() => window.scrollTo(0, 0));
-    await shopping.evaluate((el) => {
-      el.scrollTop = 0;
-    });
+    // Start the deliberate reveal in a fresh fixture, outside scroll/pinch arbitration.
+    await page.reload();
+    await nav.locator('button').nth(2).click();
+    await tuna.getByRole('checkbox').click();
     const currentBox = await tuna.boundingBox();
     await swipe(250, 130, currentBox.y + 35);
     assert.equal(await selected(), 'À acheter');
+    await shopping.locator('.revealed').waitFor();
     assert.equal(await shopping.locator('.revealed').count(), 1);
     assert.equal((await data()).shopping.length, 2, 'Swipe alone never deletes');
     await shot('shopping-revealed-375');

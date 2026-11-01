@@ -57,6 +57,7 @@ export function Shopping({
       !!document.activeElement.closest('.shopping-swipe');
     try {
       if (await remove(item.id)) {
+        setNoticeHeld(false);
         setRemoved(item);
         setRevealed(null);
       }
@@ -71,6 +72,7 @@ export function Shopping({
     setRemoving(true);
     // Consume before sending: an uncertain RPC must be resumed, never recreated.
     const item = removed;
+    setNoticeHeld(false);
     setRemoved(null);
     try {
       if ((await restore(item)) === false) setRemoved(item);
