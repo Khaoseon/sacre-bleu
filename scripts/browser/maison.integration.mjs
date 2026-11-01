@@ -65,6 +65,22 @@ try {
   const nav = () =>
     page.locator((page.viewportSize().width <= 760 ? '.mobile-nav' : '.sidebar nav') + ' button');
   const dialog = page.locator('dialog[open]');
+  const disabledPalette = async (locator) => {
+    assert(await locator.isDisabled());
+    assert(
+      await locator.evaluate((el) => {
+        const root = getComputedStyle(document.documentElement);
+        const style = getComputedStyle(el);
+        const probe = document.createElement('span');
+        probe.style.color = root.getPropertyValue('--disabled-text').trim();
+        probe.style.backgroundColor = root.getPropertyValue('--disabled-surface').trim();
+        return (
+          style.color === probe.style.color && style.backgroundColor === probe.style.backgroundColor
+        );
+      }),
+      'Disabled controls use resolved disabled colours',
+    );
+  };
   for (const theme of themes) {
     for (const [width, height] of [
       [320, 568],
@@ -149,6 +165,8 @@ try {
       await open(theme, true);
       await page.evaluate(() => window.polish.online(false));
       await page.getByText('Hors ligne · lecture seule', { exact: true }).waitFor();
+      await disabledPalette(page.getByRole('button', { name: 'Ajouter un produit', exact: true }));
+      await disabledPalette(page.locator('.page-pane').first().locator('.quantity-button').first());
       await shot(`${theme}-offline-${width}`);
     }
     // English names, form and preferences at the narrowest viewport.
@@ -174,6 +192,7 @@ try {
     const countBox = await quantity.locator(':scope > span').boundingBox();
     const minusBox = await quantity.locator('button').first().boundingBox();
     const plusBox = await quantity.locator('button').last().boundingBox();
+    await disabledPalette(quantity.locator('button').last());
     assert(
       countBox.x >= minusBox.x + minusBox.width && countBox.x + countBox.width <= plusBox.x,
       'Four digit quantity has its own space',

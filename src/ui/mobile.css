@@ -233,8 +233,6 @@
   min-height: 44px;
 }
 .modal.sb-foundation.sb-foundation .primary-button {
-  background: var(--sb-color-brand);
-  color: var(--sb-color-on-brand);
   font-size: 1rem;
 }
 .modal.sb-foundation.sb-foundation .form-actions button {
@@ -314,8 +312,6 @@
     font-size: 0.875rem;
     padding: 8px 12px;
     border-radius: 999px;
-    background: var(--sb-color-brand);
-    color: var(--sb-color-on-brand);
   }
   .sb-foundation.sb-foundation .page-heading > .primary-button > span {
     max-width: 90px;
@@ -504,7 +500,7 @@
   border: 1px solid var(--sb-color-control-border);
   color: var(--sb-color-brand);
 }
-.sb-foundation.sb-foundation .quantity-button:last-child {
+.sb-foundation.sb-foundation .quantity-button:last-child:not(:disabled) {
   background: var(--sb-color-brand);
   color: var(--sb-color-on-brand);
   border-color: transparent;
@@ -956,11 +952,11 @@
   border-radius: 8px;
   color: var(--sb-color-muted);
 }
-.sb-foundation.sb-foundation .scanner-session .mode-toggle > .active {
+.sb-foundation.sb-foundation .scanner-session .mode-toggle > .active:not(:disabled) {
   background: var(--sb-color-brand);
   color: var(--sb-color-on-brand);
 }
-.sb-foundation.sb-foundation .scanner-session .mode-toggle > .active.danger {
+.sb-foundation.sb-foundation .scanner-session .mode-toggle > .active.danger:not(:disabled) {
   background: var(--destructive-fill);
   color: var(--on-destructive);
 }
