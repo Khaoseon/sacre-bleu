@@ -1,0 +1,244 @@
+{
+  "browser": "156.0.8078.74",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "cpuRate": 4,
+  "label": "after",
+  "source": "Phase B working tree",
+  "conditions": "Headless desktop Chrome; local Vite; screenshots/tracing enabled; synthetic demo. Capture overhead included.",
+  "results": [
+    {
+      "name": "navigation",
+      "frames": [
+        {
+          "file": "navigation-000.jpg",
+          "time": 673.1000000014901
+        },
+        {
+          "file": "navigation-001.jpg",
+          "time": 792.1000000014901
+        },
+        {
+          "file": "navigation-002.jpg",
+          "time": 1006.3000000044703
+        },
+        {
+          "file": "navigation-003.jpg",
+          "time": 1123.5
+        }
+      ],
+      "elapsed": 588.1000000014901,
+      "raf": {
+        "count": 81,
+        "median": 6.099999999999909,
+        "p95": 6.2000000000000455,
+        "max": 72.70000000000005,
+        "over34ms": 1
+      },
+      "longTasks": [
+        {
+          "start": 814.8999999985099,
+          "duration": 75
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "frames": [
+        {
+          "file": "sheet-000.jpg",
+          "time": 1622.8000000044703
+        },
+        {
+          "file": "sheet-001.jpg",
+          "time": 1766.7000000029802
+        },
+        {
+          "file": "sheet-002.jpg",
+          "time": 1889.1000000014901
+        },
+        {
+          "file": "sheet-003.jpg",
+          "time": 1991.3999999985099
+        },
+        {
+          "file": "sheet-004.jpg",
+          "time": 2100.60000000149
+        },
+        {
+          "file": "sheet-005.jpg",
+          "time": 2207.7000000029802
+        },
+        {
+          "file": "sheet-006.jpg",
+          "time": 2319.39999999851
+        }
+      ],
+      "elapsed": 820.1999999955297,
+      "raf": {
+        "count": 109,
+        "median": 6.099999999999909,
+        "p95": 12.099999999999909,
+        "max": 72.70000000000005,
+        "over34ms": 2
+      },
+      "longTasks": [
+        {
+          "start": 1673.7000000029802,
+          "duration": 73
+        },
+        {
+          "start": 2247.5,
+          "duration": 51
+        }
+      ]
+    },
+    {
+      "name": "quantity",
+      "frames": [
+        {
+          "file": "quantity-000.jpg",
+          "time": 2448.7000000029802
+        },
+        {
+          "file": "quantity-001.jpg",
+          "time": 2685.7000000029802
+        },
+        {
+          "file": "quantity-002.jpg",
+          "time": 2840.60000000149
+        },
+        {
+          "file": "quantity-003.jpg",
+          "time": 2952.5
+        }
+      ],
+      "elapsed": 613.4000000059605,
+      "raf": {
+        "count": 66,
+        "median": 6.099999999999909,
+        "p95": 6.200000000000273,
+        "max": 78.79999999999973,
+        "over34ms": 3
+      },
+      "longTasks": [
+        {
+          "start": 2487.3000000044703,
+          "duration": 63
+        },
+        {
+          "start": 2605.5,
+          "duration": 68
+        },
+        {
+          "start": 2747.89999999851,
+          "duration": 77
+        }
+      ]
+    },
+    {
+      "name": "shopping",
+      "frames": [
+        {
+          "file": "shopping-000.jpg",
+          "time": 3425.7000000029802
+        },
+        {
+          "file": "shopping-001.jpg",
+          "time": 3615.60000000149
+        },
+        {
+          "file": "shopping-002.jpg",
+          "time": 3712.7000000029802
+        },
+        {
+          "file": "shopping-003.jpg",
+          "time": 3815.60000000149
+        },
+        {
+          "file": "shopping-004.jpg",
+          "time": 4004.7000000029802
+        },
+        {
+          "file": "shopping-005.jpg",
+          "time": 4152.39999999851
+        }
+      ],
+      "elapsed": 857.1999999955297,
+      "raf": {
+        "count": 102,
+        "median": 6.099999999999909,
+        "p95": 12.099999999999909,
+        "max": 121.30000000000018,
+        "over34ms": 2
+      },
+      "longTasks": [
+        {
+          "start": 3455.2000000029802,
+          "duration": 77
+        },
+        {
+          "start": 3870.2000000029802,
+          "duration": 115
+        }
+      ]
+    },
+    {
+      "name": "scanner",
+      "frames": [
+        {
+          "file": "scanner-000.jpg",
+          "time": 4863.60000000149
+        },
+        {
+          "file": "scanner-001.jpg",
+          "time": 5241.70000000298
+        },
+        {
+          "file": "scanner-002.jpg",
+          "time": 5445.89999999851
+        },
+        {
+          "file": "scanner-003.jpg",
+          "time": 5578.39999999851
+        },
+        {
+          "file": "scanner-004.jpg",
+          "time": 5705.70000000298
+        }
+      ],
+      "elapsed": 996.2000000029802,
+      "raf": {
+        "count": 95,
+        "median": 6.099999999999454,
+        "p95": 54.599999999999454,
+        "max": 103.10000000000036,
+        "over34ms": 6
+      },
+      "longTasks": [
+        {
+          "start": 4903.20000000298,
+          "duration": 80
+        },
+        {
+          "start": 4994.39999999851,
+          "duration": 58
+        },
+        {
+          "start": 5163,
+          "duration": 65
+        },
+        {
+          "start": 5315.89999999851,
+          "duration": 70
+        },
+        {
+          "start": 5509.30000000447,
+          "duration": 57
+        }
+      ]
+    }
+  ]
+}

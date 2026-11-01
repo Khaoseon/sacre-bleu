@@ -1,0 +1,155 @@
+{
+  "browser": "156.0.8078.74",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "cpuRate": 1,
+  "label": "before",
+  "source": "decf2c4b004590c588ea5726f3a22d74db3031c1",
+  "conditions": "Headless desktop Chrome; local Vite; screenshots/tracing enabled; synthetic demo. Capture overhead included.",
+  "results": [
+    {
+      "name": "navigation",
+      "frames": [
+        {
+          "file": "navigation-000.jpg",
+          "time": 233.60000000149012
+        },
+        {
+          "file": "navigation-001.jpg",
+          "time": 320.70000000298023
+        },
+        {
+          "file": "navigation-002.jpg",
+          "time": 403
+        },
+        {
+          "file": "navigation-003.jpg",
+          "time": 489.6000000014901
+        },
+        {
+          "file": "navigation-004.jpg",
+          "time": 580.7000000029802
+        },
+        {
+          "file": "navigation-005.jpg",
+          "time": 661.1000000014901
+        }
+      ],
+      "elapsed": 524.2000000029802,
+      "raf": {
+        "count": 85,
+        "median": 6.099999999999909,
+        "p95": 6.199999999999989,
+        "max": 6.2000000000000455,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "sheet",
+      "frames": [
+        {
+          "file": "sheet-000.jpg",
+          "time": 1062.1000000014901
+        },
+        {
+          "file": "sheet-001.jpg",
+          "time": 1162.2000000029802
+        },
+        {
+          "file": "sheet-002.jpg",
+          "time": 1253.2000000029802
+        },
+        {
+          "file": "sheet-003.jpg",
+          "time": 1344.2000000029802
+        }
+      ],
+      "elapsed": 373.6000000014901,
+      "raf": {
+        "count": 57,
+        "median": 6.099999999999909,
+        "p95": 6.2999999999999545,
+        "max": 18.200000000000045,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "quantity",
+      "frames": [
+        {
+          "file": "quantity-000.jpg",
+          "time": 1440.1000000014901
+        },
+        {
+          "file": "quantity-001.jpg",
+          "time": 1530
+        }
+      ],
+      "elapsed": 181.89999999850988,
+      "raf": {
+        "count": 29,
+        "median": 6.099999999999909,
+        "p95": 6.100000000000136,
+        "max": 6.100000000000136,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "shopping",
+      "frames": [
+        {
+          "file": "shopping-000.jpg",
+          "time": 1934.2999999970198
+        },
+        {
+          "file": "shopping-001.jpg",
+          "time": 2020.7000000029802
+        }
+      ],
+      "elapsed": 169.60000000149012,
+      "raf": {
+        "count": 26,
+        "median": 6.099999999999909,
+        "p95": 6.2000000000000455,
+        "max": 12.100000000000136,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "scanner",
+      "frames": [
+        {
+          "file": "scanner-000.jpg",
+          "time": 2467.39999999851
+        },
+        {
+          "file": "scanner-001.jpg",
+          "time": 2592.39999999851
+        },
+        {
+          "file": "scanner-002.jpg",
+          "time": 2688.60000000149
+        },
+        {
+          "file": "scanner-003.jpg",
+          "time": 2768
+        }
+      ],
+      "elapsed": 397.79999999701977,
+      "raf": {
+        "count": 63,
+        "median": 6.099999999999909,
+        "p95": 6.199999999999818,
+        "max": 12.199999999999818,
+        "over34ms": 0
+      },
+      "longTasks": []
+    }
+  ]
+}

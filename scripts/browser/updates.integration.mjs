@@ -124,6 +124,7 @@ try {
   await controls.getByRole('button', { name: 'Vérifier les mises à jour' }).click();
   await controls.getByText('Aucune nouvelle version disponible.', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
   await page.locator('input[type="email"]').fill('exemple@example.invalid');
   current = 1;
   controls = await settings();
@@ -142,6 +143,7 @@ try {
   await page.getByLabel('Language', { exact: true }).selectOption('fr');
   assert.match(await page.locator('.app-version').innerText(), /aaaaaaaaaaaa/);
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
   assert.equal(await page.locator('input[type="email"]').inputValue(), 'exemple@example.invalid');
   await page.locator('input[type="email"]').fill('');
 

@@ -1,0 +1,135 @@
+{
+  "browser": "156.0.8078.74",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "cpuRate": 4,
+  "label": "before",
+  "source": "decf2c4b004590c588ea5726f3a22d74db3031c1",
+  "conditions": "Headless desktop Chrome; local Vite; no screenshots/tracing; synthetic demo; Playwright/CDP input overhead included.",
+  "results": [
+    {
+      "name": "navigation",
+      "frames": [],
+      "elapsed": 504.1000000014901,
+      "raf": {
+        "count": 67,
+        "median": 6.099999999999966,
+        "p95": 6.2000000000000455,
+        "max": 72.59999999999997,
+        "over34ms": 1
+      },
+      "longTasks": [
+        {
+          "start": 474.90000000596046,
+          "duration": 78
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "frames": [],
+      "elapsed": 464.6000000014901,
+      "raf": {
+        "count": 57,
+        "median": 6.099999999999909,
+        "p95": 12.099999999999909,
+        "max": 60.700000000000045,
+        "over34ms": 2
+      },
+      "longTasks": [
+        {
+          "start": 1253.2000000029802,
+          "duration": 59
+        },
+        {
+          "start": 1622.5,
+          "duration": 52
+        }
+      ]
+    },
+    {
+      "name": "quantity",
+      "frames": [],
+      "elapsed": 246.20000000298023,
+      "raf": {
+        "count": 31,
+        "median": 0,
+        "p95": 54.59999999999991,
+        "max": 54.600000000000136,
+        "over34ms": 3
+      },
+      "longTasks": [
+        {
+          "start": 1708.8000000044703,
+          "duration": 57
+        },
+        {
+          "start": 1788.2000000029802,
+          "duration": 55
+        },
+        {
+          "start": 1871.3000000044703,
+          "duration": 55
+        }
+      ]
+    },
+    {
+      "name": "shopping",
+      "frames": [],
+      "elapsed": 228.60000000149012,
+      "raf": {
+        "count": 17,
+        "median": 6.099999999999909,
+        "p95": 72.80000000000018,
+        "max": 72.80000000000018,
+        "over34ms": 2
+      },
+      "longTasks": [
+        {
+          "start": 2331.60000000149,
+          "duration": 64
+        },
+        {
+          "start": 2461.9000000059605,
+          "duration": 69
+        }
+      ]
+    },
+    {
+      "name": "scanner",
+      "frames": [],
+      "elapsed": 662.7000000029802,
+      "raf": {
+        "count": 48,
+        "median": 6.099999999999909,
+        "p95": 66.69999999999982,
+        "max": 90.90000000000009,
+        "over34ms": 6
+      },
+      "longTasks": [
+        {
+          "start": 3103,
+          "duration": 74
+        },
+        {
+          "start": 3183.10000000149,
+          "duration": 53
+        },
+        {
+          "start": 3295.10000000149,
+          "duration": 61
+        },
+        {
+          "start": 3387.5,
+          "duration": 61
+        },
+        {
+          "start": 3526,
+          "duration": 58
+        }
+      ]
+    }
+  ]
+}

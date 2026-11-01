@@ -82,6 +82,16 @@ const backend = {
       });
     if (failure !== 'none')
       throw new BackendError('La réserve a changé. Actualisez avant de réessayer.', failure);
+    if (command.action === 'stock')
+      snapshot.products = snapshot.products.map((product) =>
+        product.id === command.payload.product_id
+          ? {
+              ...product,
+              quantity: product.quantity + command.payload.delta,
+              stock_version: product.stock_version + 1,
+            }
+          : product,
+      );
     if (command.action === 'delete_shopping')
       snapshot.shopping = snapshot.shopping.filter((i) => i.id !== command.payload.shopping_id);
     if (command.action === 'update_shopping')

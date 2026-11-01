@@ -288,7 +288,7 @@
   .page-track {
     display: flex;
     height: 100%;
-    transition: transform var(--sb-motion-settle) var(--sb-motion-ease);
+    transition: transform var(--sb-motion-navigation) var(--sb-motion-ease);
   }
   .page-track.dragging {
     transition: none;
@@ -460,20 +460,9 @@
     margin: auto auto 12px;
     width: calc(100% - 16px);
     max-width: 520px;
-    animation: sb-sheet var(--sb-motion-settle) var(--sb-motion-ease);
   }
   .object-detail .detail-actions {
     flex-direction: column;
-  }
-}
-@keyframes sb-sheet {
-  from {
-    transform: translateY(18px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -858,7 +847,7 @@
   color: var(--sb-color-on-brand);
 }
 .shopping-check .shopping-item-name {
-  transition: opacity var(--sb-motion-settle) var(--sb-motion-ease);
+  transition: opacity var(--sb-motion-state) var(--sb-motion-ease);
 }
 
 /* Each row owns its gesture; page navigation never receives a checked-row drag. */
@@ -878,7 +867,7 @@
 .shopping-swipe-surface {
   position: relative;
   background: var(--sb-color-canvas);
-  transition: transform var(--sb-motion-settle) var(--sb-motion-ease);
+  transition: transform var(--sb-motion-reflow) var(--sb-motion-ease);
 }
 .shopping-swipe.dragging .shopping-swipe-surface {
   transition: none;

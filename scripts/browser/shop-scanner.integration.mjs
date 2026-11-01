@@ -111,6 +111,7 @@ try {
   assert(await rice.getByRole('button', { name: 'Déjà dans les courses' }).isDisabled());
   assert.equal((await state()).shopping.filter((i) => i.productId === 'riz').length, 1);
   await dialog.getByRole('button', { name: 'Fermer', exact: true }).click();
+  await dialog.waitFor({ state: 'detached' });
   await fits();
   await entry.fill('Coca-Cola');
   await shopping.getByRole('button', { name: /Coca-Cola Original.*Associer ce produit/ }).click();

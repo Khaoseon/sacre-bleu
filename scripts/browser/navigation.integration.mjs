@@ -256,6 +256,7 @@ try {
   assert.equal(await form.locator('input[name="name"]').inputValue(), 'Brouillon fictif');
   await form.getByRole('button', { name: 'Fermer', exact: true }).click();
   await form.getByRole('button', { name: 'Abandonner les modifications' }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
 
   await page.setViewportSize({ width: 1024, height: 844 });
   await swipe(1014, 850); // Desktop keeps its ordinary controls.
