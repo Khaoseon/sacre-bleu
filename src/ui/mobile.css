@@ -1067,6 +1067,11 @@
 .sb-foundation .mobile-brand {
   font-size: 22px;
 }
+.sb-foundation .sidebar .brand {
+  font-size: 22px;
+  white-space: nowrap;
+  margin-inline: 0;
+}
 .sb-foundation .page-heading h1 > span {
   color: var(--accent-text);
 }

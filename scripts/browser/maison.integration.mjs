@@ -90,6 +90,16 @@ try {
     ]) {
       await page.setViewportSize({ width, height });
       await open(theme);
+      if (width === 1100) {
+        assert(
+          await page.locator('.sidebar .brand').evaluate((el) => {
+            const box = el.getBoundingClientRect();
+            const sidebar = el.closest('.sidebar').getBoundingClientRect();
+            return box.height <= 42 && box.right <= sidebar.right;
+          }),
+          'Desktop wordmark stays on one line inside the sidebar',
+        );
+      }
       for (const [name, index] of [
         ['stock', 0],
         ['scanner', 1],
