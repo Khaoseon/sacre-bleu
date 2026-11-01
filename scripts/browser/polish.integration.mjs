@@ -4,7 +4,7 @@ import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const origin = 'http://127.0.0.1:5198';
-const output = 'docs/design/polish/screenshots';
+const output = 'docs/design/maison/regression';
 const before = process.argv.includes('--before');
 const server = spawn(
   process.execPath,
@@ -47,7 +47,7 @@ try {
   await capture('shopping');
   await page.locator('.mobile-nav button').nth(1).click();
   await capture('scanner');
-  await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'maison-night'));
   await capture('dark');
   if (!before) {
     const errors = [];
@@ -164,7 +164,7 @@ try {
     assert.equal(await page.locator('.shopping-undo').count(), 0, 'Unfocused Undo expires');
     await page.reload();
     // All palettes use resolved, non-cyclic tokens; screenshots are actual app views.
-    for (const theme of ['light', 'dark', 'slate', 'retro-cream', 'retro-petrol']) {
+    for (const theme of ['light', 'maison', 'maison-night']) {
       await page.evaluate((value) => (document.documentElement.dataset.theme = value), theme);
       for (const index of [0, 2, 1]) {
         await nav.locator('button').nth(index).click();
@@ -204,18 +204,19 @@ try {
       assert.equal(focus.parent, 'none');
       assert.equal(focus.shadow, 'none');
     }
-    // Automatic follows the OS, manual preference survives an OS change and reload.
+    // Exactly three explicit choices survive OS changes and reload.
     await page.getByRole('button', { name: 'Réglages', exact: true }).click();
-    await dialog.locator('input[value=auto]').check();
+    assert.equal(await dialog.locator('input[name=theme]').count(), 3);
+    await dialog.locator('input[value=maison-night]').check();
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
-    await dialog.locator('input[value=slate]').check();
+    await page.waitForFunction(() => document.documentElement.dataset.theme === 'maison-night');
+    await dialog.locator('input[value=maison]').check();
     await page.emulateMedia({ colorScheme: 'light' });
-    assert.equal(await page.locator('html').getAttribute('data-theme'), 'slate');
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'maison');
     await dialog.getByRole('combobox', { name: 'Langue' }).selectOption('en');
     await dialog.getByRole('button', { name: 'Close', exact: true }).click();
     await page.reload();
-    assert.equal(await page.locator('html').getAttribute('data-theme'), 'slate');
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'maison');
     await nav.locator('button').nth(2).click();
     await row('Thon au naturel').getByRole('checkbox').click();
     const enBox = await row('Thon au naturel').boundingBox();
@@ -321,7 +322,7 @@ try {
     }
     assert.deepEqual(errors, []);
     console.log(
-      'PASS polish: touch arbitration/cancel/multitouch/scroll, confirmed delete and linked unchecked re-add, concurrent accumulation, subsequent scan consumption, Undo expiry/focus, FR/EN, five themes/Automatic/reload, confirmed writes/recovery/offline, sync preferences, synthetic camera and 320/375/430/landscape/desktop captures.',
+      'PASS polish: touch arbitration/cancel/multitouch/scroll, confirmed delete and linked unchecked re-add, concurrent accumulation, subsequent scan consumption, Undo expiry/focus, FR/EN, three explicit themes/reload, confirmed writes/recovery/offline, sync preferences, synthetic camera and 320/375/430/landscape/desktop captures.',
     );
   } else console.log('Local before screenshots captured.');
 } finally {

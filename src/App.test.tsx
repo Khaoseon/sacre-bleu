@@ -27,7 +27,7 @@ async function setup() {
   const render = () =>
     renderToStaticMarkup(
       <App
-        theme={{ preference: 'auto', chooseTheme: () => {}, error: '' }}
+        theme={{ preference: 'light', chooseTheme: () => {}, error: '' }}
         shared={{ store, view: store.getSnapshot() }}
       />,
     );
@@ -87,7 +87,7 @@ describe('shared saving feedback without moving the page content', () => {
     };
     const html = renderToStaticMarkup(
       <App
-        theme={{ preference: 'auto', chooseTheme: () => {}, error: '' }}
+        theme={{ preference: 'light', chooseTheme: () => {}, error: '' }}
         shared={{ store: f.store, view }}
       />,
     );

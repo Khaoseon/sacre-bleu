@@ -105,7 +105,7 @@ try {
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   assert((await inspect()).duration.split(', ').every((duration) => duration === '0s'));
-  for (const theme of ['light', 'dark', 'slate', 'retro-cream', 'retro-petrol']) {
+  for (const theme of ['light', 'maison', 'maison-night']) {
     await page.evaluate((value) => {
       document.documentElement.dataset.theme = value;
     }, theme);

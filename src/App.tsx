@@ -807,7 +807,7 @@ export default function App({
                       onClick={() => setEditor({})}
                     >
                       <Plus size={19} />
-                      <span>{t('Ajouter un produit')}</span>
+                      <span>{t('Ajouter')}</span>
                     </button>
                   </div>
                   <div className="stock-summary">
@@ -860,7 +860,7 @@ export default function App({
                         aria-label={t('Rechercher un produit')}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder={t('Rechercher dans votre réserve…')}
+                        placeholder={t('Rechercher un produit')}
                       />
                       {query && (
                         <button
@@ -893,6 +893,17 @@ export default function App({
                         <option value="recent">{t('Modifiés récemment')}</option>
                       </select>
                     </label>
+                    <div className="display-switch">
+                      <button
+                        className="sb-button"
+                        data-variant="secondary"
+                        aria-pressed={layout === 'compact'}
+                        aria-label={t(layout === 'shelf' ? 'Vue compacte' : 'Vue photographique')}
+                        onClick={() => setLayout(layout === 'shelf' ? 'compact' : 'shelf')}
+                      >
+                        {layout === 'shelf' ? <Rows3 size={20} /> : <Grid2X2 size={20} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="inventory-toolbar">
                     <div className="category-tabs" aria-label={t('Filtrer par catégorie')}>
@@ -906,17 +917,6 @@ export default function App({
                           {label(c)}
                         </button>
                       ))}
-                    </div>
-                    <div className="display-switch">
-                      <button
-                        className="sb-button"
-                        data-variant="secondary"
-                        aria-pressed={layout === 'compact'}
-                        aria-label={t(layout === 'shelf' ? 'Vue compacte' : 'Vue photographique')}
-                        onClick={() => setLayout(layout === 'shelf' ? 'compact' : 'shelf')}
-                      >
-                        {layout === 'shelf' ? <Rows3 size={20} /> : <Grid2X2 size={20} />}
-                      </button>
                     </div>
                   </div>
                   <section

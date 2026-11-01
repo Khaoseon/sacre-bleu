@@ -181,7 +181,7 @@ try {
   });
   await stock.getByRole('button', { name: 'Compact view' }).waitFor();
   await fits();
-  for (const theme of ['light', 'dark', 'slate', 'retro-cream', 'retro-petrol']) {
+  for (const theme of ['light', 'maison', 'maison-night']) {
     await page.evaluate((theme) => (document.documentElement.dataset.theme = theme), theme);
     await fits();
   }

@@ -178,7 +178,7 @@ try {
   await nav.getByRole('button', { name: 'Stock', exact: true }).click();
   assert.equal(await page.evaluate(() => window.keptTrack.readyState), 'ended');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  for (const theme of ['light', 'dark', 'slate', 'retro-cream', 'retro-petrol']) {
+  for (const theme of ['light', 'maison', 'maison-night']) {
     await page.evaluate((value) => (document.documentElement.dataset.theme = value), theme);
     await nav.getByRole('button', { name: 'À acheter' }).click();
     await fits();

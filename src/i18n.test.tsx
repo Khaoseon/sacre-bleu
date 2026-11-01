@@ -39,7 +39,7 @@ afterEach(() => {
   memory.clear();
   choose('fr');
 });
-const theme = { preference: 'auto' as const, chooseTheme: () => {}, error: '' };
+const theme = { preference: 'light' as const, chooseTheme: () => {}, error: '' };
 const product: Product = {
   id: 'p',
   name: 'Paramètres',
@@ -191,7 +191,7 @@ describe.each(['fr', 'en'] as const)('French/English rendering (%s)', (language)
     const settings = renderToStaticMarkup(<AppearanceSettings theme={theme} />);
     expect(settings).toContain('Français');
     expect(settings).toContain('English');
-    expect(settings).toContain(language === 'en' ? 'Light sage' : 'Sauge claire');
+    expect(settings).toContain(language === 'en' ? 'Light sage' : 'Sauge clair');
     const scanner = renderToStaticMarkup(
       <CameraScanner recognition={new ScanRecognition()} paused={false} onCode={() => {}} />,
     );
@@ -207,9 +207,7 @@ describe.each(['fr', 'en'] as const)('French/English rendering (%s)', (language)
     choose(language);
     const html = renderToStaticMarkup(<App theme={theme} />);
     expect(html).toContain(language === 'en' ? 'Your stock' : 'Votre stock');
-    expect(html).toContain(
-      language === 'en' ? 'Search your pantry…' : 'Rechercher dans votre réserve…',
-    );
+    expect(html).toContain(language === 'en' ? 'Search for a product' : 'Rechercher un produit');
     const state: State = { version: 1, revision: 0, sort: 'name', products: [], shopping: [] };
     expect(saveProduct(state, product).products[0]).toMatchObject({
       name: product.name,

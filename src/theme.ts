@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
 
 export const THEMES = [
-  ['auto', 'Automatique'],
-  ['light', 'Sauge claire'],
-  ['dark', 'Sauge sombre'],
-  ['slate', 'Ardoise'],
-  ['retro-cream', 'Rétro crème'],
-  ['retro-petrol', 'Rétro pétrole'],
+  ['light', 'Sauge clair'],
+  ['maison', 'Maison Sacré bleu'],
+  ['maison-night', 'Maison Nuit'],
 ] as const;
 export type ThemePreference = (typeof THEMES)[number][0];
 export function isTheme(value: unknown): value is ThemePreference {
@@ -14,35 +11,38 @@ export function isTheme(value: unknown): value is ThemePreference {
 }
 export const THEME_KEY = 'app-reserve.theme.v1';
 export const SYSTEM_THEME_QUERY = '(prefers-color-scheme: dark)';
-export function readThemePreference(): ThemePreference {
-  try {
-    const saved = localStorage.getItem(THEME_KEY);
-    return isTheme(saved) ? saved : 'auto';
-  } catch {
-    return 'auto';
-  }
+/** Legacy values are read only. All selections store explicit appearances. */
+export function migrateTheme(saved: unknown, systemDark: boolean): ThemePreference {
+  if (isTheme(saved)) return saved;
+  if (saved === 'dark' || saved === 'retro-petrol') return 'maison-night';
+  if (saved === 'auto') return systemDark ? 'maison-night' : 'light';
+  return 'light';
 }
-export function resolveTheme(
-  preference: ThemePreference,
-  systemDark: boolean,
-): Exclude<ThemePreference, 'auto'> {
-  return preference === 'auto' ? (systemDark ? 'dark' : 'light') : preference;
+export function readThemePreference(): ThemePreference {
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(THEME_KEY);
+  } catch {
+    const early = document.documentElement.dataset.theme;
+    return isTheme(early) ? early : 'light';
+  }
+  if (isTheme(saved)) return saved;
+  const next = migrateTheme(saved, matchMedia(SYSTEM_THEME_QUERY).matches);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    const early = document.documentElement.dataset.theme;
+    // Automatic is frozen by the head script even if storage cannot be written.
+    if (saved === 'auto' && isTheme(early)) return early;
+  }
+  return next;
 }
 export function applyTheme(preference: ThemePreference) {
   const root = document.documentElement;
-  const theme = resolveTheme(preference, matchMedia(SYSTEM_THEME_QUERY).matches);
-  root.dataset.theme = theme;
-  root.style.colorScheme = theme === 'dark' || theme === 'retro-petrol' ? 'dark' : 'light';
+  root.dataset.theme = preference;
+  root.style.colorScheme = preference === 'maison-night' ? 'dark' : 'light';
   const color = getComputedStyle(root).getPropertyValue('--canvas').trim();
   if (color) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
-}
-export function watchSystemTheme(preference: ThemePreference, listener: () => void) {
-  const media = matchMedia(SYSTEM_THEME_QUERY);
-  const update = () => {
-    if (preference === 'auto') listener();
-  };
-  media.addEventListener('change', update);
-  return () => media.removeEventListener('change', update);
 }
 export function saveThemePreference(preference: ThemePreference) {
   localStorage.setItem(THEME_KEY, preference);
@@ -53,7 +53,6 @@ export function useThemePreference() {
   const [error, setError] = useState('');
   useEffect(() => {
     applyTheme(preference);
-    const stop = watchSystemTheme(preference, () => applyTheme(preference));
     const sync = (event: StorageEvent) => {
       if (event.key !== THEME_KEY && event.key !== null) return;
       const saved = readThemePreference();
@@ -63,7 +62,6 @@ export function useThemePreference() {
     };
     window.addEventListener('storage', sync);
     return () => {
-      stop();
       window.removeEventListener('storage', sync);
     };
   }, [preference]);

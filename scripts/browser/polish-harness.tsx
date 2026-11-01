@@ -10,6 +10,11 @@ import '../../src/style.css';
 
 // Entirely synthetic in-memory transport. Never initializes a Supabase client.
 const state = demo();
+if (new URLSearchParams(location.search).has('visual')) {
+  state.products[0].name =
+    'Penne rigate au blé complet, fabrication traditionnelle et sélection du garde-manger';
+  state.products[0].quantity = 9999;
+}
 const stamp = '2026-10-30T12:00:00Z';
 let snapshot: ReserveSnapshot = {
   reserve: {
