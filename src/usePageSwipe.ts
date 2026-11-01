@@ -7,54 +7,70 @@ export type Page = (typeof pages)[number];
 export function usePageSwipe(page: Page, navigate: (page: Page) => void, blocked: boolean) {
   const index = pages.indexOf(page);
   const ref = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const latest = useRef({ index, navigate, blocked });
   latest.current = { index, navigate, blocked };
-  const trackRef = useRef<HTMLDivElement>(null);
+  const cancelGesture = useRef<(() => void) | null>(null);
+  const suppressUntil = useRef(0);
   useLayoutEffect(() => {
+    cancelGesture.current?.();
     const track = trackRef.current!;
     track.classList.remove('dragging');
     track.style.transform = `translate3d(${-index * 100}%,0,0)`;
-  }, [index]);
-  const suppressUntil = useRef(0);
+  }, [index, blocked]);
   useEffect(() => {
     const root = ref.current!;
-    let g: {
+    const track = trackRef.current!;
+    const mobile = matchMedia('(max-width: 760px)');
+    let gesture: {
       id: number;
       x: number;
       y: number;
       width: number;
       index: number;
+      origin: number;
       locked: boolean;
       time: number;
     } | null = null;
-    let frame = 0,
-      offset = 0;
-    const paint = () => {
-      frame = 0;
-      const track = trackRef.current;
-      if (track)
-        track.style.transform = `translate3d(calc(${-latest.current.index * 100}% + ${offset}px),0,0)`;
-    };
-    const reset = () => {
-      g = null;
+    let frame = 0;
+    let position = 0;
+    const clear = () => {
+      gesture = null;
       cancelAnimationFrame(frame);
       frame = 0;
-      offset = 0;
-      const track = trackRef.current;
-      if (track) {
+    };
+    cancelGesture.current = clear;
+    const paint = () => {
+      frame = 0;
+      track.style.transform = `translate3d(${position}px,0,0)`;
+    };
+    const settle = () => {
+      clear();
+      track.classList.remove('dragging');
+      track.style.transform = `translate3d(${-latest.current.index * 100}%,0,0)`;
+    };
+    const interrupt = () => {
+      if (gesture?.locked) suppressUntil.current = performance.now() + 450;
+      clear();
+      // Resize/background are discontinuities, not another navigation animation.
+      track.classList.add('dragging');
+      track.style.transform = `translate3d(${-latest.current.index * 100}%,0,0)`;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
         track.classList.remove('dragging');
-        track.style.transform = `translate3d(${-latest.current.index * 100}%,0,0)`;
-      }
+      });
     };
     const unavailable = () =>
-      latest.current.blocked ||
-      !!document.querySelector('dialog[open]') ||
-      !window.matchMedia('(max-width: 760px)').matches;
-    const start = (e: TouchEvent) => {
+      latest.current.blocked || !!document.querySelector('dialog[open]') || !mobile.matches;
+    const start = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        settle();
+        return;
+      }
       suppressUntil.current = 0;
-      reset();
-      if (unavailable() || e.touches.length !== 1 || e.defaultPrevented) return;
-      const target = e.target instanceof Element ? e.target : null;
+      clear();
+      if (unavailable() || event.defaultPrevented) return;
+      const target = event.target instanceof Element ? event.target : null;
       if (
         !target ||
         target.closest('[data-no-swipe],input,select,textarea,label,summary,[contenteditable]')
@@ -65,85 +81,107 @@ export function usePageSwipe(page: Page, navigate: (page: Page) => void, blocked
         !target.closest('[data-swipe-surface]')
       )
         return;
-      for (let el: Element | null = target; el && el !== root; el = el.parentElement) {
+      for (
+        let element: Element | null = target;
+        element && element !== root;
+        element = element.parentElement
+      ) {
         if (
-          el.scrollWidth > el.clientWidth + 1 &&
-          /auto|scroll/.test(getComputedStyle(el).overflowX)
+          element.scrollWidth > element.clientWidth + 1 &&
+          /auto|scroll/.test(getComputedStyle(element).overflowX)
         )
           return;
       }
-      const t = e.touches[0];
-      if (t.clientX < 24 || t.clientX > innerWidth - 24) return;
-      g = {
-        id: t.identifier,
-        x: t.clientX,
-        y: t.clientY,
+      const touch = event.touches[0];
+      if (touch.clientX < 24 || touch.clientX > innerWidth - 24) return;
+      // Read once, including an interrupted CSS transition. Never read layout per move.
+      const transform = getComputedStyle(track).transform;
+      gesture = {
+        id: touch.identifier,
+        x: touch.clientX,
+        y: touch.clientY,
         width: root.clientWidth,
         index: latest.current.index,
+        origin: transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m41,
         locked: false,
-        time: e.timeStamp,
+        time: event.timeStamp,
       };
     };
-    const move = (e: TouchEvent) => {
-      if (!g) return;
-      if (
-        unavailable() ||
-        e.touches.length !== 1 ||
-        latest.current.index !== g.index ||
-        root.clientWidth !== g.width
-      )
-        return reset();
-      const t = e.touches[0],
-        dx = t.clientX - g.x,
-        dy = Math.abs(t.clientY - g.y);
-      if (t.identifier !== g.id || (!g.locked && dy > 10 && dy >= Math.abs(dx))) return reset();
-      if (!g.locked && Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.8) {
-        g.locked = true;
-        trackRef.current?.classList.add('dragging');
+    const move = (event: TouchEvent) => {
+      if (!gesture) return;
+      if (unavailable() || event.touches.length !== 1 || latest.current.index !== gesture.index)
+        return settle();
+      const touch = event.touches[0];
+      const dx = touch.clientX - gesture.x;
+      const dy = Math.abs(touch.clientY - gesture.y);
+      if (touch.identifier !== gesture.id || (!gesture.locked && dy > 10 && dy >= Math.abs(dx)))
+        return settle();
+      if (!gesture.locked && Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.8) {
+        gesture.locked = true;
+        track.style.transform = `translate3d(${gesture.origin}px,0,0)`;
+        track.classList.add('dragging');
       }
-      if (!g.locked) return;
-      if (!e.cancelable) return reset();
-      e.preventDefault();
+      if (!gesture.locked) return;
+      if (!event.cancelable) return settle();
+      event.preventDefault();
       suppressUntil.current = performance.now() + 450;
-      const next = g.index + (dx < 0 ? 1 : -1);
-      offset = Math.max(-g.width, Math.min(g.width, dx * (next < 0 || next > 2 ? 0.18 : 1)));
+      const raw = gesture.origin + Math.max(-gesture.width, Math.min(gesture.width, dx));
+      const edge = -2 * gesture.width;
+      position = raw > 0 ? raw * 0.18 : raw < edge ? edge + (raw - edge) * 0.18 : raw;
       if (!frame) frame = requestAnimationFrame(paint);
     };
-    const end = (e: TouchEvent) => {
-      const done = g;
-      reset();
+    const end = (event: TouchEvent) => {
+      const done = gesture;
+      clear();
       if (
-        !done ||
-        !done.locked ||
+        !done?.locked ||
         unavailable() ||
-        e.touches.length ||
+        event.touches.length ||
         latest.current.index !== done.index
       )
-        return;
-      const t = Array.from(e.changedTouches).find((t) => t.identifier === done.id);
-      if (!t || root.clientWidth !== done.width) return;
-      const dx = t.clientX - done.x,
-        dy = Math.abs(t.clientY - done.y);
-      const next = swipeDestination(done.index, dx, dy, done.width, e.timeStamp - done.time);
-      if (next !== null) latest.current.navigate(pages[next]);
+        return settle();
+      suppressUntil.current = performance.now() + 450;
+      const touch = Array.from(event.changedTouches).find((t) => t.identifier === done.id);
+      if (!touch) return settle();
+      const next = swipeDestination(
+        done.index,
+        touch.clientX - done.x,
+        touch.clientY - done.y,
+        done.width,
+        event.timeStamp - done.time,
+      );
+      track.classList.remove('dragging');
+      if (next === null) return settle();
+      // Do not write the old origin before React commits the destination.
+      latest.current.navigate(pages[next]);
+      // Also settle if the owner refuses navigation (e.g. an in-flight scanner ref).
+      frame = requestAnimationFrame(settle);
     };
     root.addEventListener('touchstart', start, { passive: true });
     root.addEventListener('touchmove', move, { passive: false });
     root.addEventListener('touchend', end, { passive: true });
-    root.addEventListener('touchcancel', reset);
-    window.addEventListener('blur', reset);
-    window.addEventListener('resize', reset);
-    document.addEventListener('visibilitychange', reset);
+    root.addEventListener('touchcancel', settle);
+    window.addEventListener('blur', interrupt);
+    window.addEventListener('resize', interrupt);
+    document.addEventListener('visibilitychange', interrupt);
     return () => {
-      cancelAnimationFrame(frame);
+      clear();
+      cancelGesture.current = null;
       root.removeEventListener('touchstart', start);
       root.removeEventListener('touchmove', move);
       root.removeEventListener('touchend', end);
-      root.removeEventListener('touchcancel', reset);
-      window.removeEventListener('blur', reset);
-      window.removeEventListener('resize', reset);
-      document.removeEventListener('visibilitychange', reset);
+      root.removeEventListener('touchcancel', settle);
+      window.removeEventListener('blur', interrupt);
+      window.removeEventListener('resize', interrupt);
+      document.removeEventListener('visibilitychange', interrupt);
     };
   }, []);
-  return { ref, trackRef, suppressClick: () => performance.now() < suppressUntil.current };
+  return {
+    ref,
+    trackRef,
+    allowClick: () => {
+      suppressUntil.current = 0;
+    },
+    suppressClick: () => performance.now() < suppressUntil.current,
+  };
 }

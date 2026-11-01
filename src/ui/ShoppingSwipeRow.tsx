@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { Trash2 } from 'lucide-react';
 import { t } from '../i18n';
 
@@ -14,6 +14,7 @@ export function ShoppingSwipeRow({
   reveal,
   remove,
   name,
+  motionId,
 }: {
   children: ReactNode;
   checked: boolean;
@@ -23,24 +24,33 @@ export function ShoppingSwipeRow({
   reveal: (open: boolean) => void;
   remove: () => void;
   name: string;
+  motionId: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const surface = useRef<HTMLDivElement>(null);
   const latest = useRef({ checked, locked, active, open, reveal });
   latest.current = { checked, locked, active, open, reveal };
   const suppressUntil = useRef(0);
+  const cancelGesture = useRef<(() => void) | null>(null);
   useEffect(() => {
     const host = root.current!;
     const panel = surface.current!;
     let gesture: { id: number; x: number; y: number; offset: number; dragging: boolean } | null =
       null;
     let offset = 0;
+    let frame = 0;
+    const render = () => {
+      frame = 0;
+      panel.style.transform = `translate3d(${offset}px,0,0)`;
+    };
     const paint = (value: number) => {
       offset = Math.max(-revealWidth, Math.min(0, value));
-      panel.style.transform = `translate3d(${offset}px,0,0)`;
+      render();
     };
     const cancel = () => {
       gesture = null;
+      cancelAnimationFrame(frame);
+      frame = 0;
       host.classList.remove('dragging');
       paint(
         latest.current.open &&
@@ -51,18 +61,22 @@ export function ShoppingSwipeRow({
           : 0,
       );
     };
+    cancelGesture.current = cancel;
     const unavailable = () =>
       !latest.current.checked ||
       latest.current.locked ||
       !latest.current.active ||
       !!document.querySelector('dialog[open]');
     const start = (event: TouchEvent) => {
-      cancel();
+      if (event.touches.length !== 1) return cancel();
+      suppressUntil.current = 0;
       if (unavailable() || event.touches.length !== 1) return;
       const target = event.target instanceof Element ? event.target : null;
       if (!target || target.closest('summary,.shopping-options,.swipe-delete')) return;
       const touch = event.touches[0];
       if (touch.clientX < 24 || touch.clientX > innerWidth - 24) return;
+      const transform = getComputedStyle(panel).transform;
+      offset = transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m41;
       gesture = {
         id: touch.identifier,
         x: touch.clientX,
@@ -81,21 +95,29 @@ export function ShoppingSwipeRow({
         return cancel();
       if (!gesture.dragging && Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.8) {
         gesture.dragging = true;
+        panel.style.transform = `translate3d(${gesture.offset}px,0,0)`;
         host.classList.add('dragging');
       }
       if (!gesture.dragging) return;
       if (!event.cancelable) return cancel();
       event.preventDefault();
       suppressUntil.current = performance.now() + 450;
-      paint(gesture.offset + dx);
+      offset = Math.max(-revealWidth, Math.min(0, gesture.offset + dx));
+      if (!frame) frame = requestAnimationFrame(render);
     };
     const end = (event: TouchEvent) => {
       if (!gesture) return;
       const dragged = gesture.dragging;
-      const valid = !unavailable() && !event.touches.length;
+      const valid =
+        !unavailable() &&
+        !event.touches.length &&
+        Array.from(event.changedTouches).some((touch) => touch.identifier === gesture?.id);
       gesture = null;
+      cancelAnimationFrame(frame);
+      frame = 0;
       host.classList.remove('dragging');
       if (dragged && valid) {
+        suppressUntil.current = performance.now() + 450;
         const opened = offset <= -48;
         paint(opened ? -revealWidth : 0);
         latest.current.reveal(opened);
@@ -109,6 +131,8 @@ export function ShoppingSwipeRow({
     window.addEventListener('blur', cancel);
     document.addEventListener('visibilitychange', cancel);
     return () => {
+      cancelAnimationFrame(frame);
+      cancelGesture.current = null;
       host.removeEventListener('touchstart', start);
       host.removeEventListener('touchmove', move);
       host.removeEventListener('touchend', end);
@@ -118,7 +142,8 @@ export function ShoppingSwipeRow({
       document.removeEventListener('visibilitychange', cancel);
     };
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    cancelGesture.current?.();
     if (!active || !checked || locked) reveal(false);
     root.current?.classList.remove('dragging');
     if (surface.current)
@@ -127,6 +152,10 @@ export function ShoppingSwipeRow({
   return (
     <div
       ref={root}
+      data-motion-id={motionId}
+      onPointerDownCapture={(event) => {
+        if (event.pointerType !== 'touch') suppressUntil.current = 0;
+      }}
       className={`shopping-swipe ${open ? 'revealed' : ''}`}
       data-no-swipe={checked ? '' : undefined}
       onKeyDown={(event) => {
@@ -139,6 +168,7 @@ export function ShoppingSwipeRow({
       }}
       onClickCapture={(event) => {
         if (
+          event.detail > 0 &&
           performance.now() < suppressUntil.current &&
           !(event.target instanceof Element && event.target.closest('.swipe-delete'))
         ) {

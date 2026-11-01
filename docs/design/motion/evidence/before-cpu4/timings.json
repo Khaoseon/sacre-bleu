@@ -1,0 +1,224 @@
+{
+  "browser": "156.0.8078.74",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "cpuRate": 4,
+  "label": "before",
+  "source": "decf2c4b004590c588ea5726f3a22d74db3031c1",
+  "conditions": "Headless desktop Chrome; local Vite; screenshots/tracing enabled; synthetic demo. Capture overhead included.",
+  "results": [
+    {
+      "name": "navigation",
+      "frames": [
+        {
+          "file": "navigation-000.jpg",
+          "time": 636
+        },
+        {
+          "file": "navigation-001.jpg",
+          "time": 773.8000000044703
+        },
+        {
+          "file": "navigation-002.jpg",
+          "time": 1042.9000000059605
+        },
+        {
+          "file": "navigation-003.jpg",
+          "time": 1148
+        }
+      ],
+      "elapsed": 650.3000000044703,
+      "raf": {
+        "count": 86,
+        "median": 6.099999999999909,
+        "p95": 12.200000000000045,
+        "max": 78.70000000000005,
+        "over34ms": 1
+      },
+      "longTasks": [
+        {
+          "start": 786.7000000029802,
+          "duration": 83
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "frames": [
+        {
+          "file": "sheet-000.jpg",
+          "time": 1668.2000000029802
+        },
+        {
+          "file": "sheet-001.jpg",
+          "time": 1821.3000000044703
+        },
+        {
+          "file": "sheet-002.jpg",
+          "time": 1933.5
+        },
+        {
+          "file": "sheet-003.jpg",
+          "time": 2027.5
+        },
+        {
+          "file": "sheet-004.jpg",
+          "time": 2127.10000000149
+        }
+      ],
+      "elapsed": 657.8000000044703,
+      "raf": {
+        "count": 81,
+        "median": 6.099999999999909,
+        "p95": 12.200000000000045,
+        "max": 90.90000000000009,
+        "over34ms": 2
+      },
+      "longTasks": [
+        {
+          "start": 1720.6000000014901,
+          "duration": 84
+        }
+      ]
+    },
+    {
+      "name": "quantity",
+      "frames": [
+        {
+          "file": "quantity-000.jpg",
+          "time": 2331.9000000059605
+        },
+        {
+          "file": "quantity-001.jpg",
+          "time": 2445.7000000029802
+        },
+        {
+          "file": "quantity-002.jpg",
+          "time": 2559.10000000149
+        },
+        {
+          "file": "quantity-003.jpg",
+          "time": 2681.2000000029802
+        }
+      ],
+      "elapsed": 471.3999999985099,
+      "raf": {
+        "count": 51,
+        "median": 6.099999999999909,
+        "p95": 54.5,
+        "max": 66.70000000000027,
+        "over34ms": 3
+      },
+      "longTasks": [
+        {
+          "start": 2372.60000000149,
+          "duration": 63
+        },
+        {
+          "start": 2491.3000000044703,
+          "duration": 59
+        },
+        {
+          "start": 2611.3000000044703,
+          "duration": 61
+        }
+      ]
+    },
+    {
+      "name": "shopping",
+      "frames": [
+        {
+          "file": "shopping-000.jpg",
+          "time": 3204.8000000044703
+        },
+        {
+          "file": "shopping-001.jpg",
+          "time": 3336.5
+        },
+        {
+          "file": "shopping-002.jpg",
+          "time": 3517.8000000044703
+        }
+      ],
+      "elapsed": 438.70000000298023,
+      "raf": {
+        "count": 49,
+        "median": 6.099999999999909,
+        "p95": 6.199999999999818,
+        "max": 72.69999999999982,
+        "over34ms": 2
+      },
+      "longTasks": [
+        {
+          "start": 3242.60000000149,
+          "duration": 69
+        },
+        {
+          "start": 3434.2000000029802,
+          "duration": 74
+        }
+      ]
+    },
+    {
+      "name": "scanner",
+      "frames": [
+        {
+          "file": "scanner-000.jpg",
+          "time": 4228
+        },
+        {
+          "file": "scanner-001.jpg",
+          "time": 4564
+        },
+        {
+          "file": "scanner-002.jpg",
+          "time": 4767.30000000447
+        },
+        {
+          "file": "scanner-003.jpg",
+          "time": 4879
+        },
+        {
+          "file": "scanner-004.jpg",
+          "time": 5019
+        }
+      ],
+      "elapsed": 938.3000000044703,
+      "raf": {
+        "count": 89,
+        "median": 6.099999999999454,
+        "p95": 54.5,
+        "max": 84.90000000000055,
+        "over34ms": 6
+      },
+      "longTasks": [
+        {
+          "start": 4267,
+          "duration": 85
+        },
+        {
+          "start": 4359.70000000298,
+          "duration": 52
+        },
+        {
+          "start": 4488.4000000059605,
+          "duration": 60
+        },
+        {
+          "start": 4626.10000000149,
+          "duration": 77
+        },
+        {
+          "start": 4703.80000000447,
+          "duration": 52
+        },
+        {
+          "start": 4812.4000000059605,
+          "duration": 54
+        }
+      ]
+    }
+  ]
+}

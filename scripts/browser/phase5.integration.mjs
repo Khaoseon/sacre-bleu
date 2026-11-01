@@ -176,6 +176,7 @@ try {
   }
   async function closeSettings() {
     await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+    await page.locator('dialog[open]').waitFor({ state: 'detached' });
   }
   async function snapshot() {
     return request(

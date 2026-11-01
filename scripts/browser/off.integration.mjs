@@ -89,13 +89,14 @@ try {
     await scan('00001234');
     await page.getByRole('button', { name: 'Fermer', exact: true }).click();
     await page.evaluate(() => window.finishLookup());
-    await page.waitForTimeout(100);
+    await page.locator('dialog[open]').waitFor({ state: 'detached' });
     assert.equal(await page.locator('dialog').count(), 0);
     await scan('00005678');
     await page.evaluate(() => window.finishLookup('missing'));
     await page.locator('input[name="name"]').waitFor();
     assert.equal(await page.locator('input[name="name"]').inputValue(), '');
     await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+    await page.locator('dialog[open]').waitFor({ state: 'detached' });
     await scan('00009876');
     await page.getByRole('button', { name: 'Saisir manuellement', exact: true }).click();
     await page.locator('input[name="name"]').fill('Saisie pendant panne');

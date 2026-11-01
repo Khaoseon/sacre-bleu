@@ -1,0 +1,205 @@
+/* Presentation only: the semantic state and confirmed values always remain authoritative. */
+.sb-foundation .quantity-value > span {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+.sb-foundation
+  :is(
+    .primary-button,
+    .secondary-button,
+    .sb-button,
+    .icon-button,
+    .quantity-button,
+    .shopping-check,
+    .mode-toggle > button,
+    .category-tabs > button
+  ) {
+  transition:
+    transform var(--sb-motion-press) var(--sb-motion-ease),
+    background-color var(--sb-motion-state) var(--sb-motion-ease),
+    color var(--sb-motion-state) var(--sb-motion-ease);
+}
+.sb-foundation
+  :is(.primary-button, .secondary-button, .sb-button, .icon-button, .quantity-button):active:not(
+    :disabled
+  ) {
+  transform: translateY(1px) scale(0.98);
+}
+.sb-foundation .product-edit {
+  transition: transform var(--sb-motion-press) var(--sb-motion-ease);
+}
+.sb-foundation .product-edit:active {
+  transform: scale(0.992);
+}
+.sb-foundation .shopping-check:active:not(:disabled) .check-item {
+  transform: scale(0.92);
+}
+.sb-foundation .shopping-check .check-item {
+  transition:
+    transform var(--sb-motion-press) var(--sb-motion-ease),
+    background-color var(--sb-motion-state) var(--sb-motion-ease),
+    color var(--sb-motion-state) var(--sb-motion-ease);
+}
+.sb-foundation.sb-foundation .essential-row {
+  transition: background-color var(--sb-motion-state) var(--sb-motion-ease);
+}
+.sb-foundation .shopping-check .shopping-item-name {
+  transition:
+    opacity var(--sb-motion-state) var(--sb-motion-ease),
+    color var(--sb-motion-state) var(--sb-motion-ease);
+}
+.shopping-list {
+  position: relative;
+}
+.sb-foundation.sb-foundation .shopping-list[data-motion-collapse] {
+  overflow: hidden;
+}
+.camera-scanner video {
+  opacity: 0;
+  transition: opacity var(--sb-motion-state) var(--sb-motion-ease);
+}
+.camera-scanner[data-status='running'] video {
+  opacity: 1;
+}
+.shopping-exit {
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+/* Hidden to AT and pointers while covered; stays painted during the closing drag. */
+.shopping-swipe .swipe-delete[aria-hidden='true'] {
+  visibility: visible;
+}
+.modal.sb-foundation.sb-foundation::backdrop {
+  opacity: 0;
+  transition: opacity var(--sb-motion-sheet) var(--sb-motion-enter);
+}
+.modal.sb-foundation.sb-foundation[data-presented]::backdrop {
+  opacity: 1;
+}
+.modal.sb-foundation.sb-foundation[data-closing]::backdrop {
+  opacity: 0;
+  transition-duration: var(--sb-motion-exit);
+  transition-timing-function: var(--sb-motion-exit-ease);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .modal.sb-foundation.sb-foundation[open] {
+    animation: sb-modal-in var(--sb-motion-sheet) var(--sb-motion-enter);
+  }
+  .modal.sb-foundation.sb-foundation[data-closing] {
+    animation: none;
+  }
+  .sb-foundation .toast:not(.error) {
+    animation: sb-notice-in var(--sb-motion-state) var(--sb-motion-enter);
+  }
+  .sb-foundation
+    :is(
+      .camera-target,
+      .camera-status,
+      .camera-placeholder,
+      .last-product,
+      .scan-ready,
+      .scan-next-actions,
+      .shopping-options[open] .shopping-options-content
+    ) {
+    animation: sb-state-in var(--sb-motion-state) var(--sb-motion-enter);
+  }
+  .sb-foundation .last-product[data-confirmed='true'] .scan-identity small {
+    animation: sb-confirmed var(--sb-motion-state) var(--sb-motion-ease);
+  }
+}
+@keyframes sb-modal-in {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes sb-notice-in {
+  from {
+    translate: 0 4px;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+@keyframes sb-state-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sb-confirmed {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 760px) {
+  .modal.sb-foundation.sb-foundation {
+    margin-bottom: calc(12px + var(--sb-viewport-inset, 0px));
+  }
+  .sb-foundation.sb-foundation .mobile-nav {
+    --sb-nav-index: 0;
+  }
+  .sb-foundation.sb-foundation .mobile-nav[data-page='scanner'] {
+    --sb-nav-index: 1;
+  }
+  .sb-foundation.sb-foundation .mobile-nav[data-page='shopping'] {
+    --sb-nav-index: 2;
+  }
+  .mobile-nav-marker {
+    position: absolute;
+    inset: 8px max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    pointer-events: none;
+  }
+  .mobile-nav-marker::before {
+    content: '';
+    display: block;
+    width: calc((100% - 16px) / 3);
+    height: 100%;
+    border-radius: 18px;
+    background: var(--nav-active-surface);
+    transform: translateX(calc(var(--sb-nav-index) * (100% + 8px)));
+    transition: transform var(--sb-motion-navigation) var(--sb-motion-ease);
+  }
+  .sb-foundation.sb-foundation .mobile-nav > button {
+    position: relative;
+    z-index: 1;
+  }
+  .sb-foundation.sb-foundation .mobile-nav > button.selected {
+    background: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-foundation *,
+  .sb-foundation *::before,
+  .modal.sb-foundation.sb-foundation::backdrop {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .sb-foundation
+    :is(
+      .primary-button,
+      .secondary-button,
+      .sb-button,
+      .icon-button,
+      .quantity-button,
+      .product-edit
+    ):active,
+  .sb-foundation .shopping-check:active .check-item {
+    transform: none;
+  }
+}

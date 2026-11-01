@@ -2,9 +2,18 @@ import type { DisplayMessage } from './i18n';
 import { ProductMedia } from './ui/ProductMedia';
 import { usePrivatePhoto } from './ui/PrivatePhotos';
 import { preparePhoto } from './photos';
+import { animateMotion, dismissModal } from './ui/motion';
 import { t, message, label, locale, number, packages } from './i18n';
 
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import {
   Bean,
   Check,
@@ -131,8 +140,24 @@ export function Quantity({
   increaseLabel?: string;
   decreaseLabel?: string;
 }) {
+  const numberRef = useRef<HTMLSpanElement>(null);
+  const previous = useRef(value);
+  useLayoutEffect(() => {
+    if (previous.current === value) return;
+    previous.current = value;
+    if (!numberRef.current || disabled) return;
+    const animation = animateMotion(
+      numberRef.current,
+      [
+        { opacity: 0.45, transform: 'translateY(2px)' },
+        { opacity: 1, transform: 'translateY(0)' },
+      ],
+      'state',
+    );
+    return () => animation?.cancel();
+  }, [value, disabled]);
   return (
-    <div className="quantity">
+    <div className="quantity" aria-busy={locked || undefined}>
       <button
         className="quantity-button"
         aria-label={decreaseLabel ?? t('Retirer un {0}', { 0: name })}
@@ -141,8 +166,11 @@ export function Quantity({
       >
         <Minus size={17} />
       </button>
-      <span aria-label={disabled ? t('Quantité indisponible') : packages(value)}>
-        {disabled ? '—' : number(value)}
+      <span
+        className="quantity-value"
+        aria-label={disabled ? t('Quantité indisponible') : packages(value)}
+      >
+        <span ref={numberRef}>{disabled ? '—' : number(value)}</span>
       </span>
       <button
         className="quantity-button"
@@ -159,19 +187,26 @@ export function Modal({
   title,
   children,
   close,
+  canClose,
   error,
 }: {
   title: string;
   children: ReactNode;
   close: () => void;
+  canClose?: () => boolean;
   error?: DisplayMessage;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = ref.current!;
     const previous = document.activeElement;
     dialog.showModal();
+    const entrance = requestAnimationFrame(() => {
+      // Establish the native backdrop's initial opacity before transitioning it.
+      void getComputedStyle(dialog, '::backdrop').opacity;
+      dialog.dataset.presented = '';
+    });
     (
       dialog.querySelector<HTMLElement>('input:not([type="hidden"]):not([type="radio"])') ??
       dialog.querySelector<HTMLElement>('h2')
@@ -181,22 +216,63 @@ export function Modal({
       dialog.style.maxHeight = `${(viewport?.height ?? window.innerHeight) - 24}px`;
       const field = document.activeElement;
       if (field instanceof HTMLInputElement && dialog.contains(field))
-        field.scrollIntoView({ block: 'nearest' });
+        field.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+      dialog.style.setProperty(
+        '--sb-viewport-inset',
+        `${Math.max(0, window.innerHeight - (viewport?.height ?? window.innerHeight) - (viewport?.offsetTop ?? 0))}px`,
+      );
     };
     fit();
     viewport?.addEventListener('resize', fit);
+    viewport?.addEventListener('scroll', fit);
+    window.addEventListener('resize', fit);
     return () => {
+      cancelAnimationFrame(entrance);
+      delete dialog.dataset.presented;
       viewport?.removeEventListener('resize', fit);
-      if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+      viewport?.removeEventListener('scroll', fit);
+      window.removeEventListener('resize', fit);
+      dialog.getAnimations().forEach((animation) => animation.cancel());
+      dialog.close();
+      if (
+        previous instanceof HTMLElement &&
+        previous.isConnected &&
+        !document.querySelector('dialog[open]')
+      )
+        previous.focus({ preventScroll: true });
     };
   }, []);
+  const dismiss = () => {
+    if (!ref.current?.hasAttribute('data-closing') && (!canClose || canClose()))
+      dismissModal(ref.current, close);
+  };
   return (
     <dialog
       ref={ref}
       className="modal sb-foundation"
+      onClickCapture={(event) => {
+        if (ref.current?.hasAttribute('data-closing')) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+      onSubmitCapture={(event) => {
+        if (ref.current?.hasAttribute('data-closing')) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
-        close();
+        dismiss();
+      }}
+      onClose={() => {
+        const dialog = ref.current;
+        if (!dialog?.isConnected || dialog.open) return;
+        // A UA close request can become non-cancelable on repeated Escape.
+        // Keep native and React lifecycles aligned, including guarded drafts.
+        if (dialog.hasAttribute('data-closing') || !canClose || canClose()) close();
+        else dialog.showModal();
       }}
       aria-labelledby={titleId}
     >
@@ -204,7 +280,7 @@ export function Modal({
         <h2 id={titleId} tabIndex={-1}>
           {title}
         </h2>
-        <button className="icon-button" aria-label={t('Fermer')} onClick={close}>
+        <button className="icon-button" aria-label={t('Fermer')} onClick={dismiss}>
           <X size={21} />
         </button>
       </header>
@@ -258,10 +334,13 @@ export function ProductForm({
         ?.focus();
   }, [discard]);
   function requestClose() {
-    if (saving || reading) return;
+    if (saving || reading) return false;
     setDiscardAction('close');
-    if (dirty) setDiscard(true);
-    else close();
+    if (dirty) {
+      setDiscard(true);
+      return false;
+    }
+    return true;
   }
   useEffect(() => {
     if (!dirty) return;
@@ -312,7 +391,8 @@ export function ProductForm({
             ? t('Nouveau code-barres')
             : t('Ajouter un produit')
       }
-      close={requestClose}
+      close={close}
+      canClose={requestClose}
     >
       {discard && (
         <section className="draft-warning" role="alert">
@@ -332,7 +412,11 @@ export function ProductForm({
               type="button"
               className="sb-button"
               data-variant="secondary"
-              onClick={() => (discardAction === 'delete' && p ? onDelete(p) : close())}
+              onClick={() =>
+                discardAction === 'delete' && p
+                  ? onDelete(p)
+                  : dismissModal(formRef.current?.closest('dialog') ?? null, close)
+              }
             >
               {t('Abandonner les modifications')}
             </button>

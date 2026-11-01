@@ -1,0 +1,187 @@
+{
+  "browser": "156.0.8078.74",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "cpuRate": 1,
+  "label": "after",
+  "source": "Phase B working tree",
+  "conditions": "Headless desktop Chrome; local Vite; screenshots/tracing enabled; synthetic demo. Capture overhead included.",
+  "results": [
+    {
+      "name": "navigation",
+      "frames": [
+        {
+          "file": "navigation-000.jpg",
+          "time": 219.10000000149012
+        },
+        {
+          "file": "navigation-001.jpg",
+          "time": 313.90000000596046
+        },
+        {
+          "file": "navigation-002.jpg",
+          "time": 394.80000000447035
+        },
+        {
+          "file": "navigation-003.jpg",
+          "time": 487.90000000596046
+        },
+        {
+          "file": "navigation-004.jpg",
+          "time": 581.6000000014901
+        }
+      ],
+      "elapsed": 449.8999999985099,
+      "raf": {
+        "count": 73,
+        "median": 6.099999999999966,
+        "p95": 6.199999999999989,
+        "max": 6.199999999999989,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "sheet",
+      "frames": [
+        {
+          "file": "sheet-000.jpg",
+          "time": 952.7000000029802
+        },
+        {
+          "file": "sheet-001.jpg",
+          "time": 1053.8000000044703
+        },
+        {
+          "file": "sheet-002.jpg",
+          "time": 1140.7000000029802
+        },
+        {
+          "file": "sheet-003.jpg",
+          "time": 1222.7000000029802
+        },
+        {
+          "file": "sheet-004.jpg",
+          "time": 1310.6000000014901
+        },
+        {
+          "file": "sheet-005.jpg",
+          "time": 1389.2000000029802
+        }
+      ],
+      "elapsed": 534.1999999955297,
+      "raf": {
+        "count": 84,
+        "median": 6.099999999999909,
+        "p95": 6.2000000000000455,
+        "max": 18.100000000000023,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "quantity",
+      "frames": [
+        {
+          "file": "quantity-000.jpg",
+          "time": 1488.6000000014901
+        },
+        {
+          "file": "quantity-001.jpg",
+          "time": 1579.9000000059605
+        },
+        {
+          "file": "quantity-002.jpg",
+          "time": 1665.3000000044703
+        },
+        {
+          "file": "quantity-003.jpg",
+          "time": 1747.2000000029802
+        }
+      ],
+      "elapsed": 355.5,
+      "raf": {
+        "count": 115,
+        "median": 0,
+        "p95": 6.100000000000136,
+        "max": 12.200000000000045,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "shopping",
+      "frames": [
+        {
+          "file": "shopping-000.jpg",
+          "time": 2135.4000000059605
+        },
+        {
+          "file": "shopping-001.jpg",
+          "time": 2235.2000000029802
+        },
+        {
+          "file": "shopping-002.jpg",
+          "time": 2319.5
+        },
+        {
+          "file": "shopping-003.jpg",
+          "time": 2398.5
+        },
+        {
+          "file": "shopping-004.jpg",
+          "time": 2484.5
+        },
+        {
+          "file": "shopping-005.jpg",
+          "time": 2581.3000000044703
+        },
+        {
+          "file": "shopping-006.jpg",
+          "time": 2671.8000000044703
+        }
+      ],
+      "elapsed": 638,
+      "raf": {
+        "count": 102,
+        "median": 6.099999999999909,
+        "p95": 6.199999999999818,
+        "max": 12.199999999999818,
+        "over34ms": 0
+      },
+      "longTasks": []
+    },
+    {
+      "name": "scanner",
+      "frames": [
+        {
+          "file": "scanner-000.jpg",
+          "time": 3113.10000000149
+        },
+        {
+          "file": "scanner-001.jpg",
+          "time": 3241.7000000029802
+        },
+        {
+          "file": "scanner-002.jpg",
+          "time": 3338
+        },
+        {
+          "file": "scanner-003.jpg",
+          "time": 3429.2000000029802
+        }
+      ],
+      "elapsed": 426,
+      "raf": {
+        "count": 67,
+        "median": 6.099999999999909,
+        "p95": 6.200000000000273,
+        "max": 12.100000000000364,
+        "over34ms": 0
+      },
+      "longTasks": []
+    }
+  ]
+}

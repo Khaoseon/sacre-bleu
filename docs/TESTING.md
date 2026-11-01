@@ -42,6 +42,7 @@ Playwright is pinned in the lockfile. Browser scripts use installed Chrome; CI i
 
 ```sh
 npm run test:ui:browser
+npm run test:motion:browser
 npm run test:i18n:browser
 npm run test:pwa:browser
 npm run test:off:browser

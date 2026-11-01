@@ -6,6 +6,7 @@ import { MAX_QUANTITY, selectProducts, type State, type ShoppingItem } from './m
 import { number, shoppingCount, t } from './i18n';
 import { actionLabel } from './i18n/actions';
 import { ShoppingSwipeRow } from './ui/ShoppingSwipeRow';
+import { useShoppingMotion } from './ui/useShoppingMotion';
 
 type ShoppingActions = {
   state: State;
@@ -89,6 +90,8 @@ export function Shopping({
   const input = useRef<HTMLInputElement>(null);
   const remaining = state.shopping.filter((item) => !item.checked);
   const checked = state.shopping.filter((item) => item.checked);
+  const ordered = [...remaining, ...checked];
+  const listRef = useShoppingMotion(JSON.stringify(ordered.map((item) => item.id)), active);
   const matches = selectProducts(state, draft);
   async function submit(productId?: string) {
     if (locked || adding.current) return;
@@ -205,12 +208,13 @@ export function Shopping({
           )}
         </section>
       )}
-      <section className="shopping-list" aria-label={t('Liste de courses')}>
-        {[...remaining, ...checked].map((item) => {
+      <section ref={listRef} className="shopping-list" aria-label={t('Liste de courses')}>
+        {ordered.map((item) => {
           const product = state.products.find((p) => p.id === item.productId);
           return (
             <ShoppingSwipeRow
               key={item.id}
+              motionId={item.id}
               checked={item.checked}
               locked={locked || removing}
               active={active}

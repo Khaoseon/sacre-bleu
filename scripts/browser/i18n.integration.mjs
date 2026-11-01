@@ -72,12 +72,14 @@ try {
   await page.getByRole('heading', { name: 'Settings', exact: true }).waitFor();
   await fits();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
   await page.getByRole('button', { name: 'Sign in', exact: true }).waitFor();
   await page.getByLabel('Email', { exact: true }).fill('fiction@example.test');
   await page.getByLabel('Password', { exact: true }).fill('Fictitious1!Password');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await lang().selectOption('fr');
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
   assert.equal(
     await page.getByLabel('Email', { exact: true }).inputValue(),
     'fiction@example.test',

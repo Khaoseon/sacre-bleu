@@ -641,8 +641,12 @@ export default function App({
     <div
       className="app-shell sb-foundation"
       ref={swipeRef.ref}
+      onPointerDownCapture={(event) => {
+        if (event.pointerType !== 'touch') swipeRef.allowClick();
+      }}
       onClickCapture={(event) => {
         if (
+          event.detail > 0 &&
           swipeRef.suppressClick() &&
           event.target instanceof Element &&
           event.target.closest('[data-swipe-surface]')
@@ -1078,7 +1082,7 @@ export default function App({
                           {t('Lecture non enregistrée')} · {detectedName}
                         </p>
                       ) : scanHeld && scanPhase === 'done' && lastProduct ? (
-                        <section className="last-product">
+                        <section className="last-product" data-confirmed={!!lastScan}>
                           <div className="scan-identity">
                             <ProductImage product={lastProduct} />
                             <div>
@@ -1373,7 +1377,8 @@ export default function App({
           <span>Sacré bleu · {shared ? t('partagée') : t('démo')}</span>
         </footer>
       </div>
-      <nav ref={navRef} className="mobile-nav" aria-label={t('Navigation mobile')}>
+      <nav ref={navRef} className="mobile-nav" data-page={page} aria-label={t('Navigation mobile')}>
+        <span className="mobile-nav-marker" aria-hidden="true" />
         {nav.map((n) => (
           <button
             key={n.page}
@@ -1497,6 +1502,11 @@ export default function App({
       {editor?.lookup === 'loading' && (
         <Modal
           title={t('Nouveau code-barres')}
+          canClose={() => {
+            // Cancel the lookup at the gesture, before the presentation exit.
+            cancelLookup();
+            return true;
+          }}
           close={() => {
             cancelLookup();
             setEditor(null);

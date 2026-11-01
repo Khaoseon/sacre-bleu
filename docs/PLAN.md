@@ -1,5 +1,9 @@
 # Scope and validation plan
 
+## Phase B: Invisible choreography
+
+Frontend presentation and gesture continuity build on merged Phase A.1 (`decf2c4`). Priorities are horizontal navigation, native sheets, confirmed quantities, Shopping reflow/reveal/removal and scanner presentation. [Tokens, decisions, validation and device limits](design/motion/README.md) and [timestamped before/after evidence and CPU simulation](design/motion/EVIDENCE.md) record the result. No business rule, backend contract, palette, dependency or hosted operation changed. Delivery is a feature branch/PR to `main`, without merge or manual deployment.
+
 ## Phase A: Maison Sacré bleu visual identity
 
 Frontend-only identity work introduces exactly Sauge clair, Maison Sacré bleu and Maison Nuit, with deterministic migration of legacy device preferences. The explicitly requested delivery is a feature branch and PR to `main`, without merge or manual deployment. [Art direction, palette, migration and browser evidence](design/maison/README.md) document the result. Motion design remains a separate Phase B; backend, Auth behavior and hosted services remain unchanged.

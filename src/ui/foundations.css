@@ -24,7 +24,13 @@
   --sb-focus-width: 3px;
   --sb-focus-offset: 2px;
   --sb-motion-press: 110ms;
-  --sb-motion-settle: 280ms;
+  --sb-motion-state: 180ms;
+  --sb-motion-reflow: 220ms;
+  --sb-motion-navigation: 260ms;
+  --sb-motion-sheet: 260ms;
+  --sb-motion-exit: 180ms;
+  --sb-motion-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --sb-motion-exit-ease: cubic-bezier(0.4, 0, 1, 1);
   --sb-motion-ease: cubic-bezier(0.2, 0, 0, 1);
   /* Compatibility adapter: every existing/custom palette inherits semantic roles. */
   --sb-color-canvas: var(--canvas);
@@ -142,6 +148,10 @@
 @media (prefers-reduced-motion: reduce) {
   :root {
     --sb-motion-press: 0ms;
-    --sb-motion-settle: 0ms;
+    --sb-motion-state: 0ms;
+    --sb-motion-reflow: 0ms;
+    --sb-motion-navigation: 0ms;
+    --sb-motion-sheet: 0ms;
+    --sb-motion-exit: 0ms;
   }
 }
